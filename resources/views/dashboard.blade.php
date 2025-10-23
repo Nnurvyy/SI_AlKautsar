@@ -123,25 +123,59 @@
             border: none;
             border-radius: 0.75rem;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
         }
+        
+        .stat-card:hover {
+            transform: translateY(-3px); 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12); 
+        }
+        
         .stat-card .card-body {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 1.5rem; 
         }
         .stat-card-icon {
             font-size: 1.5rem;  
-            width: 48px;       
+            width: 48px;        
             height: 48px;       
             border-radius: 50%; 
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        .stat-card-icon.bg-success-subtle { color: #198754; }
-        .stat-card-icon.bg-danger-subtle { color: #dc3545; }
-        .stat-card-icon.bg-primary-subtle { color: #0d6efd; }
-        .stat-card-icon.bg-warning-subtle { color: #ffc107; }
+
+        .stat-card .card-body .text-muted {
+            font-size: 0.875rem; 
+        }
+        
+        .bg-custom-green-light { background-color: #e6f9f0; }
+        .text-custom-green { color: #28a745; }
+        .bg-custom-red-light { background-color: #fdebec; }
+        .text-custom-red { color: #dc3545; }
+        .bg-custom-blue-light { background-color: #e9f0ff; }
+        .text-custom-blue { color: #0d6efd; }
+        .bg-custom-yellow-light { background-color: #fffbeb; }
+        .text-custom-yellow { color: #ffc107; }
+
+        .stat-card-icon.bg-success-subtle { 
+            background-color: #e6f9f0 !important; 
+            color: #28a745 !important;
+        }
+        .stat-card-icon.bg-danger-subtle { 
+            background-color: #fdebec !important;
+            color: #dc3545 !important;
+        }
+        .stat-card-icon.bg-primary-subtle { 
+            background-color: #e9f0ff !important;
+            color: #0d6efd !important;
+        }
+        .stat-card-icon.bg-warning-subtle { 
+            background-color: #fffbeb !important;
+            color: #ffc107 !important;
+        }
 
         .transaction-table .badge {
             font-weight: 500;
@@ -225,6 +259,11 @@
                         <i class="bi bi-list"></i>
                     </button>
 
+                    <div class="ms-4"> 
+                        <h4 class="fw-bold mb-0">Dashboard</h4> 
+                        <p class="text-muted mb-0 d-none d-sm-block">{{ now()->locale('id')->translatedFormat('l, d F Y') }}</p>
+                    </div>
+
                     <ul class="navbar-nav ms-auto d-flex flex-row align-items-center">
                         <li class="nav-item me-3">
                             <a class="nav-link" href="#">
@@ -258,11 +297,6 @@
             </nav>
 
             <div class="container-fluid p-4">
-                
-                <div class="mb-4">
-                    <h2 class="fw-bold">Dashboard</h2>
-                    <p class="text-muted">Kamis, 23 Oktober 2025</p>
-                </div>
 
                 <div class="row g-4 mb-4">
                     <div class="col-md-6 col-xl-3">
@@ -338,31 +372,31 @@
                                 <tbody>
                                     <tr>
                                         <td>22/10/2025</td>
-                                        <td><span class="badge bg-success-subtle text-success-emphasis rounded-pill">Pemasukan</span></td>
+                                        <td><span class="badge bg-custom-green-light text-custom-green rounded-pill">Pemasukan</span></td>
                                         <td>Donasi</td>
                                         <td>Donasi</td>
-                                        <td class="text-end text-success fw-bold">+ Rp 1.000.000</td>
+                                        <td class="text-end text-custom-green fw-bold">+ Rp 1.000.000</td>
                                     </tr>
                                     <tr>
                                         <td>22/10/2025</td>
-                                        <td><span class="badge bg-success-subtle text-success-emphasis rounded-pill">Pemasukan</span></td>
+                                        <td><span class="badge bg-custom-green-light text-custom-green rounded-pill">Pemasukan</span></td>
                                         <td>SPP</td>
                                         <td>SPP Santri</td>
-                                        <td class="text-end text-success fw-bold">+ Rp 1.000.000</td>
+                                        <td class="text-end text-custom-green fw-bold">+ Rp 1.000.000</td>
                                     </tr>
                                     <tr>
                                         <td>22/10/2025</td>
-                                        <td><span class="badge bg-success-subtle text-success-emphasis rounded-pill">Pemasukan</span></td>
+                                        <td><span class="badge bg-custom-green-light text-custom-green rounded-pill">Pemasukan</span></td>
                                         <td>Infaq</td>
                                         <td>pemasukan infaq</td>
-                                        <td class="text-end text-success fw-bold">+ Rp 1</td>
+                                        <td class="text-end text-custom-green fw-bold">+ Rp 1</td>
                                     </tr>
                                     <tr>
                                         <td>21/10/2025</td>
-                                        <td><span class="badge bg-danger-subtle text-danger-emphasis rounded-pill">Pengeluaran</span></td>
+                                        <td><span class="badge bg-custom-red-light text-custom-red rounded-pill">Pengeluaran</span></td>
                                         <td>Listrik</td>
                                         <td>Bayar listrik bulan Oktober</td>
-                                        <td class="text-end text-danger fw-bold">- Rp 500.000</td>
+                                        <td class="text-end text-custom-red fw-bold">- Rp 500.000</td>
                                     </tr>
                                 </tbody>
                             </table>
