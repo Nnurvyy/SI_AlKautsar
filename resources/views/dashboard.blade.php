@@ -150,6 +150,16 @@
         .stat-card .card-body .text-muted {
             font-size: 0.875rem; 
         }
+
+        .transaction-table table {
+            font-size: 0.875rem; 
+        }
+
+        .transaction-table td {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            vertical-align: middle; 
+        }
         
         .bg-custom-green-light { background-color: #e6f9f0; }
         .text-custom-green { color: #28a745; }
@@ -179,6 +189,9 @@
 
         .transaction-table .badge {
             font-weight: 500;
+            font-size: 0.8rem;   
+            border-radius: 6px;    
+            padding: 0.4em 0.7em;
         }
     </style>
 </head>
@@ -186,9 +199,9 @@
 
     <div>
         <nav id="sidebar" class="sidebar d-flex flex-column">
-            <div class="sidebar-header">
-                <h5>SI Keuangan</h5>
-                <p>Pesantren Al Kautsar 561</p>
+            <div class="sidebar-header" style="text-align: left;">
+                <h5 style="font-weight: bold; margin: 0;">SI Keuangan</h5>
+                <p style="margin: 0;">Pesantren Al Kautsar 561</p>
             </div>
 
             <ul class="nav nav-pills flex-column mb-auto">
@@ -304,7 +317,7 @@
                             <div class="card-body">
                                 <div>
                                     <p class="text-muted mb-1">Total Pemasukan</p>
-                                    <h4 class="fw-bold mb-0">Rp 2.000.001</h4>
+                                    <h4 class="fw-bold mb-0">Rp 2.100.000</h4>
                                 </div>
                                 <div class="stat-card-icon bg-success-subtle">
                                     <i class="bi bi-graph-up-arrow"></i>
@@ -317,7 +330,7 @@
                             <div class="card-body">
                                 <div>
                                     <p class="text-muted mb-1">Total Pengeluaran</p>
-                                    <h4 class="fw-bold mb-0">Rp 0</h4>
+                                    <h4 class="fw-bold mb-0">Rp 500.000</h4>
                                 </div>
                                 <div class="stat-card-icon bg-danger-subtle">
                                     <i class="bi bi-graph-down-arrow"></i>
@@ -330,7 +343,7 @@
                             <div class="card-body">
                                 <div>
                                     <p class="text-muted mb-1">Saldo</p>
-                                    <h4 class="fw-bold mb-0">Rp 2.000.001</h4>
+                                    <h4 class="fw-bold mb-0">Rp 1.600.000</h4>
                                 </div>
                                 <div class="stat-card-icon bg-primary-subtle">
                                     <i class="bi bi-wallet2"></i>
@@ -343,7 +356,7 @@
                             <div class="card-body">
                                 <div>
                                     <p class="text-muted mb-1">Total Santri Aktif</p>
-                                    <h4 class="fw-bold mb-0">1</h4>
+                                    <h4 class="fw-bold mb-0">10.000</h4>
                                 </div>
                                 <div class="stat-card-icon bg-warning-subtle">
                                     <i class="bi bi-person-check"></i>
@@ -372,28 +385,28 @@
                                 <tbody>
                                     <tr>
                                         <td>22/10/2025</td>
-                                        <td><span class="badge bg-custom-green-light text-custom-green rounded-pill">Pemasukan</span></td>
+                                        <td><span class="badge bg-custom-green-light text-custom-green">Pemasukan</span></td>
                                         <td>Donasi</td>
                                         <td>Donasi</td>
                                         <td class="text-end text-custom-green fw-bold">+ Rp 1.000.000</td>
                                     </tr>
                                     <tr>
                                         <td>22/10/2025</td>
-                                        <td><span class="badge bg-custom-green-light text-custom-green rounded-pill">Pemasukan</span></td>
+                                        <td><span class="badge bg-custom-green-light text-custom-green">Pemasukan</span></td>
                                         <td>SPP</td>
                                         <td>SPP Santri</td>
                                         <td class="text-end text-custom-green fw-bold">+ Rp 1.000.000</td>
                                     </tr>
                                     <tr>
                                         <td>22/10/2025</td>
-                                        <td><span class="badge bg-custom-green-light text-custom-green rounded-pill">Pemasukan</span></td>
+                                        <td><span class="badge bg-custom-green-light text-custom-green">Pemasukan</span></td>
                                         <td>Infaq</td>
                                         <td>pemasukan infaq</td>
-                                        <td class="text-end text-custom-green fw-bold">+ Rp 1</td>
+                                        <td class="text-end text-custom-green fw-bold">+ Rp 100.000</td>
                                     </tr>
                                     <tr>
                                         <td>21/10/2025</td>
-                                        <td><span class="badge bg-custom-red-light text-custom-red rounded-pill">Pengeluaran</span></td>
+                                        <td><span class="badge bg-custom-red-light text-custom-red">Pengeluaran</span></td>
                                         <td>Listrik</td>
                                         <td>Bayar listrik bulan Oktober</td>
                                         <td class="text-end text-custom-red fw-bold">- Rp 500.000</td>
