@@ -43,10 +43,12 @@
         </div>
         <!--Tombol Aksi -->
         <div class="d-flex align-items-center mt-2 mt-md-0">
-            <!-- Tombol Tambah Pemasukan (BARU) -->
-            <a href="#" class="btn btn-primary btn-custom-padding d-flex align-items-center"> <!-- Warna diubah ke btn-success -->
-                <i class="bi bi-plus-circle me-2"></i> <!--Ikon diubah-->
-                Tambah Divisi <!-- Teks diubah -->
+            <a href="#" 
+            class="btn btn-primary btn-custom-padding d-flex align-items-center"
+            data-bs-toggle="modal"
+            data-bs-target="#modalTambahDivisi">
+                <i class="bi bi-plus-circle me-2"></i>
+                Tambah Divisi
             </a>
         </div>
     </div>
@@ -60,10 +62,10 @@
                     <!-- 6. Header Tabel diubah -->
                     <thead class="table-light">
                         <tr>
-                            <th scope="col">Divisi</th>
-                            <th scope="col">Deskripsi</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Aksi</th>
+                            <th scope="col" style="width: 25%">Divisi</th>
+                            <th scope="col" style="width: 45%">Deskripsi</th>
+                            <th scope="col" style="width: 15%">Status</th>
+                            <th scope="col" style="width: 15%">Aksi</th>
                         </tr>
                     </thead>
                     
@@ -81,14 +83,26 @@
                                 @endif
                             </td>
                             
-                            <td class="text-left">
-                                <a href="#" class="btn btn-sm me-1" title="Edit">
-                                    <i class="bi bi-pencil text-primary fs-5"></i> <!-- fs-5 dari request sebelumnya -->
+                            <td class="text-center col-nowrap">
+                                <!-- Tombol Edit -->
+                                <a href="#" 
+                                class="btn btn-sm me-1" 
+                                title="Edit"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modalEditDivisi">
+                                    <i class="bi bi-pencil text-primary fs-6"></i>
                                 </a>
-                                <a href="#" class="btn btn-sm" title="Hapus">
-                                    <i class="bi bi-trash text-danger fs-5"></i> <!-- fs-5 dari request sebelumnya -->
+
+                                <!-- Tombol Hapus -->
+                                <a href="#" 
+                                class="btn btn-sm" 
+                                title="Hapus"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modalHapusDivisi">
+                                    <i class="bi bi-trash text-danger fs-6"></i>
                                 </a>
                             </td>
+
                             
                         </tr>
                         @endforeach
@@ -100,11 +114,62 @@
     </div>
 </div>
 
-<!-- 
-    Modal untuk Kelola Kategori akan ditaruh di sini nanti.
-    <div class="modal fade" id="modalKelolaKategori" ...>
-    ...
-    </div> 
--->
+
+<!-- modal untuk tambah divisi -->
+<div class="modal fade" id="modalTambahDivisi" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tambah Divisi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Isi form di sini...
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                <button type="submit" class="btn btn-primary">Tambah</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- modal untuk edit divisi -->
+<div class="modal fade" id="modalEditDivisi" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Divisi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Isi form di sini...
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                <button type="submit" class="btn btn-primary">Simpan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- modal untuk hapus divisi -->
+<div class="modal fade" id="modalHapusDivisi" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Hapus Divisi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Isi form di sini...
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-danger">Hapus</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @endsection
