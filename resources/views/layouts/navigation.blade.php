@@ -11,7 +11,7 @@
             </a>
         </li>
         <li class="nav-item">
-            <<a href="{{ route('pemasukan.index') }}" class="nav-link {{ request()->routeIs('pemasukan.*') ? 'active' : '' }}">
+            <a href="{{ route('pemasukan.index') }}" class="nav-link {{ request()->routeIs('pemasukan.*') ? 'active' : '' }}">
                 <i class="bi bi-box-arrow-in-down"></i> Pemasukan
             </a>
         </li>

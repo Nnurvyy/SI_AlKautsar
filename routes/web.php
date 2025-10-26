@@ -27,7 +27,6 @@ Route::middleware(['auth'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
     
-    // 🔧 CRUD Pemasukan
     Route::resource('pemasukan', PemasukanController::class);
     
     // Pengeluaran
