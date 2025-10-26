@@ -6,12 +6,13 @@
 <div class="container-fluid p-4">
 
     <div class="row g-4 mb-4">
+
         <div class="col-md-6 col-xl-3">
             <div class="card stat-card">
                 <div class="card-body">
                     <div>
                         <p class="text-muted mb-1">Total Pemasukan</p>
-                        <h4 class="fw-bold mb-0">Rp 2.000.001</h4>
+                        <h5 class="fw-bold mb-0">Rp 2.000.000.000</h5>
                     </div>
                     <div class="stat-card-icon bg-custom-green-light text-custom-green">
                         <i class="bi bi-graph-up-arrow"></i>
@@ -24,7 +25,7 @@
                 <div class="card-body">
                     <div>
                         <p class="text-muted mb-1">Total Pengeluaran</p>
-                        <h4 class="fw-bold mb-0">Rp 0</h4>
+                        <h5 class="fw-bold mb-0">Rp 0</h5>
                     </div>
                     <div class="stat-card-icon bg-custom-red-light text-custom-red">
                         <i class="bi bi-graph-down-arrow"></i>
@@ -37,7 +38,7 @@
                 <div class="card-body">
                     <div>
                         <p class="text-muted mb-1">Saldo</p>
-                        <h4 class="fw-bold mb-0">Rp 2.000.001</h4>
+                        <h5 class="fw-bold mb-0">Rp 2.000.001</h5>
                     </div>
                     <div class="stat-card-icon bg-custom-blue-light text-custom-blue">
                         <i class="bi bi-wallet2"></i>
@@ -50,7 +51,7 @@
                 <div class="card-body">
                     <div>
                         <p class="text-muted mb-1">Total Santri Aktif</p>
-                        <h4 class="fw-bold mb-0">1</h4>
+                        <h5 class="fw-bold mb-0">1</h5>
                     </div>
                     <div class="stat-card-icon bg-custom-yellow-light text-custom-yellow">
                         <i class="bi bi-person-check"></i>

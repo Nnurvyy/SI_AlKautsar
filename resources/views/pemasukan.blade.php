@@ -5,16 +5,43 @@
 
 @section('content')
 
-
+<!-- Data Dummy -->
+@php
+    $transaksi = [
+        (object)[
+            'tanggal' => '22/10/2025',
+            'kategori' => 'Donasi',
+            'divisi' => 'Administrasi',
+            'santri' => '-',
+            'deskripsi' => 'Donasi',
+            'jumlah' => 1000000
+        ],
+        (object)[
+            'tanggal' => '22/10/2025',
+            'kategori' => 'SPP',
+            'divisi' => 'Putra',
+            'santri' => 'Panjei (241511019)',
+            'deskripsi' => 'SPP Santri',
+            'jumlah' => 1000000
+        ],
+        (object)[
+            'tanggal' => '22/10/2025',
+            'kategori' => 'Infaq',
+            'divisi' => 'Administrasi',
+            'santri' => '-',
+            'deskripsi' => 'pemasukan infaq',
+            'jumlah' => 100000
+        ],
+    ];
+    $totalPemasukan = 2100000; 
+@endphp
 
 <div class="container-fluid p-4">
 
-    <!-- 3. Header Atas diubah (Search, Filter, Tombol) -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         
         <!-- Search Bar & Filter -->
         <div class="d-flex align-items-center flex-wrap">
-            <!-- Search Bar -->
             <div class="input-group search-bar me-2" style="width: 300px;">
                 <span class="input-group-text bg-white border-end-0">
                     <i class="bi bi-search"></i>
@@ -22,7 +49,6 @@
                 <input type="text" class="form-control border-start-0" placeholder="Cari transaksi...">
             </div>
 
-            <!-- Filter Dropdown -->
             <select class="form-select me-2" style="width: auto;">
                 <option selected>Semua Kategori</option>
                 <option value="1">Donasi</option>
@@ -37,9 +63,7 @@
             </select>
         </div>
         
-        <!-- Tombol Aksi -->
         <div class="d-flex align-items-center mt-2 mt-md-0">
-            <!-- Tombol Kelola Kategori (BARU) -->
             <button type_button" class="btn btn-outline-secondary btn-custom-padding d-flex align-items-center me-2" data-bs-toggle="modal" data-bs-target="#modalKelolaKategori">
                 <i class="bi bi-tags me-2"></i>
                 Kelola Kategori
@@ -55,30 +79,27 @@
         </div>
     </div>
 
-    <!-- 4. Baris Total Pemasukan (BARU) -->
     <div class="d-flex justify-content-between align-items-center p-3 bg-white rounded shadow-sm mb-4">
         <h5 class="fw-bold mb-0">Total Pemasukan</h5>
         <h5 class="fw-bold mb-0 text-custom-green">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</h5>
     </div>
 
 
-    <!-- 5. Tabel Transaksi -->
+    <!-- Tabel -->
     <div class="card transaction-table border-0 shadow-sm">
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
                     
-                    <!-- 6. Header Tabel diubah -->
                     <thead class="table-light">
                         <tr>
-                            <th scope="col">Tanggal</th>
-                            <th scope="col">Kategori</th>
-                            <th scope="col">Divisi</th>
-                            <th scope="col">Santri</th>
-                            <th scope="col">Deskripsi</th>
-                            <th scope="col">Metode</th>
-                            <th scope="col" class="text-end">Jumlah</th>
-                            <th scope="col" class="text-center" style="width: 10%;">Aksi</th>
+                            <th scope="col" style="width: 10%;">Tanggal</th>
+                            <th scope="col" style="width: 12%;">Kategori</th>
+                            <th scope="col" style="width: 12%;">Divisi</th>
+                            <th scope="col" style="width: 15%;">Santri</th>
+                            <th scope="col">Deskripsi</th> 
+                            <th scope="col" style="width: 13%;" class="text-end">Jumlah</th>
+                            <th scope="col" style="width: 8%;" class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     
