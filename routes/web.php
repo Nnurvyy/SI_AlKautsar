@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PemasukanController;
+use App\Http\Controllers\PengeluaranController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,11 +24,17 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Grup Rute yang Dilindungi (Hanya bisa diakses setelah login)
 Route::middleware(['auth'])->group(function () {
     
-    // Ini adalah halaman "dashboard" atau halaman utama setelah login
+    // Rute Dashboard
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
     
-    // Nanti kamu bisa tambahkan rute lain yang butuh login di sini
-    // Route::get('/data-keuangan', [KeuanganController::class, 'index']);
+    // 2. Rute Kategori Pemasukan diubah
+    Route::get('/pemasukan', [PemasukanController::class, 'indexPemasukan'])
+         ->name('pemasukan');
+         
+    // 3. Rute Kategori Pengeluaran diubah
+    Route::get('/pengeluaran', [PengeluaranController::class, 'indexPengeluaran'])
+         ->name('pengeluaran');
+         
 });
 
 // Arahkan halaman utama (/) ke halaman login
