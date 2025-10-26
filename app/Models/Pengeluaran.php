@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Support\Str;
 
 class Pengeluaran extends Model
 {
@@ -30,9 +31,7 @@ class Pengeluaran extends Model
         'nominal' => 'integer',
     ];
 
-    // ======================
-    // 🔗 RELATIONSHIPS
-    // ======================
+    
 
     public function divisi()
     {
@@ -42,5 +41,16 @@ class Pengeluaran extends Model
     public function kategori()
     {
         return $this->belongsTo(PengeluaranKategori::class, 'id_kategori', 'id_kategori');
+    }
+
+
+
+    protected static function booted(): void
+    {
+        static::creating(function ($model) {
+            if (empty($model->{$model->getKeyName()})) {
+                $model->{$model->getKeyName()} = (string) Str::uuid();
+            }
+        });
     }
 }
