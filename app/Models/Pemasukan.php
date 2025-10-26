@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use App\Models\Student; 
 use App\Models\PemasukanKategori; 
+use App\Models\Divisi;
 
 class Pemasukan extends Model
 {
@@ -14,31 +15,40 @@ class Pemasukan extends Model
 
     protected $table = 'pemasukan';
     protected $primaryKey = 'id_pemasukan';
-    public $incrementing = false; // karena pakai UUID
+    public $incrementing = false;
     protected $keyType = 'string';
 
     protected $fillable = [
         'id_pemasukan',
-        'tanggal',
-        'jumlah',
-        'keterangan',
-        'id_students',
-        'id_pemasukan_kategori',
+        'id_divisi',
+        'id_siswa',
+        'id_kategori',
+        'metode_pembayaran',
+        'nominal',
+        'deskripsi',
+        'tanggal_transaksi',
+        'nomor_kwitansi',
     ];
 
-    // Relasi ke Students
-    public function student()
+    // Relasi ke siswa
+    public function siswa()
     {
-    return $this->belongsTo(Student::class, 'id_students');
+        return $this->belongsTo(Student::class, 'id_siswa');
     }
 
-    // Relasi ke Kategori Pemasukan
+    // Relasi ke kategori pemasukan
     public function kategori()
     {
-        return $this->belongsTo(PemasukanKategori::class, 'id_pemasukan_kategori');
+        return $this->belongsTo(PemasukanKategori::class, 'id_kategori');
     }
 
-    //  Auto generate UUID saat create
+    // Relasi ke divisi
+    public function divisi()
+    {
+        return $this->belongsTo(Divisi::class, 'id_divisi');
+    }
+
+    // Generate UUID otomatis
     protected static function booted(): void
     {
         static::creating(function ($model) {
