@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PemasukanController;
 use App\Http\Controllers\PengeluaranController;
+use App\Http\Controllers\DataSantriController;
+use App\Http\Controllers\DivisiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,6 +36,14 @@ Route::middleware(['auth'])->group(function () {
     // 3. Rute Kategori Pengeluaran diubah
     Route::get('/pengeluaran', [PengeluaranController::class, 'indexPengeluaran'])
          ->name('pengeluaran');
+
+    //4. Route untuk kategori data santri
+    Route::get('/datasantri', [DataSantriController::class, 'indexDataSantri'])
+         ->name('datasantri');
+
+    //5. Route untuk kategori divisi
+    Route::get('/divisi', [DivisiController::class, 'indexDivisi'])
+         ->name('divisi');
          
 });
 
