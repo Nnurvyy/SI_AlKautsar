@@ -15,7 +15,7 @@
             'jumlah' => 1000000
         ],
     ];
-    $totalPengeluaran = 1000000; // Sesuai gambar
+    $totalPengeluaran = 1000000; 
 @endphp
 
 <div class="container-fluid p-4">
@@ -66,27 +66,24 @@
                     
                     <thead class="table-light">
                         <tr>
-                            <th scope="col">Tanggal</th>
-                            <th scope="col">Kategori</th>
-                            <th scope="col">Divisi</th>
-                            <th scope="col">Vendor</th>
-                            <th scope="col">Deskripsi</th>
-                            <th scope="col" class="text-end">Jumlah</th>
-                            <th scope="col" class="text-center" style="width: 10%;">Aksi</th>
+                            <th scope="col" style="width: 10%;">Tanggal</th>
+                            <th scope="col" style="width: 12%;">Kategori</th>
+                            <th scope="col" style="width: 12%;">Divisi</th>
+                            <th scope="col" style="width: 15%;">Vendor</th>
+                            <th scope="col">Deskripsi</th> <th scope="col" style="width: 13%;" class="text-end">Jumlah</th>
+                            <th scope="col" style="width: 8%;" class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     
                     <tbody>
                         @foreach ($transaksi as $item)
                         <tr>
-                            <td>{{ $item->tanggal }}</td>
+                            <td class="col-nowrap">{{ $item->tanggal }}</td>
                             <td>{{ $item->kategori }}</td>
                             <td>{{ $item->divisi }}</td>
                             <td>{{ $item->vendor }}</td>
-                            <td>{{ $item->deskripsi }}</td>
-                            <td class="text-end text-custom-red fw-bold">- Rp {{ number_format($item->jumlah, 0, ',', '.') }}</td>
-                            <td class="text-center">
-                                <a href="#" class="btn btn-sm me-1" title="Edit">
+                            <td>{{ $item->deskripsi }}</td> <td class="text-end text-custom-red fw-bold col-nowrap"> Rp {{ number_format($item->jumlah, 0, ',', '.') }}</td>
+                            <td class="text-center col-nowrap"> <a href="#" class="btn btn-sm me-1" title="Edit">
                                     <i class="bi bi-pencil text-primary fs-6"></i> </a>
                                 <a href="#" class="btn btn-sm" title="Hapus">
                                     <i class="bi bi-trash text-danger fs-6"></i> </a>
