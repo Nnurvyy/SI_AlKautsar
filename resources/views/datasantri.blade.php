@@ -38,7 +38,7 @@
 <div class="container-fluid p-4">
 
     <!-- 3. Header Atas diubah (Search, Filter, Tombol) -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
         
         <!-- Search Bar & Filter -->
         <div class="d-flex align-items-center flex-wrap">
@@ -47,7 +47,7 @@
                 <span class="input-group-text bg-white border-end-0">
                     <i class="bi bi-search"></i>
                 </span>
-                <input type="text" class="form-control border-start-0" placeholder="Cari Santri (nama atau nis)...">
+                <input type="text" class="form-control border-start-0" placeholder="Cari Data Santri (NIS atau nama)...">
             </div>
         </div>
         <!--Tombol Aksi -->
@@ -57,7 +57,7 @@
             data-bs-toggle="modal"
             data-bs-target="#modalTambahDataSantri">
                 <i class="bi bi-plus-circle me-2"></i>
-                Tambah Divisi
+                Tambah Data Santri
             </a>
         </div>
     </div>
@@ -101,7 +101,7 @@
                             <td class="text-center col-nowrap">
                                 <!-- Tombol Edit -->
                                 <a href="#" 
-                                class="btn btn-sm me-1" 
+                                class="btn btn-sm btnEditSantri me-1" 
                                 title="Edit"
                                 data-bs-toggle="modal" 
                                 data-bs-target="#modalEditDataSantri">
@@ -127,26 +127,74 @@
     </div>
 </div>
 
-<!-- modal untuk tambah divisi -->
-<div class="modal fade" id="modalTambahDataSantri" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+<!-- Modal Tambah Santri -->
+<div class="modal fade" id="modalTambahDataSantri" tabindex="-1" aria-labelledby="modalEditSantriLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+
             <div class="modal-header">
-                <h5 class="modal-title">Tambah Data Santri</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title fw-bold" id="modalEditSantriLabel">Edit Data Santri</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                Isi form di sini...
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                <button type="submit" class="btn btn-primary">Tambah</button>
-            </div>
+
+            <form id="formEditSantri" action="" method="POST">
+                @csrf
+                @method('PUT')
+
+                <div class="modal-body">
+                    <div class="row g-3">
+
+                        <input type="hidden" name="id_students" id="edit_id">
+
+                        <div class="col-md-6">
+                            <label class="form-label">NIS</label>
+                            <input type="text" class="form-control" name="nis" id="edit_nis">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Nama Lengkap</label>
+                            <input type="text" class="form-control" name="nama_santri" id="edit_nama">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Kelas</label>
+                            <input type="text" class="form-control" name="kelas" id="edit_kelas">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Telepon Santri</label>
+                            <input type="text" class="form-control" name="no_telepon" id="edit_telp">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Wali Santri</label>
+                            <input type="text" class="form-control" name="wali_santri" id="edit_wali">
+                        </div>
+
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div class="form-check mt-3">
+                                <input type="checkbox" class="form-check-input" name="is_aktif" id="edit_status">
+                                <label class="form-check-label">Aktif</label>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer d-flex justify-content-between">
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary px-5">Simpan Perubahan</button>
+                </div>
+
+            </form>
+
         </div>
     </div>
 </div>
 
-<!-- modal untuk edit divisi -->
+
+
+<!-- modal untuk edit data santru -->
 <div class="modal fade" id="modalEditDataSantri" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -165,7 +213,7 @@
     </div>
 </div>
 
-<!-- modal untuk hapus divisi -->
+<!-- modal untuk hapus data santru -->
 <div class="modal fade" id="modalHapusDataSantri" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -185,3 +233,33 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // Event Klik Edit
+    const editButtons = document.querySelectorAll('.btn-edit');
+
+    editButtons.forEach(button => {
+        button.addEventListener('click', function () {
+
+            document.getElementById('edit_id').value = this.dataset.id;
+            document.getElementById('edit_nis').value = this.dataset.nis;
+            document.getElementById('edit_nama').value = this.dataset.nama;
+            document.getElementById('edit_kelas').value = this.dataset.kelas;
+            document.getElementById('edit_telp').value = this.dataset.telp;
+            document.getElementById('edit_wali').value = this.dataset.wali;
+            
+            document.getElementById('edit_status').checked = (this.dataset.status == '1');
+
+            // Update action form
+            document.getElementById('formEditSantri').action = "/students/update/" + this.dataset.id;
+
+        });
+    });
+
+});
+</script>
+@endpush
+

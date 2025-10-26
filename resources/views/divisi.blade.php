@@ -29,7 +29,7 @@
 <div class="container-fluid p-4">
 
     <!-- 3. Header Atas diubah (Search, Filter, Tombol) -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
         
         <!-- Search Bar & Filter -->
         <div class="d-flex align-items-center flex-wrap">
