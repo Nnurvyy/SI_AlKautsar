@@ -69,9 +69,12 @@
                 Kelola Kategori
             </button>
             
-            <a href="#" class="btn btn-success btn-custom-padding d-flex align-items-center"> 
-                <i class="bi bi-plus-circle me-2"></i>
-                Tambah Pemasukan 
+            <!-- Tombol Tambah Pemasukan (BARU) -->
+            <a href="{{ route('pemasukan.create') }}" class="btn btn-success btn-custom-padding d-flex align-items-center">
+            <i class="bi bi-plus-circle me-2"></i>
+            Tambah Pemasukan
+            </a>
+
             </a>
         </div>
     </div>
@@ -99,26 +102,33 @@
                             <th scope="col" style="width: 8%;" class="text-center">Aksi</th>
                         </tr>
                     </thead>
-
+                    
                     <tbody>
-                    @foreach ($transaksi as $item)
-                    <tr>
-                        <td class="col-nowrap">{{ $item->tanggal }}</td>
-                        <td>{{ $item->kategori }}</td>
-                        <td>{{ $item->divisi }}</td>
-                        <td>{{ $item->santri }}</td>
-                        <td>{{ $item->deskripsi }}</td> 
-                        <td class="text-end text-custom-green fw-bold col-nowrap">Rp {{ number_format($item->jumlah, 0, ',', '.') }}</td>
-                        <td class="text-center col-nowrap"> <a href="#" class="btn btn-sm me-1" title="Edit">
-                                <i class="bi bi-pencil text-primary fs-6"></i> 
-                            </a>
-                            <a href="#" class="btn btn-sm" title="Hapus">
-                                <i class="bi bi-trash text-danger fs-6"></i> 
-                            </a>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
+    @foreach ($pemasukan as $item)
+    <tr>
+        <td>{{ \Carbon\Carbon::parse($item->tanggal_transaksi)->format('d/m/Y') }}</td>
+        <td>{{ $item->kategori->nama_kategori ?? '-' }}</td>
+        <td>{{ $item->divisi->nama_divisi ?? '-' }}</td>
+        <td>{{ $item->siswa->nama ?? '-' }}</td>
+        <td>{{ $item->deskripsi }}</td>
+        <td>{{ $item->metode_pembayaran }}</td>
+        <td class="text-end text-custom-green fw-bold">Rp {{ number_format($item->nominal, 0, ',', '.') }}</td>
+        <td class="text-center">
+            <a href="{{ route('pemasukan.edit', $item->id_pemasukan) }}" class="btn btn-sm me-1" title="Edit">
+                <i class="bi bi-pencil text-primary fs-5"></i>
+            </a>
+            <form action="{{ route('pemasukan.destroy', $item->id_pemasukan) }}" method="POST" class="d-inline">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-sm" onclick="return confirm('Yakin ingin menghapus?')" title="Hapus">
+                    <i class="bi bi-trash text-danger fs-5"></i>
+                </button>
+            </form>
+        </td>
+    </tr>
+    @endforeach
+</tbody>
+
                 </table>
             </div>
         </div>
