@@ -34,7 +34,7 @@ class PengeluaranKategori extends Model
     protected $keyType = 'string';
 
     /**
-     * 4. Buat UUID secara otomatis saat membuat model baru.
+     *
      */
     protected static function booted(): void
     {
