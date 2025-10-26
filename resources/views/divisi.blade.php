@@ -73,7 +73,7 @@
                         <tr>
                             <td>{{ $item->nama_divisi }}</td>
                             <td>{{ $item->deskripsi_divisi }}</td>
-                            <td class="text-center">
+                            <td class="text-left">
                                 @if ($item->is_aktif)
                                     <span class="badge bg-success">Aktif</span>
                                 @else
@@ -81,7 +81,7 @@
                                 @endif
                             </td>
                             
-                            <td class="text-center">
+                            <td class="text-left">
                                 <a href="#" class="btn btn-sm me-1" title="Edit">
                                     <i class="bi bi-pencil text-primary fs-5"></i> <!-- fs-5 dari request sebelumnya -->
                                 </a>
