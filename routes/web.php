@@ -26,14 +26,12 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Grup Rute yang Dilindungi (Hanya bisa diakses setelah login)
 Route::middleware(['auth'])->group(function () {
     
-    // Rute Dashboard
+    // Dashboard
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
     
-    // 2. Rute Kategori Pemasukan diubah
-    Route::get('/pemasukan', [PemasukanController::class, 'indexPemasukan'])
-         ->name('pemasukan');
-         
-    // 3. Rute Kategori Pengeluaran diubah
+    Route::resource('pemasukan', PemasukanController::class);
+    
+    // Pengeluaran
     Route::get('/pengeluaran', [PengeluaranController::class, 'indexPengeluaran'])
          ->name('pengeluaran');
 
@@ -47,7 +45,7 @@ Route::middleware(['auth'])->group(function () {
          
 });
 
-// Arahkan halaman utama (/) ke halaman login
+// Halaman utama diarahkan ke login
 Route::get('/', function () {
     return redirect()->route('login');
 });
