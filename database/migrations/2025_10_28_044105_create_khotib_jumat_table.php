@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('divisi', function (Blueprint $table) {
-            $table->uuid('id_divisi')->primary();
-            $table->string('nama_divisi', 100)->unique();
-            $table->string('deskripsi_divisi', 255)->nullable();
-            $table->boolean('is_aktif')->default(true);
+        Schema::create('khotib_jumat', function (Blueprint $table) {
+            $table->uuid('id_khotib_jumat')->primary();
+            $table->string('nama_khotib_jumat', 100);
+            $table->string('tema_khotib_jumat', 255);
+            $table->date('tanggal');
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('divisi');
+        Schema::dropIfExists('khotib_jumat');
     }
 };

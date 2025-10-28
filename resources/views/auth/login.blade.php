@@ -114,8 +114,8 @@
             </svg>              
         </div>
         
-        <h1>Sistem Informasi Keuangan</h1>
-        <p>Pesantren Al Kautsar 561</p>
+        <h1>Sistem Informasi</h1>
+        <p>E-Masjid</p>
 
         <form action="{{ route('login.process') }}" method="POST">
             @csrf 
