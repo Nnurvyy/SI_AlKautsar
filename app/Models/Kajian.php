@@ -6,22 +6,23 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str; // <-- 1. Import class Str
 
-class KhotibJumat extends Model
+class Kajian extends Model
 {
     use HasFactory;
 
-    protected $table = 'khotib_jumat';
-    protected $primaryKey = 'id_khotib_jumat';
+    protected $table = 'kajian';
+    protected $primaryKey = 'id_kajian';
     public $timestamps = false;
 
     /**
      * Atribut yang dapat diisi secara massal.
      */
     protected $fillable = [
-        'nama_khotib_jumat',
-        'nama_imam_jumat',
-        'tema_khotib_jumat',
-        'tanggal',
+        'nama_penceramah',
+        'tema_kajian',
+        'tanggal_kajian',
+        'waktu_kajian',
+        'foto_penceramah',
     ];
 
     // --- Tambahan untuk UUID ---

@@ -8,10 +8,10 @@ return new class extends Migration {
     public function up(): void {
         Schema::create('tabungan_hewan_qurban', function (Blueprint $table) {
             $table->uuid('id_tabungan_hewan_qurban')->primary();
-            $table->string('nama_hewan', 100);
+            $table->enum('nama_hewan', ['kambing', 'kerbau', 'domba', 'sapi', 'unta']);
             $table->integer('total_hewan')->default(0);
             $table->bigInteger('total_tabungan')->default(0);
-            $table->uuid('id_pengguna'); // UUID sesuai users
+            $table->uuid('id_pengguna'); 
             $table->bigInteger('total_harga_hewan_qurban')->default(0);
             $table->timestamps();
 

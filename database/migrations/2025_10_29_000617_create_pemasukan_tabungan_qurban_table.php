@@ -9,13 +9,12 @@ return new class extends Migration {
         Schema::create('pemasukan_tabungan_qurban', function (Blueprint $table) {
             $table->uuid('id_pemasukan_tabungan_qurban')->primary();
             $table->uuid('id_tabungan_hewan_qurban');
-            $table->uuid('id_pengguna');
             $table->date('tanggal');
             $table->bigInteger('nominal');
             $table->timestamps();
 
             // foreign key ke pengguna
-            $table->foreign('id_pengguna')->references('id_pengguna')->on('pengguna')->onDelete('cascade');
+            $table->foreign('id_tabungan_hewan_qurban')->references('id_tabungan_hewan_qurban')->on('tabungan_hewan_qurban')->onDelete('cascade');
         });
     }
 
