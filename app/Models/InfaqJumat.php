@@ -6,19 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class Divisi extends Model
+class InfaqJumat extends Model
 {
     use HasFactory;
 
-    protected $table = 'divisi';
-    protected $primaryKey = 'id_divisi';
+    protected $table = 'infaq_jumat';
+    protected $primaryKey = 'id_infaq_jumat';
     public $incrementing = false;
     protected $keyType = 'string';
 
     protected $fillable = [
-        'nama_divisi',
-        'deskripsi_divisi',
-        'is_aktif',
+        'tanggal',
+        'nominal'
     ];
 
     // Auto-generate UUID saat create
@@ -27,8 +26,8 @@ class Divisi extends Model
         parent::boot();
 
         static::creating(function ($model) {
-            if (! $model->id_divisi) {
-                $model->id_divisi = (string) Str::uuid();
+            if (! $model->id_infaq_jumat) {
+                $model->id_infaq_jumat = (string) Str::uuid();
             }
         });
     }

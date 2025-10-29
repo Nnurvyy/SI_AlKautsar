@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-class DivisiController extends Controller
+class InfaqJumatController extends Controller
 {
     // Fungsi untuk menampilkan halaman Kategori Pengeluaran
-    public function indexDivisi()
+    public function indexInfaqJumat()
     {
         // Langsung tampilkan view-nya
-        return view('divisi');
+        return view('infaq_jumat');
     }
 }
