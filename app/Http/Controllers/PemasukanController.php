@@ -5,79 +5,85 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Pemasukan;
 use App\Models\PemasukanKategori;
-use App\Models\Divisi;
-use App\Models\Student;
 
 class PemasukanController extends Controller
 {
     // Tampilkan semua data pemasukan
     public function index()
     {
-        $pemasukan = Pemasukan::with(['kategori', 'divisi', 'siswa'])->get();
+        // Ambil semua pemasukan + kategori
+        $pemasukan = Pemasukan::with('kategori')->get();
         $totalPemasukan = $pemasukan->sum('nominal');
 
         $kategori = PemasukanKategori::all();
-        $divisi = Divisi::all();
-        $siswa = Student::all();
 
-        return view('pemasukan.index', compact('pemasukan', 'totalPemasukan', 'kategori', 'divisi', 'siswa'));
+        return view('pemasukan.index', compact('pemasukan', 'totalPemasukan', 'kategori'));
     }
 
+    // Tampilkan form tambah data
     public function create()
     {
         $kategori = PemasukanKategori::all();
-        $divisi = Divisi::all();
-        $siswa = Student::all();
-
-        return view('pemasukan.create', compact('kategori', 'divisi', 'siswa'));
+        return view('pemasukan.create', compact('kategori'));
     }
 
+    // Simpan data baru
     public function store(Request $request)
     {
         $request->validate([
-            'id_divisi' => 'required',
-            'id_kategori' => 'required',
-            'metode_pembayaran' => 'required',
+            'tanggal' => 'required|date',
             'nominal' => 'required|numeric',
-            'tanggal_transaksi' => 'required|date',
+            'id_kategori_pemasukan' => 'required',
+            'deskripsi' => 'nullable|string',
         ]);
 
-        Pemasukan::create($request->all());
+        Pemasukan::create([
+            'tanggal' => $request->tanggal,
+            'nominal' => $request->nominal,
+            'id_kategori_pemasukan' => $request->id_kategori_pemasukan,
+            'deskripsi' => $request->deskripsi,
+        ]);
 
         return redirect()->route('pemasukan.index')->with('success', 'Data pemasukan berhasil ditambahkan!');
     }
 
+    // Edit data
     public function edit($id)
     {
         $pemasukan = Pemasukan::findOrFail($id);
         $kategori = PemasukanKategori::all();
-        $divisi = Divisi::all();
-        $siswa = Student::all();
 
-        return view('pemasukan.edit', compact('pemasukan', 'kategori', 'divisi', 'siswa'));
+        return view('pemasukan.edit', compact('pemasukan', 'kategori'));
     }
 
+    // Update data
     public function update(Request $request, $id)
     {
         $request->validate([
-            'id_divisi' => 'required',
-            'id_kategori' => 'required',
-            'metode_pembayaran' => 'required',
+            'tanggal' => 'required|date',
             'nominal' => 'required|numeric',
-            'tanggal_transaksi' => 'required|date',
+            'id_kategori_pemasukan' => 'required',
+            'deskripsi' => 'nullable|string',
         ]);
 
         $pemasukan = Pemasukan::findOrFail($id);
-        $pemasukan->update($request->all());
 
-        return redirect()->route('pemasukan.index')->with('success', 'Data berhasil diperbarui!');
+        $pemasukan->update([
+            'tanggal' => $request->tanggal,
+            'nominal' => $request->nominal,
+            'id_kategori_pemasukan' => $request->id_kategori_pemasukan,
+            'deskripsi' => $request->deskripsi,
+        ]);
+
+        return redirect()->route('pemasukan.index')->with('success', 'Data pemasukan berhasil diperbarui!');
     }
 
+    // Hapus data
     public function destroy($id)
     {
         $pemasukan = Pemasukan::findOrFail($id);
         $pemasukan->delete();
 
-        return redirect()->route('pemasukan.index')->with('success', 'Data berhasil dihapus!');
+        return redirect()->route('pemasukan.index')->with('success', 'Data pemasukan berhasil dihapus!');
     }
 }
