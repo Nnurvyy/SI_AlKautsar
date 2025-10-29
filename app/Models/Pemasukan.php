@@ -5,9 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use App\Models\Student; 
-use App\Models\PemasukanKategori; 
-use App\Models\Divisi;
+use App\Models\PemasukanKategori; // sesuai class baru di bawah
 
 class Pemasukan extends Model
 {
@@ -20,32 +18,16 @@ class Pemasukan extends Model
 
     protected $fillable = [
         'id_pemasukan',
-        'id_divisi',
-        'id_siswa',
-        'id_kategori',
-        'metode_pembayaran',
+        'tanggal',
         'nominal',
+        'id_kategori_pemasukan',
         'deskripsi',
-        'tanggal_transaksi',
-        'nomor_kwitansi',
     ];
-
-    // Relasi ke siswa
-    public function siswa()
-    {
-        return $this->belongsTo(Student::class, 'id_siswa');
-    }
 
     // Relasi ke kategori pemasukan
     public function kategori()
     {
-        return $this->belongsTo(PemasukanKategori::class, 'id_kategori');
-    }
-
-    // Relasi ke divisi
-    public function divisi()
-    {
-        return $this->belongsTo(Divisi::class, 'id_divisi');
+        return $this->belongsTo(PemasukanKategori::class, 'id_kategori_pemasukan', 'id_kategori_pemasukan');
     }
 
     // Generate UUID otomatis
