@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pengeluaran_kategori', function (Blueprint $table) {
+        Schema::create('kategori_pengeluaran', function (Blueprint $table) {
             // Menggunakan UUID sebagai primary key
-            $table->uuid('id_pengeluaran_kategori')->primary();
+            $table->uuid('id_kategori_pengeluaran')->primary();
             
-            $table->string('nama_pengeluaran_kategori', 100);
+            $table->string('nama_kategori_pengeluaran', 100);
             
             $table->timestamps();
         });
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pengeluaran_kategori');
+        Schema::dropIfExists('kategori_pengeluaran');
     }
 };

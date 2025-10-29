@@ -16,31 +16,18 @@ class Pengeluaran extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = [
-        'id_divisi',
-        'id_kategori',
-        'nominal',
-        'deskripsi',
-        'tanggal_transaksi',
-        'nomor_kwitansi',
-        'penanggung_jawab',
-    ];
+    protected $fillable = ['tanggal', 'nominal', 'id_kategori_pengeluaran', 'deskripsi'];
 
     protected $casts = [
-        'tanggal_transaksi' => 'date',
+        'tanggal' => 'date',
         'nominal' => 'integer',
     ];
 
     
 
-    public function divisi()
+    public function kategoriPengeluaran()
     {
-        return $this->belongsTo(Divisi::class, 'id_divisi', 'id_divisi');
-    }
-
-    public function kategori()
-    {
-        return $this->belongsTo(PengeluaranKategori::class, 'id_kategori', 'id_kategori');
+        return $this->belongsTo(KategoriPengeluaran::class, 'id_kategori_pengeluaran');
     }
 
 

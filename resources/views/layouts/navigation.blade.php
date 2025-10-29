@@ -50,16 +50,6 @@
                 <i class="bi bi-wallet"></i> Tabungan Hewan Qurban
             </a>
         </li>
-        {{-- <li class="nav-item">
-            <a href="{{ route('datasantri') }}" class="nav-link {{ request()->routeIs('datasantri') ? 'active' : '' }}">
-                <i class="bi bi-people"></i> Data Santri
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{{ route('divisi') }}" class="nav-link {{ request()->routeIs('divisi') ? 'active' : '' }}">
-                <i class="bi bi-building"></i> Divisi
-            </a>
-        </li> --}}
     </ul>
 
     <div class="logout-form">

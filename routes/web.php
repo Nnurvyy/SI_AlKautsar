@@ -32,17 +32,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('pemasukan', PemasukanController::class);
     
     // Pengeluaran
-    Route::get('/pengeluaran', [PengeluaranController::class, 'indexPengeluaran'])
+    Route::get('/pengeluaran', [PengeluaranController::class, 'index'])
          ->name('pengeluaran');
-
-    //4. Route untuk kategori data santri
-    Route::get('/datasantri', [DataSantriController::class, 'indexDataSantri'])
-         ->name('datasantri');
-
-    //5. Route untuk kategori divisi
-    Route::get('/divisi', [DivisiController::class, 'indexDivisi'])
-         ->name('divisi');
-         
 });
 
 // Halaman utama diarahkan ke login

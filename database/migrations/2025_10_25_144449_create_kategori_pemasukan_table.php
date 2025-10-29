@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // HANYA BUAT TABEL USERS
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->string('password');
-            $table->rememberToken();
+        Schema::create('kategori_pemasukan', function (Blueprint $table) {
+            // Menggunakan UUID sebagai primary key
+            $table->uuid('id_kategori_pemasukan')->primary(); 
+            
+            $table->string('nama_kategori_pemasukan', 100);
+            
             $table->timestamps();
         });
     }
@@ -27,7 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        
+        Schema::dropIfExists('kategori_pemasukan');
     }
 };

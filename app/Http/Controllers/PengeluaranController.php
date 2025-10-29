@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 class PengeluaranController extends Controller
 {
     // Fungsi untuk menampilkan halaman Kategori Pengeluaran
-    public function indexPengeluaran()
+    public function index()
     {
         // Langsung tampilkan view-nya
         return view('pengeluaran');

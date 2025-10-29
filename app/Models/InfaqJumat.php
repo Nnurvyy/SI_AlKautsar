@@ -6,20 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str; // <-- 1. Import class Str
 
-class PengeluaranKategori extends Model
+class InfaqJumat extends Model
 {
     use HasFactory;
 
-    protected $table = 'pengeluaran_kategori';
-    protected $primaryKey = 'id_pengeluaran_kategori';
+    protected $table = 'infaq_jumat';
+    protected $primaryKey = 'id_infaq';
     public $timestamps = false;
 
     /**
      * Atribut yang dapat diisi secara massal.
      */
-    protected $fillable = [
-        'nama_pengeluaran_kategori',
-    ];
+    protected $fillable = ['tanggal', 'nominal'];
 
     // --- Tambahan untuk UUID ---
 
@@ -34,12 +32,11 @@ class PengeluaranKategori extends Model
     protected $keyType = 'string';
 
     /**
-     *
+     * 4. Buat UUID secara otomatis saat membuat model baru.
      */
     protected static function booted(): void
     {
         static::creating(function ($model) {
-            // Cek jika ID belum di-set
             if (empty($model->{$model->getKeyName()})) {
                 $model->{$model->getKeyName()} = (string) Str::uuid();
             }
