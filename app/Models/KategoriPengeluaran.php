@@ -12,7 +12,6 @@ class KategoriPengeluaran extends Model
 
     protected $table = 'kategori_pengeluaran';
     protected $primaryKey = 'id_kategori_pengeluaran';
-    public $timestamps = false;
 
     /**
      * Atribut yang dapat diisi secara massal.

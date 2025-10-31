@@ -12,8 +12,6 @@ class Inventori extends Model
 
     protected $table = 'inventori';
     protected $primaryKey = 'id_barang';
-    public $timestamps = false;
-
     /**
      * Atribut yang dapat diisi secara massal.
      */

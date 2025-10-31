@@ -11,17 +11,18 @@ class KhotibJumat extends Model
     use HasFactory;
 
     protected $table = 'khotib_jumat';
-    protected $primaryKey = 'id_khotib_jumat';
-    public $timestamps = false;
+    protected $primaryKey = 'id_khutbah';
+
 
     /**
      * Atribut yang dapat diisi secara massal.
      */
     protected $fillable = [
-        'nama_khotib_jumat',
-        'nama_imam_jumat',
-        'tema_khotib_jumat',
+        'nama_khotib',
+        'nama_imam',
+        'tema_khutbah',
         'tanggal',
+        'foto_khotib',
     ];
 
     // --- Tambahan untuk UUID ---
@@ -46,5 +47,14 @@ class KhotibJumat extends Model
                 $model->{$model->getKeyName()} = (string) Str::uuid();
             }
         });
+    }
+
+    protected $appends = ['foto_url'];
+
+    public function getFotoUrlAttribute()
+    {
+        return $this->foto_khotib
+            ? asset('storage/' . $this->foto_khotib)
+            : asset('images/default.png');
     }
 }

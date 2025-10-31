@@ -34,8 +34,9 @@ Route::middleware(['auth'])->group(function () {
          ->name('pengeluaran');
 
     // Khotib Jumat
-    Route::get('/khotib_jumat', [KhotibJumatController::class, 'index'])
-         ->name('khotib_jumat');
+    Route::resource('khotib-jumat', KhotibJumatController::class);
+    Route::get('khotib-jumat-data', [KhotibJumatController::class, 'data'])->name('khotib-jumat.data');
+
 });
 
 // Halaman utama diarahkan ke login

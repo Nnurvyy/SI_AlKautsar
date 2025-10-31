@@ -12,8 +12,6 @@ class Kajian extends Model
 
     protected $table = 'kajian';
     protected $primaryKey = 'id_kajian';
-    public $timestamps = false;
-
     /**
      * Atribut yang dapat diisi secara massal.
      */

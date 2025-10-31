@@ -31,7 +31,7 @@
             </a>
         </li>
         <li class="nav-item">
-            <a href="{{ route('khotib_jumat') }}" class="nav-link {{ request()->routeIs('khotib_jumat') ? 'active' : '' }}">
+            <a href="{{ route('khotib-jumat.index') }}" class="nav-link {{ request()->routeIs('khotib-jumat.index') ? 'active' : '' }}">
                 <i class="bi bi-person-fill"></i> Khotib Jumat
             </a>
         </li>

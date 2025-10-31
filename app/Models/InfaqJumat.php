@@ -12,7 +12,6 @@ class InfaqJumat extends Model
 
     protected $table = 'infaq_jumat';
     protected $primaryKey = 'id_infaq';
-    public $timestamps = false;
 
     /**
      * Atribut yang dapat diisi secara massal.
