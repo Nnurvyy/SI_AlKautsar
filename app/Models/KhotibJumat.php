@@ -4,7 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str; // <-- 1. Import class Str
+use Illuminate\Support\Str;
+use Carbon\Carbon; 
 
 class KhotibJumat extends Model
 {
@@ -13,10 +14,6 @@ class KhotibJumat extends Model
     protected $table = 'khotib_jumat';
     protected $primaryKey = 'id_khutbah';
 
-
-    /**
-     * Atribut yang dapat diisi secara massal.
-     */
     protected $fillable = [
         'nama_khotib',
         'nama_imam',
@@ -25,21 +22,14 @@ class KhotibJumat extends Model
         'foto_khotib',
     ];
 
-    // --- Tambahan untuk UUID ---
+    protected $casts = [
+        'tanggal' => 'date',
+    ];
 
-    /**
-     * 2. Beri tahu Eloquent bahwa Primary Key bukan auto-increment.
-     */
     public $incrementing = false;
-
-    /**
-     * 3. Beri tahu Eloquent bahwa Primary Key adalah tipe string.
-     */
     protected $keyType = 'string';
 
-    /**
-     * 4. Buat UUID secara otomatis saat membuat model baru.
-     */
+    
     protected static function booted(): void
     {
         static::creating(function ($model) {
@@ -49,12 +39,24 @@ class KhotibJumat extends Model
         });
     }
 
-    protected $appends = ['foto_url'];
+    protected $appends = ['foto_url', 'is_aktif'];
 
     public function getFotoUrlAttribute()
     {
         return $this->foto_khotib
             ? asset('storage/' . $this->foto_khotib)
             : asset('images/default.png');
+    }
+
+    /**
+     * Accessor untuk 'is_aktif'
+     * Otomatis membandingkan tanggal dengan hari ini.
+     */
+    public function getIsAktifAttribute()
+    {
+        if (!$this->tanggal) {
+            return false;
+        }
+        return $this->tanggal->greaterThanOrEqualTo(Carbon::today());
     }
 }

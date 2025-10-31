@@ -6,21 +6,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
     const tbody = document.querySelector('#tabelKhotib tbody');
     const token = document.querySelector('meta[name="csrf-token"]').content;
-
-    // BARU: Ambil tombol simpan & batal, dan simpan teks aslinya
+    
+    // Tombol Modal
     const submitButton = form ? form.querySelector('button[type="submit"]') : null;
     const cancelButton = form ? form.querySelector('button[data-bs-dismiss="modal"]') : null;
     const originalButtonText = submitButton ? submitButton.innerHTML : 'Simpan';
 
-    // Elemen untuk input file kustom
+    // Elemen Input File Kustom
     const fotoInput = document.getElementById('foto_khotib');
     const fotoLabel = document.getElementById('foto_khotib_label');
     const fotoLabelSpan = fotoLabel ? fotoLabel.querySelector('span') : null;
     const clearFileBtn = document.getElementById('clearFile');
     
-    // Elemen untuk preview
+    // Elemen Preview
     const preview = document.getElementById('previewFoto');
     const previewContainer = document.getElementById('previewContainer');
+
+    // Elemen Filter & Pagination
+    const statusFilter = document.getElementById('statusFilter');
+    const paginationContainer = document.getElementById('paginationLinks');
+    const paginationInfo = document.getElementById('paginationInfo');
+    const tableContainer = document.getElementById('tabelKhotib');
+
+    const sortTanggal = document.getElementById('sortTanggal');
+    const sortIcon = document.getElementById('sortIcon');
+
+    if (sortTanggal) {
+        sortTanggal.addEventListener('click', () => {
+            // Toggle arah sort
+            state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+            sortIcon.className = state.sortDir === 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down';
+            loadKhotib();
+        });
+    }
+
+
+    // State Management
+    let state = {
+        currentPage: 1,
+        status: 'aktif',
+        search: '',
+        perPage: 10,
+        sortBy: 'tanggal',    
+        sortDir: 'desc',      
+        searchTimeout: null
+    };
+
 
     // --- Event Listener Utama ---
 
@@ -28,20 +59,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (form) {
         form.addEventListener('submit', async e => {
             e.preventDefault();
-            
-            // BARU: Mulai animasi loading
-            if (submitButton && cancelButton) {
-                submitButton.disabled = true;
-                cancelButton.disabled = true; // Nonaktifkan tombol batal juga
-                submitButton.innerHTML = `
-                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    Menyimpan...
-                `;
-            }
+            setLoading(true);
 
             const id = document.getElementById('id_khutbah').value;
             const formData = new FormData(form);
-            
             const url = id ? `/khotib-jumat/${id}` : '/khotib-jumat';
             if (id) formData.append('_method', 'PUT');
 
@@ -56,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (res.ok) {
                     Swal.fire('Berhasil!', data.message, 'success');
                     bootstrap.Modal.getInstance(modalKhotib).hide();
-                    loadKhotib();
+                    loadKhotib(); // Muat ulang data
                 } else {
                     if (res.status === 422 && data.errors) {
                         let errorMessages = Object.values(data.errors).map(err => err[0]).join('<br>');
@@ -65,71 +86,55 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error(data.message || 'Terjadi kesalahan');
                 }
             } catch (err) {
-                // BARU: Kembalikan tombol jika gagal
-                if (submitButton && cancelButton) {
-                    submitButton.disabled = false;
-                    cancelButton.disabled = false;
-                    submitButton.innerHTML = originalButtonText;
-                }
                 Swal.fire('Gagal', err.message, 'error');
+            } finally {
+                // Pastikan loading di-stop, bahkan jika error
+                setLoading(false);
             }
         });
     }
 
-    // 2. Script untuk Search Bar
+    // 2. Search Bar (Server-side)
     if (searchInput) {
         searchInput.addEventListener('keyup', function() {
-            const filter = searchInput.value.toLowerCase();
-            const rows = tbody.getElementsByTagName('tr');
+            // Hentikan timeout sebelumnya
+            clearTimeout(state.searchTimeout);
+
+            // Set timeout baru (300ms) sebelum memicu search
+            state.searchTimeout = setTimeout(() => {
+                state.search = searchInput.value;
+                state.currentPage = 1; // Reset ke halaman 1
+                loadKhotib();
+            }, 300); 
+        });
+    }
+
+    // 3. Listener untuk Filter Status
+    if (statusFilter) {
+        statusFilter.addEventListener('change', () => {
+            state.status = statusFilter.value;
+            state.currentPage = 1; // Reset ke halaman 1
+            loadKhotib();
+        });
+    }
+
+    // 4. Listener untuk Klik Pagination
+    if (paginationContainer) {
+        paginationContainer.addEventListener('click', e => {
+            e.preventDefault();
+            const target = e.target.closest('a.page-link'); // Cari link yang diklik
             
-            for (let i = 0; i < rows.length; i++) {
-                if (rows[i].getElementsByTagName('td').length <= 1) continue;
-
-                const namaKhotib = rows[i].cells[2].innerText.toLowerCase();
-                const namaImam = rows[i].cells[3].innerText.toLowerCase();
-                const tema = rows[i].cells[4].innerText.toLowerCase();
-
-                if (namaKhotib.indexOf(filter) > -1 || namaImam.indexOf(filter) > -1 || tema.indexOf(filter) > -1) {
-                    rows[i].style.display = "";
-                } else {
-                    rows[i].style.display = "none";
-                }
+            if (!target || target.parentElement.classList.contains('disabled') || target.parentElement.classList.contains('active')) {
+                return; // Abaikan jika link non-aktif atau halaman saat ini
             }
-        });
-    }
 
-    // 3. Script untuk Preview Foto & Update Label
-    if (fotoInput && fotoLabelSpan && clearFileBtn && previewContainer && preview) {
-        fotoInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-
-            if (file) {
-                fotoLabelSpan.textContent = file.name;
-                fotoLabelSpan.classList.remove('text-muted');
-                clearFileBtn.classList.remove('d-none');
-
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    preview.src = event.target.result;
-                    previewContainer.classList.remove('d-none');
-                }
-                reader.readAsDataURL(file);
-            } else {
-                fotoLabelSpan.textContent = "Choose file...";
-                fotoLabelSpan.classList.add('text-muted');
-                clearFileBtn.classList.add('d-none');
-                preview.src = "";
-                previewContainer.classList.add('d-none');
+            const url = new URL(target.href);
+            const page = url.searchParams.get('page'); // Ambil nomor halaman dari URL
+            
+            if (page) {
+                state.currentPage = parseInt(page);
+                loadKhotib();
             }
-        });
-    }
-
-    // 4. Script untuk Tombol 'x' di field
-    if (clearFileBtn && fotoInput) {
-        clearFileBtn.addEventListener('click', function(e) {
-            e.stopPropagation(); 
-            fotoInput.value = ""; 
-            fotoInput.dispatchEvent(new Event('change'));
         });
     }
 
@@ -139,60 +144,158 @@ document.addEventListener('DOMContentLoaded', () => {
             form.reset();
             fotoInput.dispatchEvent(new Event('change'));
             document.getElementById('id_khutbah').value = '';
-
-            // BARU: Pastikan tombol simpan kembali normal saat modal ditutup
-            if (submitButton && cancelButton) {
-                submitButton.disabled = false;
-                cancelButton.disabled = false;
-                submitButton.innerHTML = originalButtonText;
-            }
+            setLoading(false); // Pastikan tombol simpan kembali normal
         });
     }
 
-    // --- Fungsi ---
+    // --- Fungsi Helper ---
 
-    // Ambil data dari server
-    async function loadKhotib() {
-        if (!tbody) return;
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center"><div class="spinner-border text-primary"></div></td></tr>`;
+    // Fungsi untuk mengaktifkan/menonaktifkan loading tombol
+    function setLoading(isLoading) {
+        if (!submitButton || !cancelButton) return;
 
-        try {
-            const res = await fetch('/khotib-jumat-data');
-            if (!res.ok) throw new Error('Gagal memuat data');
-            const data = await res.json();
-
-            tbody.innerHTML = '';
-            if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center">Belum ada data.</td></tr>`;
-                return;
-            }
-
-            data.forEach((item, i) => {
-                const row = `
-                <tr>
-                    <td class="text-center">${i + 1}</td>
-                    <td class="text-center"><img src="${item.foto_url}" class="rounded" style="width:60px;height:60px;object-fit:cover;" alt="Foto ${item.nama_khotib}"></td>
-                    <td>${item.nama_khotib}</td>
-                    <td>${item.nama_imam}</td>
-                    <td>${item.tema_khutbah}</td> 
-                    <td class="text-center">${new Date(item.tanggal).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                    <td class="text-center">
-                        <button class="btn btn-warning btn-sm" onclick="editKhotib('${item.id_khutbah}')">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-danger btn-sm" onclick="hapusKhotib('${item.id_khutbah}')">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
-                </tr>`;
-                tbody.insertAdjacentHTML('beforeend', row);
-            });
-        } catch (err) {
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">${err.message}</td></tr>`;
+        if (isLoading) {
+            submitButton.disabled = true;
+            cancelButton.disabled = true;
+            submitButton.innerHTML = `
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Menyimpan...`;
+        } else {
+            submitButton.disabled = false;
+            cancelButton.disabled = false;
+            submitButton.innerHTML = originalButtonText;
         }
     }
 
-    // Edit data (dibuat global agar bisa di-panggil dari onclick)
+    // --- Fungsi Render ---
+    async function loadKhotib() {
+        if (!tbody) return;
+        
+        // Tampilkan loading di tabel
+        let colCount = tbody.closest('table').querySelector('thead tr').cells.length;
+        tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center"><div class="spinner-border text-primary"></div></td></tr>`;
+
+        // Buat URL dengan query params
+        const url = `/khotib-jumat-data?page=${state.currentPage}&status=${state.status}&search=${state.search}&perPage=${state.perPage}&sortBy=${state.sortBy}&sortDir=${state.sortDir}`;
+
+        try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Gagal memuat data');
+            
+            const response = await res.json(); // Ini adalah response pagination Laravel default
+            
+            renderTable(response.data, response.from || 1);
+            renderPagination(response); // Kirim seluruh response
+            
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center text-danger">${err.message}</td></tr>`;
+            paginationInfo.textContent = 'Gagal memuat data';
+            paginationContainer.innerHTML = '';
+        }
+    }
+
+
+    function formatTanggal(tanggalStr) {
+        if (!tanggalStr) return '-';
+
+        // Jika formatnya dd/mm/yyyy atau dd-mm-yyyy
+        const parts = tanggalStr.split(/[-/]/);
+        if (parts.length === 3) {
+            const [d, m, y] = parts;
+            const date = new Date(`${y}-${m}-${d}T00:00:00`);
+            if (!isNaN(date)) {
+                return date.toLocaleDateString('id-ID', {
+                    day: '2-digit', month: 'short', year: 'numeric'
+                });
+            }
+        }
+
+        // Coba parse default jika format sudah ISO
+        const date = new Date(tanggalStr);
+        return !isNaN(date)
+            ? date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
+            : 'Invalid Date';
+    }
+
+    /**
+     * Fungsi untuk me-render isi tabel
+     */
+    function renderTable(data, startingNumber) {
+        tbody.innerHTML = ''; // Kosongkan tabel
+        
+        if (data.length === 0) {
+            let colCount = tbody.closest('table').querySelector('thead tr').cells.length;
+            tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center">Belum ada data.</td></tr>`;
+            return;
+        }
+
+        data.forEach((item, i) => {
+            const row = `
+            <tr>
+                <td class="text-center">${startingNumber + i}</td>
+                <td class="text-center"><img src="${item.foto_url}" class="rounded" style="width:60px;height:60px;object-fit:cover;" alt="Foto ${item.nama_khotib}"></td>
+                <td>${item.nama_khotib}</td>
+                <td>${item.nama_imam}</td>
+                <td>${item.tema_khutbah}</td> 
+                <td class="text-center">${formatTanggal(item.tanggal)}</td>
+                <td class="text-center">
+                    <button class="btn btn-warning btn-sm" onclick="editKhotib('${item.id_khutbah}')">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="hapusKhotib('${item.id_khutbah}')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>`;
+            tbody.insertAdjacentHTML('beforeend', row);
+        });
+    }
+
+    /**
+     * Fungsi untuk me-render link pagination
+     */
+    function renderPagination(response) {
+        const { from, to, total, links } = response;
+
+        if (total === 0) {
+            paginationInfo.textContent = 'Menampilkan 0 dari 0 data';
+            paginationContainer.innerHTML = '';
+            return;
+        }
+
+        // Update info: "Menampilkan 1 - 10 dari 100 data"
+        paginationInfo.textContent = `Menampilkan ${from} - ${to} dari ${total} data`;
+
+        // HTML pagination
+        let linksHtml = '<ul class="pagination justify-content-center mb-0">';
+        
+        links.forEach(link => {
+            let label = link.label;
+            if (label.includes('Previous')) label = '<';
+            else if (label.includes('Next')) label = '>';
+            
+            const disabled = !link.url ? 'disabled' : '';
+            const active = link.active ? 'active' : '';
+
+            linksHtml += `
+                <li class="page-item ${disabled} ${active}">
+                    <a class="page-link" href="${link.url || '#'}">${label}</a>
+                </li>
+            `;
+        });
+
+        linksHtml += '</ul>';
+        paginationContainer.innerHTML = linksHtml;
+    }
+
+
+
+    
+
+    
+    
+
+    // --- Fungsi Global (Edit/Hapus) ---
     window.editKhotib = async function(id_khutbah) {
         try {
             const res = await fetch(`/khotib-jumat/${id_khutbah}`);
@@ -203,7 +306,9 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('nama_khotib').value = data.nama_khotib;
             document.getElementById('nama_imam').value = data.nama_imam;
             document.getElementById('tema_khutbah').value = data.tema_khutbah;
-            document.getElementById('tanggal').value = data.tanggal;
+            if (data.tanggal) {
+                document.getElementById('tanggal').value = data.tanggal.split('T')[0];
+            }
 
             if (data.foto_khotib) {
                 fotoLabelSpan.textContent = data.foto_khotib.split('/').pop();
@@ -221,7 +326,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Hapus data (dibuat global)
     window.hapusKhotib = async function(id_khutbah) {
         const confirm = await Swal.fire({
             title: 'Yakin ingin menghapus?',
@@ -249,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             if (res.ok) {
                 Swal.fire('Terhapus!', data.message, 'success');
-                loadKhotib();
+                loadKhotib(); // Muat ulang data
             } else {
                 throw new Error(data.message || 'Terjadi kesalahan');
             }
@@ -258,7 +362,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Inisialisasi ---
-    loadKhotib();
-});
+    // --- Logika Input File Kustom (Tidak berubah) ---
+    if (fotoInput && fotoLabelSpan && clearFileBtn && previewContainer && preview) {
+        fotoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                fotoLabelSpan.textContent = file.name;
+                fotoLabelSpan.classList.remove('text-muted');
+                clearFileBtn.classList.remove('d-none');
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    preview.src = event.target.result;
+                    previewContainer.classList.remove('d-none');
+                }
+                reader.readAsDataURL(file);
+            } else {
+                fotoLabelSpan.textContent = "Choose file...";
+                fotoLabelSpan.classList.add('text-muted');
+                clearFileBtn.classList.add('d-none');
+                preview.src = "";
+                previewContainer.classList.add('d-none');
+            }
+        });
+    }
+    if (clearFileBtn && fotoInput) {
+        clearFileBtn.addEventListener('click', function(e) {
+            e.stopPropagation(); 
+            fotoInput.value = ""; 
+            fotoInput.dispatchEvent(new Event('change'));
+        });
+    }
 
+    // --- Inisialisasi ---
+    loadKhotib(); // Muat data pertama kali
+});

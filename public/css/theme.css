@@ -1,0 +1,30 @@
+/* === WARNA & TEMA === */
+.bg-custom-green-light { background-color: #e6f9f0; }
+.text-custom-green { color: #28a745; }
+.bg-custom-red-light { background-color: #fdebec; }
+.text-custom-red { color: #dc3545; }
+.bg-custom-blue-light { background-color: #e9f0ff; }
+.text-custom-blue { color: #0d6efd; }
+.bg-custom-yellow-light { background-color: #fffbeb; }
+.text-custom-yellow { color: #ffc107; }
+
+/* === STAT CARD === */
+.stat-card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+.stat-card .card-body {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1.5rem;
+}
+.stat-card .card-body .text-muted { font-size: 0.875rem; }
+.stat-card-icon {
+    font-size: 1.5rem; width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+}

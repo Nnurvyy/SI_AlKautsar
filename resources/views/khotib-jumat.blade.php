@@ -5,53 +5,57 @@
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
-{{-- Menggunakan container-fluid dan padding (p-4) seperti di file pengeluaran --}}
 <div class="container-fluid p-4">
 
-    {{-- Header: Search bar di kiri, Tombol di kanan --}}
+    {{-- Header: Filter, Search, Tombol --}}
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         
-        {{-- Search Bar --}}
-        <div class="input-group search-bar me-2" style="width: 300px;">
-            <span class="input-group-text bg-white border-end-0">
-                <i class="bi bi-search"></i>
-            </span>
-            <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Cari khotib, imam, atau tema...">
+        <div class="d-flex flex-wrap align-items-center">
+            <div class="me-2 mb-2 mb-md-0">
+                <select class="form-select" id="statusFilter" style="width: 150px;">
+                    <option value="aktif" selected>Aktif</option>
+                    <option value="tidak_aktif">Tidak Aktif</option>
+                    <option value="semua">Semua</option>
+                </select>
+            </div>
+
+            {{-- Search Bar --}}
+            <div class="input-group search-bar me-2 mb-2 mb-md-0" style="width: 350px;">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Cari khotib, imam, tema, atau tanggal...">
+            </div>
         </div>
         
-        {{-- Tombol Tambah Khotib (Style baru dengan Ikon) --}}
+        {{-- Tombol Tambah Khotib --}}
         <div class="d-flex align-items-center mt-2 mt-md-0">
             <button class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalKhotib">
                 <i class="bi bi-plus-circle me-2"></i>
-                Tambah Khotib
+                Tambah Khutbah
             </button>
         </div>
     </div>
 
-    {{-- Wrapper Tabel dengan Card, Shadow, dan Responsive --}}
+    <div class="d-flex justify-content-between align-items-center p-3 bg-white rounded shadow-sm mb-4">
+        <h5 class="fw-bold mb-0">Data Khutbah Jumat</h5>
+    </div>
+
+    {{-- Wrapper Tabel --}}
     <div class="card transaction-table border-0 shadow-sm">
         <div class="card-body">
             <div class="table-responsive">
-                {{-- Mengganti class tabel menjadi table-hover dan align-middle --}}
                 <table class="table table-hover align-middle" id="tabelKhotib">
-                    
-                    {{-- Header tabel dengan style table-light --}}
                     <thead class="table-light">
                         <tr> 
-                            <!-- Hanya No, Foto, dan Aksi yang diatur lebarnya -->
                             <th scope="col" style="width: 5%;" class="text-center">No</th>
                             <th scope="col" style="width: 10%;" class="text-center">Foto</th>
-                            
-                            <!-- DIUBAH: style="width: 15%" DIHAPUS -->
                             <th scope="col">Nama Khotib</th>
-                            <!-- DIUBAH: style="width: 15%" DIHAPUS -->
                             <th scope="col">Nama Imam</th>
-                            
                             <th scope="col">Tema Khutbah</th>
-                            
-                            <!-- DIUBAH: style="width: 10%" DIHAPUS -->
-                            <th scope="col" class="text-center">Tanggal</th>
-                            
+                            <th scope="col" class="text-center" id="sortTanggal" style="cursor:pointer;">
+                                Tanggal <i id="sortIcon" class="bi bi-arrow-down"></i>
+                            </th>
                             <th scope="col" style="width: 8%;" class="text-center">Aksi</th>
                         </tr>
                     </thead>
@@ -60,11 +64,16 @@
                     </tbody>
                 </table>
             </div>
-        </div>
+            
+            <div id="paginationContainer" class="d-flex justify-content-between align-items-center mt-3">
+                <span id="paginationInfo">Menampilkan 0 dari 0 data</span>
+                <nav id="paginationLinks"></nav>
+            </div>
+            </div>
     </div>
 </div>
 
-<!-- Modal Form (Tidak ada perubahan di modal) -->
+<!-- Modal Form -->
 <div class="modal fade" id="modalKhotib" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -73,7 +82,7 @@
         <input type="hidden" id="id_khutbah" name="id_khutbah">
 
         <div class="modal-header">
-          <h5 class="modal-title">Tambah Khotib Jumat</h5>
+          <h5 class="modal-title">Tambah Khutbah Jumat</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
 
@@ -93,25 +102,24 @@
             </div>
             <div id="previewContainer" class="position-relative d-none mt-2">
                 <img id="previewFoto"
-                     class="img-fluid rounded"
-                     style="max-height: 200px; object-fit: cover; width: 100%;">
+                     class="rounded mt-2 d-none d-block mx-auto" 
+                     style="width: 200px; height: 200px; object-fit: cover;">
             </div>
-          </div>
-
+          </div>>
           <div class="mb-3">
-            <label for="nama_khotib" class="form-label">Nama Khotib</label>
+            <label for="nama_khotib" class="form-label">Nama Khotib <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="nama_khotib" name="nama_khotib">
           </div>
           <div class="mb-3">
-            <label for="nama_imam" class="form-label">Nama Imam</label>
+            <label for="nama_imam" class="form-label">Nama Imam <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="nama_imam" name="nama_imam">
           </div>
           <div class="mb-3">
-            <label for="tema_khutbah" class="form-label">Tema Khutbah</label>
+            <label for="tema_khutbah" class="form-label">Tema Khutbah <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="tema_khutbah" name="tema_khutbah">
           </div>
           <div class="mb-3">
-            <label for="tanggal" class="form-label">Tanggal</label>
+            <label for="tanggal" class="form-label">Tanggal <span class="text-danger">*</span></label>
             <input type="date" class="form-control" id="tanggal" name="tanggal">
           </div>
         </div>
@@ -126,10 +134,6 @@
 </div>
 
 <style>
-/* CSS untuk Search Bar */
-.search-bar .input-group-text { background-color: #fff; border-right: 0; }
-.search-bar .form-control { border-left: 0; box-shadow: none; }
-.search-bar .form-control:focus { border-color: #dee2e6; box-shadow: none; }
 
 /* CSS Modal Scroll */
 #modalKhotib .modal-dialog { max-height: 80vh; display: flex; flex-direction: column; }
@@ -140,11 +144,24 @@
 /* CSS Tombol 'x' di field */
 #clearFile:hover { color: #212529; }
 #clearFile:focus { box-shadow: none; }
+
+/* CSS untuk Pagination */
+#paginationLinks .pagination {
+    margin-bottom: 0;
+}
+#paginationLinks .page-item.disabled .page-link {
+    background-color: #e9ecef;
+}
+#paginationLinks .page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+#paginationLinks .page-link {
+    cursor: pointer;
+}
 </style>
 
-<!-- SweetAlert2 -->
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-{{-- Script utama Anda (SEMUA LOGIKA PINDAH KE SINI) --}}
 <script src="{{ asset('js/khotib.js') }}"></script>
 @endsection
-

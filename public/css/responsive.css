@@ -1,0 +1,462 @@
+@media (max-width: 768px) {
+    .search-bar {
+        width: 100% !important;
+        margin-top: 0.5rem;
+    }
+
+    .search-bar input {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 1500px) {
+    .row.g-4.mb-4>.col-md-6.col-xl-3 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+
+/* Saat layar kecil (HP), ubah jadi 1 kolom */
+@media (max-width: 700px) {
+    .row.g-4.mb-4>.col-md-6.col-xl-3 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1300px) {
+
+    /* 1. Target container utama */
+    /* paksa 2 grup (filter & tombol) untuk tidak 'wrap' (turun baris) */
+    .d-flex.flex-wrap.justify-content-between.align-items-center.mb-4 {
+        flex-wrap: nowrap;
+        align-items: flex-start;
+        /* Ratakan kedua kolom ke atas */
+        gap: 1.5rem;
+        /* Jarak antara kolom filter dan kolom tombol */
+    }
+
+    /* 2. Target Kolom Kiri (Grup Filter) */
+    /* target 'div' anak PERTAMA dari container utama */
+    .d-flex.flex-wrap.justify-content-between.align-items-center.mb-4>div:first-child {
+        /* Ubah arahnya jadi vertikal (menumpuk ke bawah) */
+        flex-direction: column;
+        flex-basis: 60%;
+        /* Beri lebar 60% */
+        flex-grow: 1;
+        gap: 0.75rem;
+        /* Jarak antar search bar dan select box */
+    }
+
+    /* 3. Target Kolom Kanan (Grup Tombol) */
+    /* target 'div' anak KEDUA dari container utama */
+    .d-flex.flex-wrap.justify-content-between.align-items-center.mb-4>div:last-child {
+        flex-basis: 40%;
+        /* Ambil sisa lebarnya */
+        flex-grow: 1;
+        justify-content: flex-end;
+        /* Dorong tombol ke paling kanan */
+        flex-wrap: nowrap;
+        /* Pastikan tombolnya tidak 'wrap' */
+    }
+
+    /* 4. Target Item DI DALAM Kolom Kiri */
+    /* buat search bar dan select box jadi 100% lebar kolomnya */
+    .d-flex.flex-wrap.justify-content-between.align-items-center.mb-4>div:first-child>.input-group,
+    .d-flex.flex-wrap.justify-content-between.align-items-center.mb-4>div:first-child>.form-select {
+
+        /* butuh !important untuk "mengalahkan" style inline di HTML
+                (yaitu style="width: 300px;" dan style="width: auto;")
+                */
+        width: 100% !important;
+
+        /* Hapus margin kanan agar rata sempurna */
+        margin-right: 0 !important;
+    }
+}
+
+@media (max-width: 991.98px) {
+
+    /* --- NAVBAR MOBILE (POSISI JUDUL & FONT) --- */
+    .top-navbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem 1rem;
+        background-color: #fff;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    /* Tombol toggle sidebar tetap di kiri */
+    #sidebar-toggle {
+        flex-shrink: 0;
+        font-size: 1.25rem;
+        margin-right: 0.5rem;
+    }
+
+    /* Judul halaman */
+    .navbar-page-title {
+        flex: 1;
+        text-align: center;
+        margin: 0;
+    }
+
+    .navbar-page-title h4 {
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    .navbar-page-title p {
+        display: none;
+    }
+
+    /* --- POSISI DROPDOWN AKUN DI MOBILE --- */
+    .navbar-nav .dropdown-menu {
+        position: absolute !important;
+        right: 0.5rem !important;
+        top: 100% !important;
+        transform: none !important;
+        min-width: 140px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        z-index: 2000;
+    }
+
+
+    /* Profil user di kanan */
+    .navbar-nav {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+        margin-left: auto;
+        gap: 0.5rem;
+    }
+
+    /* Avatar user dan nama */
+    .user-avatar {
+        width: 30px;
+        height: 30px;
+        font-size: 0.8rem;
+    }
+
+    .user-avatar+div {
+        display: none;
+        /* sembunyikan teks nama di layar kecil */
+    }
+
+    .top-navbar,
+    .top-navbar.toggled {
+        left: 0;
+        padding-right: 0.75rem;
+    }
+
+    .top-navbar .container-fluid {
+        padding-left: 0;
+        padding-right: 0;
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+
+    #sidebar-toggle {
+        position: static;
+        transform: none;
+        padding-left: 0.75rem;
+        padding-right: 0.5rem;
+    }
+
+    .navbar-page-title {
+        /* Hapus flex-grow agar tidak mendorong */
+        /* flex-grow: 1; */
+        margin-left: 0;
+    }
+
+    .navbar-page-title h4 {
+        font-size: 1rem;
+        /* Kecilkan lagi judul halaman */
+    }
+
+    .navbar-page-title p {
+        display: none !important;
+    }
+
+    .navbar-nav {
+        flex-shrink: 0;
+        margin-left: auto;
+        /* Pastikan tetap di kanan */
+    }
+
+    .nav-bell-link i.bi-bell {
+        font-size: 1.1rem;
+    }
+
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.8rem;
+    }
+
+    .user-avatar+div>.fw-bold {
+        font-size: 0.85rem;
+    }
+
+    .user-avatar+div>.small.text-muted {
+        display: none !important;
+    }
+
+    /* --- AKHIR NAVBAR --- */
+
+    /* --- KONTEN & SIDEBAR --- */
+    .main-content,
+    .main-content.toggled {
+        margin-left: 0;
+    }
+
+    .sidebar {
+        margin-left: -280px;
+        z-index: 1040;
+    }
+
+    .sidebar.toggled {
+        margin-left: 0;
+    }
+
+    .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1039;
+        display: none;
+    }
+
+    .sidebar-backdrop.show {
+        display: block;
+    }
+
+    /* --- AKHIR KONTEN & SIDEBAR --- */
+
+    /* --- TABEL MOBILE --- */
+    .transaction-table table {
+        font-size: 0.65rem;
+        table-layout: auto;
+    }
+
+    .transaction-table th {
+        width: auto !important;
+    }
+
+    .transaction-table th,
+    .transaction-table td {
+        padding: 0.5rem 0.4rem;
+        white-space: normal !important;
+    }
+
+    .transaction-table .col-amount,
+    .transaction-table .col-action {
+        white-space: nowrap !important;
+    }
+
+    .dashboard-table th,
+    .dashboard-table td {
+        padding-top: 0.6rem;
+        padding-bottom: 0.6rem;
+    }
+
+    /* --- AKHIR TABEL MOBILE --- */
+
+    /* --- FILTER/TOMBOL MOBILE --- */
+    .d-flex.align-items-center.flex-wrap>*:not(:last-child) {
+        margin-bottom: 0.5rem;
+    }
+
+    .d-flex.align-items-center.flex-wrap .input-group.search-bar,
+    .d-flex.align-items-center.flex-wrap .form-select {
+        width: 100% !important;
+        margin-right: 0 !important;
+    }
+
+    .d-flex.align-items-center.w-100.w-lg-auto .btn {
+        width: 50% !important;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199.98px) {
+
+    .transaction-table th,
+    .transaction-table td {
+
+        /* 1. MATIKAN PEMOTONGAN KATA */
+        -webkit-hyphens: none;
+        -ms-hyphens: none;
+        hyphens: none;
+
+        /* 2. JANGAN PECAH KATA DI TENGAH */
+        word-break: keep-all;
+
+        /* 3. BIARKAN TEKS TURUN BARIS (WRAP) SECARA ALAMI */
+        /* !important di sini untuk mengalahkan 'nowrap' 
+                    jika ada di kode Anda yang lain */
+        white-space: normal !important;
+
+        /* 4. Kecilkan font & padding sedikit biar muat */
+        font-size: 0.875rem;
+        /* (14px) */
+        padding: 0.75rem 0.5rem;
+        /* (atas/bawah 0.75, kiri/kanan 0.5) */
+        vertical-align: middle;
+    }
+}
+
+
+.stat-card {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card .card-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+}
+
+.stat-card .card-body .text-muted {
+    font-size: 0.875rem;
+}
+
+.stat-card-icon {
+    font-size: 1.5rem;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bg-custom-green-light {
+    background-color: #e6f9f0;
+}
+
+.text-custom-green {
+    color: #28a745;
+}
+
+.bg-custom-red-light {
+    background-color: #fdebec;
+}
+
+.text-custom-red {
+    color: #dc3545;
+}
+
+.bg-custom-blue-light {
+    background-color: #e9f0ff;
+}
+
+.text-custom-blue {
+    color: #0d6efd;
+}
+
+.bg-custom-yellow-light {
+    background-color: #fffbeb;
+}
+
+.text-custom-yellow {
+    color: #ffc107;
+}
+
+.transaction-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.transaction-table table {
+    font-size: 0.875rem;
+    table-layout: fixed;
+    width: 100%;
+    min-width: 600px;
+}
+
+.transaction-table th,
+.transaction-table td {
+    padding-top: .8rem;
+    padding-bottom: .8rem;
+    vertical-align: middle;
+}
+
+.transaction-table td {
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.col-nowrap {
+    white-space: nowrap;
+}
+
+.dashboard-table th,
+.dashboard-table td {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    vertical-align: middle;
+}
+
+.transaction-table .badge {
+    font-weight: 500;
+    font-size: inherit;
+    border-radius: 6px;
+    padding: 0.4em 0.7em;
+}
+
+.btn-custom-padding {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.input-group.search-bar .form-control,
+.input-group.search-bar .input-group-text {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.input-group.search-bar .form-control:focus {
+    box-shadow: none;
+    border-color: #dee2e6;
+}
+
+.input-group.search-bar {
+    border: 1px solid #dee2e6;
+    border-radius: 0.4rem;
+    overflow: hidden;
+    transition: box-shadow 0.15s ease-in-out;
+}
+
+.input-group.search-bar .form-control,
+.input-group.search-bar .input-group-text {
+    border: none;
+}
+
+.input-group.search-bar:focus-within {
+    border: 1px solid black;
+    outline: 2px solid #3c68ab;
+    outline-offset: 2px;
+}
+
+.input-group.search-bar .form-control::placeholder {
+    color: #adb5bd;
+    opacity: 1;
+}
+
+.nav-bell-link {
+    padding-top: 0.9rem !important;
+    padding-bottom: 0.9rem !important;
+}
