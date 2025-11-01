@@ -6,15 +6,10 @@ use Illuminate\Http\Request;
 
 class InfaqJumatController extends Controller
 {
-<<<<<<< HEAD
     // Fungsi untuk menampilkan halaman Kategori Pengeluaran
-    public function indexInfaqJumat()
+    public function index()
     {
         // Langsung tampilkan view-nya
-        return view('infaq_jumat');
+        return view('infaq-jumat');
     }
 }
-=======
-    //
-}
->>>>>>> eeddd5f44f2f6e40c27d20ea7c0b8844ef6d12d1

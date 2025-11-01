@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PemasukanController;
 use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\KhotibJumatController;
+use App\Http\Controllers\InfaqJumatController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -37,6 +38,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('khotib-jumat', KhotibJumatController::class);
     Route::get('khotib-jumat-data', [KhotibJumatController::class, 'data'])->name('khotib-jumat.data');
 
+    Route::get('/infaq-jumat', [InfaqJumatController::class, 'index'])
+         ->name('infaq-jumat');
 });
 
 // Halaman utama diarahkan ke login

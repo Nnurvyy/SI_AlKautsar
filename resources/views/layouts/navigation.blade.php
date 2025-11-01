@@ -46,7 +46,7 @@
             </a>
         </li>
         <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="{{ route('infaq-jumat') }}" class="nav-link {{ request()->routeIs('infaq-jumat') ? 'active' : '' }}">
                 <i class="bi bi-cash-coin"></i> Infaq Jumat
             </a>
         </li>
