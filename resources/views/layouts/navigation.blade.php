@@ -41,7 +41,7 @@
             </a>
         </li>
         <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="{{ route('inventaris') }}" class="nav-link {{ request()->routeIs('inventaris') ? 'active' : '' }}">
                 <i class="bi bi-collection"></i> Stok & Inventori 
             </a>
         </li>

@@ -6,6 +6,7 @@ use App\Http\Controllers\PemasukanController;
 use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\KhotibJumatController;
 use App\Http\Controllers\InfaqJumatController;
+use App\Http\Controllers\BarangInventarisController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -38,8 +39,13 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('khotib-jumat', KhotibJumatController::class);
     Route::get('khotib-jumat-data', [KhotibJumatController::class, 'data'])->name('khotib-jumat.data');
 
+    //infaq juamt
     Route::get('/infaq-jumat', [InfaqJumatController::class, 'index'])
          ->name('infaq-jumat');
+
+    //inventaris dan stock
+    Route::get('/inventaris', [BarangInventarisController::class, 'index'])
+         ->name('inventaris');
 });
 
 // Halaman utama diarahkan ke login

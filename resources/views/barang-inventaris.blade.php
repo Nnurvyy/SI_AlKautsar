@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Infaq Jumat')
+@section('title', 'Inventaris & Stock')
 
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -14,18 +14,18 @@
             <span class="input-group-text bg-white border-end-0">
                 <i class="bi bi-search"></i>
             </span>
-            <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Cari tanggal....">
+            <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Cari nama barang....">
         </div>
         
         {{-- Tombol Tambah Khutbah (Kanan) --}}
-        <button class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modaltambahinfaq">
+        <button class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalInventaris">
             <i class="bi bi-plus-circle me-2"></i>
-            Tambah Pemasukan Infaq
+            Tambah Barang Inventaris
         </button>
     </div>
 
     <div class="d-flex justify-content-between align-items-center p-3 bg-white rounded shadow-sm mb-4">
-        <h5 class="fw-bold mb-0">Data Infaq Jumat</h5>
+        <h5 class="fw-bold mb-0">Data Barang Inventaris dan Stock</h5>
     </div>
 
     {{-- Wrapper Tabel --}}
@@ -36,8 +36,11 @@
                     <thead class="table-light">
                         <tr> 
                             <th scope="col" style="width: 5%;" class="text-center">No</th>
-                            <th scope="col" style="width: 35%;" class="text-center">Tanggal</th>
-                            <th scope="col" style="width: 60%;" class="text-center">Nominal</th>
+                            <th scope="col" style="width: 30%;" class="text-center">Nama Barang</th>
+                            <th scope="col" style="width: 10%;" class="text-center">Satuan</th>
+                            <th scope="col" style="width: 15%;" class="text-center">Kondisi</th>
+                            <th scope="col" style="width: 10%;" class="text-center">Stock</th>
+                            <th scope="col" style="width: 30%;" class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -54,39 +57,61 @@
     </div>
 </div>
 
-<!-- Modal Form -->
-<div class="modal fade" id="modaltambahinfaq" tabindex="-1" aria-labelledby="modalInfaqLabel" aria-hidden="true">
+<div class="modal fade" id="modalInventaris" tabindex="-1" aria-labelledby="modalInventarisLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form id="formTambahInfaq">
+      <form id="formInventarisStock">
         
-        <input type="hidden" id="id_infaq" name="id_infaq">
+        <input type="hidden" id="id_barang" name="id_barang">
 
         <div class="modal-header">
-          <h5 class="modal-title" id="modalInfaqLabel">Tambah Infaq Jumat</h5>
+          <h5 class="modal-title" id="modalInventarisLabel">Tambah/Ubah Data Inventaris</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
         <div class="modal-body">
           
-          {{-- Input Tanggal --}}
+          {{-- Input Nama Barang --}}
           <div class="mb-3">
-            <label for="tanggal_infaq" class="form-label">Tanggal Infaq <span class="text-danger">*</span></label>
-            <input type="date" class="form-control" id="tanggal_infaq" name="tanggal_infaq" required>
+            <label for="nama_barang" class="form-label">Nama Barang <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="nama_barang" name="nama_barang" required>
           </div>
           
-          {{-- Input Nominal --}}
+          {{-- Dropdown Satuan --}}
           <div class="mb-3">
-            <label for="nominal_infaq" class="form-label">Nominal Infaq (Rp) <span class="text-danger">*</span></label>
-            <input type="number" class="form-control" id="nominal_infaq" name="nominal_infaq" placeholder="Contoh: 1500000" min="0" required>
-            <div class="form-text">Masukkan nominal tanpa titik atau koma.</div>
+            <label for="satuan" class="form-label">Satuan <span class="text-danger">*</span></label>
+            <select class="form-select" id="satuan" name="satuan" required>
+                <option value="" disabled selected>Pilih Satuan</option>
+                <option value="Pcs">Pcs</option>
+                <option value="Unit">Unit</option>
+                <option value="Set">Set</option>
+                <option value="Meter">Meter</option>
+                <option value="Roll">Roll</option>
+            </select>
+          </div>
+
+          {{-- Dropdown Kondisi --}}
+          <div class="mb-3">
+            <label for="kondisi" class="form-label">Kondisi <span class="text-danger">*</span></label>
+            <select class="form-select" id="kondisi" name="kondisi" required>
+                <option value="" disabled selected>Pilih Kondisi</option>
+                <option value="Baik">Baik</option>
+                <option value="Perlu Perbaikan">Perlu Perbaikan</option>
+                <option value="Rusak Berat">Rusak Berat</option>
+            </select>
+          </div>
+
+          {{-- Input Stock --}}
+          <div class="mb-3">
+            <label for="stock" class="form-label">Stock <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="stock" name="stock" placeholder="Masukkan Jumlah Stok" min="0" required>
           </div>
           
         </div>
 
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-success">Simpan</button>
+          <button type="submit" class="btn btn-success">Simpan Data</button>
         </div>
       </form>
     </div>
