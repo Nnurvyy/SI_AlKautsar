@@ -4,19 +4,23 @@
         <p>E-Masjid</p>
     </div>
 
+    <!-- ====================================================== -->
+    <!--          SEMUA NAMA RUTE DI SINI DIPERBARUI            -->
+    <!-- ====================================================== -->
+
     <ul class="nav nav-pills flex-column mb-auto">
         <li class="nav-item">
-            <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" aria-current="page">
+            <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" aria-current="page">
                 <i class="bi bi-grid-fill"></i> Dashboard
             </a>
         </li>
         <li class="nav-item">
-            <a href="{{ route('pemasukan.index') }}" class="nav-link {{ request()->routeIs('pemasukan.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.pemasukan.index') }}" class="nav-link {{ request()->routeIs('admin.pemasukan.*') ? 'active' : '' }}">
                 <i class="bi bi-box-arrow-in-down"></i> Pemasukan
             </a>
         </li>
         <li class="nav-item">
-            <a href="{{ route('pengeluaran') }}" class="nav-link {{ request()->routeIs('pengeluaran') ? 'active' : '' }}">
+            <a href="{{ route('admin.pengeluaran') }}" class="nav-link {{ request()->routeIs('admin.pengeluaran') ? 'active' : '' }}">
                 <i class="bi bi-box-arrow-up"></i> Pengeluaran
             </a>
         </li>
@@ -31,7 +35,7 @@
             </a>
         </li>
         <li class="nav-item">
-            <a href="{{ route('khotib-jumat.index') }}" class="nav-link {{ request()->routeIs('khotib-jumat.index') ? 'active' : '' }}">
+            <a href="{{ route('admin.khotib-jumat.index') }}" class="nav-link {{ request()->routeIs('admin.khotib-jumat.*') ? 'active' : '' }}">
                 <i class="bi bi-person-fill"></i> Khotib Jumat
             </a>
         </li>
