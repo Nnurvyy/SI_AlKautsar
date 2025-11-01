@@ -6,19 +6,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str; // <-- 1. Import class Str
 
-class PemasukanKategori extends Model
+class KategoriPemasukan extends Model
 {
     use HasFactory;
 
-    protected $table = 'pemasukan_kategori';
-    protected $primaryKey = 'id_pemasukan_kategori';
+    protected $table = 'kategori_pemasukan';
+    protected $primaryKey = 'id_kategori_pemasukan';
     public $timestamps = false;
 
     /**
      * Atribut yang dapat diisi secara massal.
      */
     protected $fillable = [
-        'nama_pemasukan_kategori',
+        'nama_kategori_pemasukan',
     ];
 
     // --- Tambahan untuk UUID ---
@@ -43,5 +43,10 @@ class PemasukanKategori extends Model
                 $model->{$model->getKeyName()} = (string) Str::uuid();
             }
         });
+    }
+
+    public function pemasukan()
+    {
+        return $this->hasMany(Pemasukan::class, 'id_kategori_pemasukan');
     }
 }

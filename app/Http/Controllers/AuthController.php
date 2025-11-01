@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
 
 class AuthController extends Controller
 {
@@ -13,10 +12,10 @@ class AuthController extends Controller
      */
     public function showLoginForm()
     {
-        // Cek jika user SUDAH login, arahkan ke dashboard
         if (Auth::check()) {
             return redirect()->route('dashboard');
         }
+
         return view('auth.login');
     }
 
@@ -31,41 +30,42 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        // 2. Coba lakukan autentikasi
-        if (Auth::attempt($credentials)) {
-            // Jika berhasil, regenerate session
+        // 2. Pastikan guard pakai provider "pengguna"
+        if (Auth::guard('web')->attempt($credentials)) {
             $request->session()->regenerate();
 
-            // Redirect ke halaman yang dituju sebelumnya, atau ke dashboard
             return redirect()->intended('dashboard');
         }
 
-        // 3. Jika gagal
+        // 3. Jika gagal login
         return back()->withErrors([
             'email' => 'Email atau Password yang Anda masukkan salah.',
-        ])->onlyInput('email'); // Hanya kembalikan input email
+        ])->onlyInput('email');
     }
 
     /**
-     * Menampilkan halaman dashboard (setelah login).
+     * Menampilkan halaman dashboard.
      */
     public function dashboard()
     {
-        // Cukup tampilkan view dashboard
-        // Data user bisa diakses di view dengan Auth::user()
+        // Pastikan hanya user login yang bisa masuk
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
         return view('dashboard');
     }
 
     /**
-     * Memproses logout user.
+     * Logout user.
      */
     public function logout(Request $request)
     {
-        Auth::logout();
+        Auth::guard('web')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/login');
+        return redirect()->route('login');
     }
 }
