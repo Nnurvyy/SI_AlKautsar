@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str; // <-- 1. Import class Str
+use Illuminate\Support\Str;
 
 class Inventori extends Model
 {
@@ -12,29 +12,22 @@ class Inventori extends Model
 
     protected $table = 'inventori';
     protected $primaryKey = 'id_barang';
+
     /**
      * Atribut yang dapat diisi secara massal.
      */
     protected $fillable = [
         'nama_barang',
         'jumlah_barang',
+        'nama_kategori_pemasukan',
     ];
 
-    // --- Tambahan untuk UUID ---
-
     /**
-     * 2. Beri tahu Eloquent bahwa Primary Key bukan auto-increment.
+     * Primary key bukan auto-increment.
      */
     public $incrementing = false;
-
-    /**
-     * 3. Beri tahu Eloquent bahwa Primary Key adalah tipe string.
-     */
     protected $keyType = 'string';
 
-    /**
-     * 4. Buat UUID secara otomatis saat membuat model baru.
-     */
     protected static function booted(): void
     {
         static::creating(function ($model) {

@@ -4,16 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str; // <-- 1. Import class Str
+use Illuminate\Support\Str;
+use Carbon\Carbon; 
 
 class Kajian extends Model
 {
     use HasFactory;
 
-    protected $table = 'kajian';
-    protected $primaryKey = 'id_kajian';
     /**
-     * Atribut yang dapat diisi secara massal.
+     * Ganti nama tabel
+     */
+    protected $table = 'kajian';
+    
+    /**
+     * Ganti primary key
+     */
+    protected $primaryKey = 'id_kajian';
+
+    /**
+     * Sesuaikan kolom-kolom yang bisa diisi
      */
     protected $fillable = [
         'nama_penceramah',
@@ -23,21 +32,17 @@ class Kajian extends Model
         'foto_penceramah',
     ];
 
-    // --- Tambahan untuk UUID ---
-
     /**
-     * 2. Beri tahu Eloquent bahwa Primary Key bukan auto-increment.
+     * Sesuaikan kolom tanggal
      */
+    protected $casts = [
+        'tanggal_kajian' => 'date',
+    ];
+
+    // --- Ini untuk UUID (Biarkan saja, sudah benar) ---
     public $incrementing = false;
-
-    /**
-     * 3. Beri tahu Eloquent bahwa Primary Key adalah tipe string.
-     */
     protected $keyType = 'string';
 
-    /**
-     * 4. Buat UUID secara otomatis saat membuat model baru.
-     */
     protected static function booted(): void
     {
         static::creating(function ($model) {
@@ -45,5 +50,34 @@ class Kajian extends Model
                 $model->{$model->getKeyName()} = (string) Str::uuid();
             }
         });
+    }
+    // --- Selesai UUID ---
+
+
+    /**
+     * (PENTING) Biarkan ini agar 'foto_url' dan 'is_aktif' bisa dipakai di JS/Blade
+     */
+    protected $appends = ['foto_url', 'is_aktif'];
+
+    /**
+     * (PENTING) Ganti 'foto_khotib' menjadi 'foto_penceramah'
+     */
+    public function getFotoUrlAttribute()
+    {
+        return $this->foto_penceramah
+            ? asset('storage/' . $this->foto_penceramah)
+            : asset('images/default.png'); // Pastikan kamu punya default.png di public/images
+    }
+
+    /**
+     * (PENTING) Ganti 'tanggal' menjadi 'tanggal_kajian'
+     */
+    public function getIsAktifAttribute()
+    {
+        if (!$this->tanggal_kajian) {
+            return false;
+        }
+        // Bandingkan 'tanggal_kajian' dengan hari ini
+        return $this->tanggal_kajian->greaterThanOrEqualTo(Carbon::today());
     }
 }
