@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const id = document.getElementById('id_khutbah').value;
             const formData = new FormData(form);
-            const url = id ? `/khotib-jumat/${id}` : '/khotib-jumat';
+            const url = id ? `/admin/khotib-jumat/${id}` : '/admin/khotib-jumat';
             if (id) formData.append('_method', 'PUT');
 
             try {
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center"><div class="spinner-border text-primary"></div></td></tr>`;
 
         // Buat URL dengan query params
-        const url = `/khotib-jumat-data?page=${state.currentPage}&status=${state.status}&search=${state.search}&perPage=${state.perPage}&sortBy=${state.sortBy}&sortDir=${state.sortDir}`;
+        const url = `/admin/khotib-jumat-data?page=${state.currentPage}&status=${state.status}&search=${state.search}&perPage=${state.perPage}&sortBy=${state.sortBy}&sortDir=${state.sortDir}`;
 
         try {
             const res = await fetch(url);
@@ -298,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Fungsi Global (Edit/Hapus) ---
     window.editKhotib = async function(id_khutbah) {
         try {
-            const res = await fetch(`/khotib-jumat/${id_khutbah}`);
+            const res = await fetch(`/admin/khotib-jumat/${id_khutbah}`);
             if (!res.ok) throw new Error('Data tidak ditemukan');
             const data = await res.json();
 
@@ -344,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData();
             formData.append('_method', 'DELETE');
 
-            const res = await fetch(`/khotib-jumat/${id_khutbah}`, {
+            const res = await fetch(`/admin/khotib-jumat/${id_khutbah}`, {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
                 body: formData

@@ -102,10 +102,10 @@
             </div>
             <div id="previewContainer" class="position-relative d-none mt-2">
                 <img id="previewFoto"
-                     class="rounded mt-2 d-none d-block mx-auto" 
-                     style="width: 200px; height: 200px; object-fit: cover;">
+                    class="rounded mt-2 mx-auto d-block"
+                    style="width: 200px; height: 200px; object-fit: cover;">
             </div>
-          </div>>
+          </div>
           <div class="mb-3">
             <label for="nama_khotib" class="form-label">Nama Khotib <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="nama_khotib" name="nama_khotib">
