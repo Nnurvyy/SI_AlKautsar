@@ -4,68 +4,66 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
+use App\Models\Pengguna; // Pastikan Anda menggunakan model Pengguna
 
 class AuthController extends Controller
 {
     /**
-     * Menampilkan halaman form login.
+     * Menampilkan halaman login.
      */
     public function showLoginForm()
     {
-        // Cek jika user SUDAH login, arahkan ke dashboard
-        if (Auth::check()) {
-            return redirect()->route('dashboard');
-        }
-        return view('auth.login');
+        return view('auth.login'); 
     }
 
     /**
-     * Memproses percobaan login.
+     * Memproses upaya login.
      */
     public function loginProcess(Request $request)
     {
         // 1. Validasi input
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
+            'email' => 'required|email',
+            'password' => 'required',
         ]);
 
-        // 2. Coba lakukan autentikasi
-        if (Auth::attempt($credentials)) {
-            // Jika berhasil, regenerate session
+        // 2. Coba autentikasi
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            // Redirect ke halaman yang dituju sebelumnya, atau ke dashboard
-            return redirect()->intended('dashboard');
+            // 3. Ambil user yang login
+            $user = Auth::user();
+
+            if ($user->role === 'admin') {
+                return redirect()->intended(route('admin.dashboard'));
+            }
+             
+            // Jika 'publik' (atau role lainnya), arahkan ke landing page
+            return redirect()->intended(route('public.landing'));
         }
 
-        // 3. Jika gagal
+        // 4. Jika gagal, kembalikan ke login dengan error
         return back()->withErrors([
-            'email' => 'Email atau Password yang Anda masukkan salah.',
-        ])->onlyInput('email'); // Hanya kembalikan input email
+            'email' => 'Email atau password salah.',
+        ])->onlyInput('email');
     }
 
-    /**
-     * Menampilkan halaman dashboard (setelah login).
-     */
     public function dashboard()
     {
-        // Cukup tampilkan view dashboard
-        // Data user bisa diakses di view dengan Auth::user()
-        return view('dashboard');
+        return view('dashboard'); 
     }
 
     /**
-     * Memproses logout user.
+     * Memproses logout.
      */
     public function logout(Request $request)
     {
         Auth::logout();
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/login');
+        // Setelah logout, kembali ke landing page
+        return redirect()->route('public.landing');
     }
 }
+

@@ -6,19 +6,27 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
-class PemasukanKategori extends Model // 🔥 ubah dari KategoriPemasukan ke PemasukanKategori
+class Inventori extends Model
 {
     use HasFactory;
 
-    protected $table = 'kategori_pemasukan';
-    protected $primaryKey = 'id_kategori_pemasukan';
-    public $timestamps = false;
-    public $incrementing = false;
-    protected $keyType = 'string';
+    protected $table = 'inventori';
+    protected $primaryKey = 'id_barang';
 
+    /**
+     * Atribut yang dapat diisi secara massal.
+     */
     protected $fillable = [
+        'nama_barang',
+        'jumlah_barang',
         'nama_kategori_pemasukan',
     ];
+
+    /**
+     * Primary key bukan auto-increment.
+     */
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     protected static function booted(): void
     {

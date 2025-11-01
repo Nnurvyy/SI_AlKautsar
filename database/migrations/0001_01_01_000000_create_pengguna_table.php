@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // HANYA BUAT TABEL USERS
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
+        Schema::create('pengguna', function (Blueprint $table) {
+            $table->uuid('id_pengguna')->primary();
+            $table->string('nama');
             $table->string('email')->unique();
             $table->string('password');
+            $table->enum('role', ['admin', 'publik'])->default('publik');
             $table->rememberToken();
             $table->timestamps();
         });
@@ -27,7 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        
+        Schema::dropIfExists('pengguna');
     }
 };

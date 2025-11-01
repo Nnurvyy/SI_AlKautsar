@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('divisi', function (Blueprint $table) {
-            $table->uuid('id_divisi')->primary();
-            $table->string('nama_divisi', 100)->unique();
-            $table->string('deskripsi_divisi', 255)->nullable();
-            $table->boolean('is_aktif')->default(true);
+        Schema::create('kategori_pengeluaran', function (Blueprint $table) {
+            // Menggunakan UUID sebagai primary key
+            $table->uuid('id_kategori_pengeluaran')->primary();
+            
+            $table->string('nama_kategori_pengeluaran', 100);
+            
             $table->timestamps();
         });
     }
@@ -25,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('divisi');
+        Schema::dropIfExists('kategori_pengeluaran');
     }
 };

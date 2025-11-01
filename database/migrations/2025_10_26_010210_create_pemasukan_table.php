@@ -4,28 +4,23 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    public function up(): void
-    {
+return new class extends Migration {
+    public function up(): void {
         Schema::create('pemasukan', function (Blueprint $table) {
             $table->uuid('id_pemasukan')->primary();
             $table->date('tanggal');
             $table->bigInteger('nominal');
-            $table->unsignedBigInteger('id_kategori'); // tipe harus cocok dengan kolom id di kategori_pemasukan
-            $table->text('deskripsi')->nullable();
+            $table->uuid('id_kategori_pemasukan');
+            $table->string('deskripsi', 255)->nullable();
             $table->timestamps();
 
-            // Relasi ke tabel kategori_pemasukan
-            $table->foreign('id_kategori')
-                  ->references('id')
-                  ->on('kategori_pemasukan')
-                  ->onDelete('cascade');
+            $table->foreign('id_kategori_pemasukan')->references('id_kategori_pemasukan')->on('kategori_pemasukan')->onDelete('cascade');
         });
     }
 
-    public function down(): void
-    {
+    public function down(): void {
         Schema::dropIfExists('pemasukan');
     }
 };
+
+

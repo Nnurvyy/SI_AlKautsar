@@ -1,19 +1,19 @@
 @extends('layouts.app')
 
-<!-- 1. Judul Halaman diubah -->
 @section('title', 'Pemasukan')
 
 @section('content')
 
-<!-- Data Dummy -->
 @php
+    // Data dummy transaksi pemasukan
     $transaksi = [
         (object)[
             'tanggal' => '22/10/2025',
             'kategori' => 'Donasi',
             'divisi' => 'Administrasi',
             'santri' => '-',
-            'deskripsi' => 'Donasi',
+            'deskripsi' => 'Donasi Umum dari Donatur',
+            'metode_pembayaran' => 'Tunai',
             'jumlah' => 1000000
         ],
         (object)[
@@ -21,19 +21,22 @@
             'kategori' => 'SPP',
             'divisi' => 'Putra',
             'santri' => 'Panjei (241511019)',
-            'deskripsi' => 'SPP Santri',
+            'deskripsi' => 'SPP Santri Bulan Oktober',
+            'metode_pembayaran' => 'Transfer',
             'jumlah' => 1000000
         ],
         (object)[
-            'tanggal' => '22/10/2025',
+            'tanggal' => '23/10/2025',
             'kategori' => 'Infaq',
             'divisi' => 'Administrasi',
             'santri' => '-',
-            'deskripsi' => 'pemasukan infaq',
+            'deskripsi' => 'Pemasukan Infaq Jumat',
+            'metode_pembayaran' => 'Tunai',
             'jumlah' => 100000
         ],
     ];
-    $totalPemasukan = 2100000; 
+
+    $totalPemasukan = collect($transaksi)->sum('jumlah');
 @endphp
 
 <div class="container-fluid p-4">
@@ -64,17 +67,14 @@
         </div>
         
         <div class="d-flex align-items-center mt-2 mt-md-0">
-            <button type_button" class="btn btn-outline-secondary btn-custom-padding d-flex align-items-center me-2" data-bs-toggle="modal" data-bs-target="#modalKelolaKategori">
+            <button type="button" class="btn btn-outline-secondary btn-custom-padding d-flex align-items-center me-2" data-bs-toggle="modal" data-bs-target="#modalKelolaKategori">
                 <i class="bi bi-tags me-2"></i>
                 Kelola Kategori
             </button>
             
-            <!-- Tombol Tambah Pemasukan (BARU) -->
-            <a href="{{ route('pemasukan.create') }}" class="btn btn-success btn-custom-padding d-flex align-items-center">
-            <i class="bi bi-plus-circle me-2"></i>
-            Tambah Pemasukan
-            </a>
-
+            <a href="#" class="btn btn-success btn-custom-padding d-flex align-items-center">
+                <i class="bi bi-plus-circle me-2"></i>
+                Tambah Pemasukan
             </a>
         </div>
     </div>
@@ -84,8 +84,7 @@
         <h5 class="fw-bold mb-0 text-custom-green">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</h5>
     </div>
 
-
-    <!-- Tabel -->
+    <!-- Tabel Data Dummy -->
     <div class="card transaction-table border-0 shadow-sm">
         <div class="card-body">
             <div class="table-responsive">
@@ -98,48 +97,40 @@
                             <th scope="col" style="width: 12%;">Divisi</th>
                             <th scope="col" style="width: 15%;">Santri</th>
                             <th scope="col">Deskripsi</th> 
+                            <th scope="col" style="width: 13%;">Metode</th>
                             <th scope="col" style="width: 13%;" class="text-end">Jumlah</th>
                             <th scope="col" style="width: 8%;" class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     
                     <tbody>
-    @foreach ($pemasukan as $item)
-    <tr>
-        <td>{{ \Carbon\Carbon::parse($item->tanggal_transaksi)->format('d/m/Y') }}</td>
-        <td>{{ $item->kategori->nama_kategori ?? '-' }}</td>
-        <td>{{ $item->divisi->nama_divisi ?? '-' }}</td>
-        <td>{{ $item->siswa->nama ?? '-' }}</td>
-        <td>{{ $item->deskripsi }}</td>
-        <td>{{ $item->metode_pembayaran }}</td>
-        <td class="text-end text-custom-green fw-bold">Rp {{ number_format($item->nominal, 0, ',', '.') }}</td>
-        <td class="text-center">
-            <a href="{{ route('pemasukan.edit', $item->id_pemasukan) }}" class="btn btn-sm me-1" title="Edit">
-                <i class="bi bi-pencil text-primary fs-5"></i>
-            </a>
-            <form action="{{ route('pemasukan.destroy', $item->id_pemasukan) }}" method="POST" class="d-inline">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-sm" onclick="return confirm('Yakin ingin menghapus?')" title="Hapus">
-                    <i class="bi bi-trash text-danger fs-5"></i>
-                </button>
-            </form>
-        </td>
-    </tr>
-    @endforeach
-</tbody>
+                        @foreach ($transaksi as $item)
+                        <tr>
+                            <td>{{ $item->tanggal }}</td>
+                            <td>{{ $item->kategori }}</td>
+                            <td>{{ $item->divisi }}</td>
+                            <td>{{ $item->santri }}</td>
+                            <td>{{ $item->deskripsi }}</td>
+                            <td>{{ $item->metode_pembayaran }}</td>
+                            <td class="text-end text-custom-green fw-bold">
+                                Rp {{ number_format($item->jumlah, 0, ',', '.') }}
+                            </td>
+                            <td class="text-center">
+                                <a href="#" class="btn btn-sm me-1" title="Edit">
+                                    <i class="bi bi-pencil text-primary fs-5"></i>
+                                </a>
+                                <a href="#" class="btn btn-sm" title="Hapus">
+                                    <i class="bi bi-trash text-danger fs-5"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
 
                 </table>
             </div>
         </div>
     </div>
 </div>
-
-<!-- 
-    Modal untuk Kelola Kategori akan ditaruh di sini nanti.
-    <div class="modal fade" id="modalKelolaKategori" ...>
-    ...
-    </div> 
--->
 
 @endsection

@@ -15,19 +15,12 @@ class Pemasukan extends Model
     protected $primaryKey = 'id_pemasukan';
     public $incrementing = false;
     protected $keyType = 'string';
-
-    protected $fillable = [
-        'id_pemasukan',
-        'tanggal',
-        'nominal',
-        'id_kategori_pemasukan',
-        'deskripsi',
-    ];
+    protected $fillable = ['tanggal', 'nominal', 'id_kategori_pemasukan', 'deskripsi'];
 
     // Relasi ke kategori pemasukan
-    public function kategori()
+    public function kategoriPemasukan()
     {
-        return $this->belongsTo(PemasukanKategori::class, 'id_kategori_pemasukan', 'id_kategori_pemasukan');
+        return $this->belongsTo(KategoriPemasukan::class, 'id_kategori_pemasukan');
     }
 
     // Generate UUID otomatis

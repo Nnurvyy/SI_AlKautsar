@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Sistem Informasi Keuangan</title>
+    <title>Login - E-Masjid</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -14,6 +17,24 @@
             min-height: 100vh;
             margin: 0;
         }
+        
+        /* ====================================================== */
+        /* BARU: Style untuk Tombol Back                          */
+        /* ====================================================== */
+        .back-link {
+            position: absolute; /* Tetap di pojok layar */
+            top: 1.5rem;
+            left: 1.5rem;
+            font-size: 1.8rem; /* Ukuran ikon */
+            color: #6b7280; /* Warna abu-abu */
+            text-decoration: none;
+            transition: color 0.2s;
+            z-index: 10;
+        }
+        .back-link:hover {
+            color: #111827; /* Jadi hitam saat di-hover */
+        }
+        
         .login-card {
             background-color: #ffffff;
             border-radius: 12px;
@@ -22,6 +43,8 @@
             width: 100%;
             max-width: 400px; 
             text-align: center;
+            /* BARU: Tambahkan position relative agar icon back tidak tertimpa di mobile */
+            position: relative; 
         }
         .login-icon {
             display: inline-flex;
@@ -103,19 +126,48 @@
             width: 20px;
             height: 20px;
         }
+
+        /* Style Responsif untuk Mobile */
+        @media (max-width: 576px) {
+            body {
+                background-color: #ffffff;
+                display: block; 
+                align-items: normal;
+                justify-content: normal;
+                /* DIUBAH: padding-top ditambah agar tidak tertimpa ikon back */
+                padding-top: 5rem; 
+                min-height: auto;
+            }
+            .login-card {
+                box-shadow: none; 
+                border-radius: 0; 
+                max-width: 100%;
+                padding: 1.5rem;
+            }
+
+            /* Sesuaikan posisi tombol back di mobile */
+            .back-link {
+                top: 1rem;
+                left: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
+    
+    <a href="{{ route('public.landing') }}" class="back-link" title="Kembali ke Beranda">
+        <i class="bi bi-arrow-left"></i>
+    </a>
     
     <div class="login-card">
         <div class="login-icon">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 24px; height: 24px;">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-            </svg>              
+            </svg>                      
         </div>
         
-        <h1>Sistem Informasi Keuangan</h1>
-        <p>Pesantren Al Kautsar 561</p>
+        <h1>Sistem Informasi</h1>
+        <p>E-Masjid</p>
 
         <form action="{{ route('login.process') }}" method="POST">
             @csrf 
@@ -144,7 +196,7 @@
                         
                         <svg id="icon-eye-slash" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
-                        </svg>                          
+                        </svg>                                  
                     </span>
                 </div>
 

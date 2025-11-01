@@ -6,22 +6,24 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
-class User extends Authenticatable
+class Pengguna extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    protected $table = 'pengguna';
     protected $fillable = [
-        'name',
+        'nama',
         'email',
         'password',
+        'role',
     ];
+
+    protected $primaryKey = 'id_pengguna';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     /**
      * The attributes that should be hidden for serialization.
@@ -45,4 +47,19 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    protected static function booted(): void
+    {
+        static::creating(function ($model) {
+            if (empty($model->{$model->getKeyName()})) {
+                $model->{$model->getKeyName()} = (string) Str::uuid();
+            }
+        });
+    }
+
+    public function tabunganHewanQurban()
+    {
+        return $this->hasMany(TabunganHewanQurban::class, 'id_pengguna');
+    }
+
 }

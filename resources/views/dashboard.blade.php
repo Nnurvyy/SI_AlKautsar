@@ -37,11 +37,11 @@
             <div class="card stat-card">
                 <div class="card-body">
                     <div>
-                        <p class="text-muted mb-1">Saldo</p>
-                        <h5 class="fw-bold mb-0">Rp 2.000.001</h5>
+                        <p class="text-muted mb-1">Total Tabungan Qurban</p>
+                        <h5 class="fw-bold mb-0">Rp 2.000.000</h5>
                     </div>
-                    <div class="stat-card-icon bg-custom-blue-light text-custom-blue">
-                        <i class="bi bi-wallet2"></i>
+                    <div class="stat-card-icon bg-custom-yellow-light text-custom-yellow">
+                        <i class="bi bi-person-check"></i>
                     </div>
                 </div>
             </div>
@@ -50,11 +50,11 @@
             <div class="card stat-card">
                 <div class="card-body">
                     <div>
-                        <p class="text-muted mb-1">Total Santri Aktif</p>
-                        <h5 class="fw-bold mb-0">1</h5>
+                        <p class="text-muted mb-1">Saldo</p>
+                        <h5 class="fw-bold mb-0">Rp 2.000.001</h5>
                     </div>
-                    <div class="stat-card-icon bg-custom-yellow-light text-custom-yellow">
-                        <i class="bi bi-person-check"></i>
+                    <div class="stat-card-icon bg-custom-blue-light text-custom-blue">
+                        <i class="bi bi-wallet2"></i>
                     </div>
                 </div>
             </div>
