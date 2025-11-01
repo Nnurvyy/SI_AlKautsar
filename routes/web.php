@@ -67,6 +67,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('khotib-jumat', KhotibJumatController::class);
     Route::get('khotib-jumat-data', [KhotibJumatController::class, 'data'])->name('khotib-jumat.data');
 
+
+    // (WAJIB) TAMBAHKAN INI UNTUK KAJIAN
+    Route::resource('kajian', \App\Http\Controllers\KajianController::class);
+    Route::get('kajian-data', [\App\Http\Controllers\KajianController::class, 'data'])->name('kajian.data');
+    
     // ... (Tambahkan rute admin lainnya di sini) ...
 
 });
