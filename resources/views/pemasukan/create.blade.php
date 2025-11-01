@@ -9,56 +9,36 @@
     <form action="{{ route('pemasukan.store') }}" method="POST">
         @csrf
 
+        {{-- Kategori Pemasukan --}}
         <div class="mb-3">
-            <label class="form-label">Divisi</label>
-            <select name="id_divisi" class="form-select" required>
-                <option value="">Pilih Divisi</option>
-                @foreach($divisi as $d)
-                    <option value="{{ $d->id_divisi }}">{{ $d->nama_divisi }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Kategori</label>
-            <select name="id_kategori" class="form-select" required>
+            <label class="form-label">Kategori Pemasukan</label>
+            <select name="id_kategori_pemasukan" class="form-select" required>
                 <option value="">Pilih Kategori</option>
                 @foreach($kategori as $k)
-                    <option value="{{ $k->id_kategori }}">{{ $k->nama_kategori }}</option>
+                    <option value="{{ $k->id_kategori_pemasukan }}">{{ $k->nama_kategori_pemasukan }}</option>
                 @endforeach
             </select>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Santri (Opsional)</label>
-            <select name="id_siswa" class="form-select">
-                <option value="">Tidak ada</option>
-                @foreach($siswa as $s)
-                    <option value="{{ $s->id }}">{{ $s->nama }} ({{ $s->nis }})</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">Metode Pembayaran</label>
-            <input type="text" name="metode_pembayaran" class="form-control" required>
-        </div>
-
+        {{-- Nominal --}}
         <div class="mb-3">
             <label class="form-label">Nominal</label>
-            <input type="number" name="nominal" class="form-control" required>
+            <input type="number" name="nominal" class="form-control" placeholder="Masukkan jumlah pemasukan" required>
         </div>
 
+        {{-- Deskripsi --}}
         <div class="mb-3">
             <label class="form-label">Deskripsi</label>
-            <textarea name="deskripsi" class="form-control" rows="3"></textarea>
+            <textarea name="deskripsi" class="form-control" rows="3" placeholder="Opsional"></textarea>
         </div>
 
+        {{-- Tanggal --}}
         <div class="mb-3">
-            <label class="form-label">Tanggal Transaksi</label>
-            <input type="date" name="tanggal_transaksi" class="form-control" required>
+            <label class="form-label">Tanggal</label>
+            <input type="date" name="tanggal" class="form-control" required>
         </div>
 
+        {{-- Tombol --}}
         <button type="submit" class="btn btn-success">Simpan</button>
         <a href="{{ route('pemasukan.index') }}" class="btn btn-secondary">Batal</a>
     </form>
