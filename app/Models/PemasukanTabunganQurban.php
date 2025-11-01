@@ -11,12 +11,8 @@ class PemasukanTabunganQurban extends Model
 
     protected $table = 'pemasukan_tabungan_qurban';
     protected $primaryKey = 'id_pemasukan_tabungan_qurban';
-    protected $fillable = ['id_pengguna', 'tanggal', 'nominal'];
+    protected $fillable = ['id_tabungan_hewan_qurban', 'tanggal', 'nominal'];
 
-    public function pengguna()
-    {
-        return $this->belongsTo(Pengguna::class, 'id_pengguna');
-    }
 
     // RELASI KE TABUNGAN HEWAN QURBAN
     public function tabunganHewanQurban()

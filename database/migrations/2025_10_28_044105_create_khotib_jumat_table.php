@@ -12,9 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('khotib_jumat', function (Blueprint $table) {
-            $table->uuid('id_khotib_jumat')->primary();
-            $table->string('nama_khotib_jumat', 100);
-            $table->string('tema_khotib_jumat', 255);
+            $table->uuid('id_khutbah')->primary();
+            $table->string('nama_khotib', 100);
+            $table->string('foto_khotib')->nullable();
+            $table->string('nama_imam', 100);
+            $table->string('tema_khutbah', 255);
             $table->date('tanggal');
             $table->timestamps();
         });

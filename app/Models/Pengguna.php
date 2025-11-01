@@ -62,10 +62,4 @@ class Pengguna extends Authenticatable
         return $this->hasMany(TabunganHewanQurban::class, 'id_pengguna');
     }
 
-    // RELASI KE PEMASUKAN TABUNGAN QURBAN
-    public function pemasukanTabunganQurban()
-    {
-        return $this->hasMany(PemasukanTabunganQurban::class, 'id_pengguna');
-    }
-
 }

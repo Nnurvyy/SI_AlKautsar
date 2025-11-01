@@ -4,9 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PemasukanController;
 use App\Http\Controllers\PengeluaranController;
-use App\Http\Controllers\DataSantriController;
-use App\Http\Controllers\DivisiController;
-
+use App\Http\Controllers\KhotibJumatController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -34,6 +32,11 @@ Route::middleware(['auth'])->group(function () {
     // Pengeluaran
     Route::get('/pengeluaran', [PengeluaranController::class, 'index'])
          ->name('pengeluaran');
+
+    // Khotib Jumat
+    Route::resource('khotib-jumat', KhotibJumatController::class);
+    Route::get('khotib-jumat-data', [KhotibJumatController::class, 'data'])->name('khotib-jumat.data');
+
 });
 
 // Halaman utama diarahkan ke login

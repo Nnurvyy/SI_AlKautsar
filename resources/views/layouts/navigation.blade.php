@@ -31,8 +31,13 @@
             </a>
         </li>
         <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="{{ route('khotib-jumat.index') }}" class="nav-link {{ request()->routeIs('khotib-jumat.index') ? 'active' : '' }}">
                 <i class="bi bi-person-fill"></i> Khotib Jumat
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="#" class="nav-link">
+                <i class="bi bi-person-fill"></i> Kajian
             </a>
         </li>
         <li class="nav-item">
