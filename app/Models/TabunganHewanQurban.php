@@ -15,13 +15,22 @@ class TabunganHewanQurban extends Model
         'nama_hewan',
         'total_hewan',
         'total_tabungan',
-        'id_user',
-        'total_harga_hewan_qurban'
+        'id_pengguna',
+        'total_harga_hewan_qurban',
     ];
 
     public function pengguna()
     {
         return $this->belongsTo(Pengguna::class, 'id_pengguna');
+    }
+
+    /**
+     * TAMBAHKAN FUNGSI INI
+     * (Agar Trait HasUuids tahu kolom mana yang harus diisi)
+     */
+    public function uniqueIds()
+    {
+        return ['id_tabungan_hewan_qurban'];
     }
 
     // RELASI KE PEMASUKAN TABUNGAN QURBAN

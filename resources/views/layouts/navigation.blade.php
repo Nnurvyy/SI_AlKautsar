@@ -46,7 +46,7 @@
         </li>
         <li class="nav-item">
             <a href="#" class="nav-link">
-                <i class="bi bi-collection"></i> Stok & Inventori 
+                <i class="bi bi-collection"></i> Stok & Inventori
             </a>
         </li>
         <li class="nav-item">
@@ -55,8 +55,8 @@
             </a>
         </li>
         <li class="nav-item">
-            <a href="#" class="nav-link">
-                <i class="bi bi-wallet"></i> Tabungan Hewan Qurban
+            <a href="{{ route('admin.tabungan-qurban.index') }}" class="nav-link {{ request()->routeIs('admin.tabungan-qurban.*') ? 'active' : '' }}">
+                <i class="bi bi-wallet-fill"></i>  Tabungan Qurban
             </a>
         </li>
     </ul>

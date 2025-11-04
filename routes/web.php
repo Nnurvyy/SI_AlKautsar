@@ -6,7 +6,9 @@ use App\Http\Controllers\PemasukanController;
 use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\KhotibJumatController;
 use App\Http\Controllers\PublicController;
-use App\Http\Controllers\QurbanController;
+use App\Http\Controllers\TabunganHewanQurbanController;
+use App\Http\Controllers\PemasukanTabunganQurbanController;
+
 
 
 /*
@@ -53,13 +55,13 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 |
 */
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    
+
     // Dashboard (URL: /admin/dashboard)
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
-    
+
     // Pemasukan (URL: /admin/pemasukan)
     Route::resource('pemasukan', PemasukanController::class);
-    
+
     // Pengeluaran (URL: /admin/pengeluaran)
     Route::get('/pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran');
 
@@ -69,6 +71,17 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // ... (Tambahkan rute admin lainnya di sini) ...
 
+// --- RUTE TABUNGAN QURBAN (CRUD INDUK TABUNGAN) ---
+    // URL: /admin/tabungan-qurban
+    // Nama rute: admin.tabungan-qurban.store, admin.tabungan-qurban.show, dll.
+    Route::resource('tabungan-qurban', TabunganHewanQurbanController::class);
+
+    // 2. Rute untuk mengambil data JSON
+    // URL: /admin/tabungan-qurban-data
+    // Nama rute: admin.tabungan-qurban.data
+    Route::get('tabungan-qurban-data', [TabunganHewanQurbanController::class, 'data'])->name('tabungan-qurban.data');
+    Route::resource('pemasukan-qurban', PemasukanTabunganQurbanController::class)
+        ->parameter('pemasukan-qurban', 'id');
 });
 
 
@@ -83,10 +96,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 |
 */
 Route::middleware(['auth', 'role:publik'])->name('public.')->group(function () {
-    
+
     // URL: /qurban-saya
     Route::get('/qurban-saya', [QurbanController::class, 'index'])->name('qurban');
-    
+
     // ... (Tambahkan rute 'publik' terotentikasi lainnya di sini) ...
 
 });
