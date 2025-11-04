@@ -7,6 +7,7 @@ use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\KhotibJumatController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\QurbanController;
+use App\Http\Controllers\LapKeuController;
 
 
 /*
@@ -66,6 +67,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Khotib Jumat (URL: /admin/khotib-jumat)
     Route::resource('khotib-jumat', KhotibJumatController::class);
     Route::get('khotib-jumat-data', [KhotibJumatController::class, 'data'])->name('khotib-jumat.data');
+
+    // Laporan Keuangan
+    Route::get('/lapkeu', [LapKeuController::class, 'index'])->name('lapkeu.index');
+    Route::get('/lapkeu/export-pdf', [LapKeuController::class, 'exportPdf'])->name('lapkeu.export.pdf');
 
     // ... (Tambahkan rute admin lainnya di sini) ...
 

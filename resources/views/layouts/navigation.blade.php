@@ -25,7 +25,7 @@
             </a>
         </li>
         <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="{{ route('admin.lapkeu.index') }}" class="nav-link {{ request()->routeIs('admin.lapkeu.*') ? 'active' : '' }}">
                 <i class="bi bi-file-earmark-text"></i> Laporan Keuangan
             </a>
         </li>
@@ -57,6 +57,16 @@
         <li class="nav-item">
             <a href="#" class="nav-link">
                 <i class="bi bi-wallet"></i> Tabungan Hewan Qurban
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="#" class="nav-link">
+                <i class="bi bi-file-earmark-text"></i> Laporan Tabungan Qurban
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="#" class="nav-link">
+                <i class="bi bi-exclamation-triangle"></i> Peringatan
             </a>
         </li>
     </ul>
