@@ -72,6 +72,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/lapkeu', [LapKeuController::class, 'index'])->name('lapkeu.index');
     Route::get('/lapkeu/export-pdf', [LapKeuController::class, 'exportPdf'])->name('lapkeu.export.pdf');
 
+
+    // (WAJIB) TAMBAHKAN INI UNTUK KAJIAN
+    Route::resource('kajian', \App\Http\Controllers\KajianController::class);
+    Route::get('kajian-data', [\App\Http\Controllers\KajianController::class, 'data'])->name('kajian.data');
+    
     // ... (Tambahkan rute admin lainnya di sini) ...
 
 });

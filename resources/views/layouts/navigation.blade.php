@@ -39,8 +39,8 @@
                 <i class="bi bi-person-fill"></i> Khotib Jumat
             </a>
         </li>
-        <li class="nav-item">
-            <a href="#" class="nav-link">
+       <li class="nav-item">
+            <a href="{{ route('admin.kajian.index') }}" class="nav-link {{ request()->routeIs('admin.kajian.*') ? 'active' : '' }}">
                 <i class="bi bi-person-fill"></i> Kajian
             </a>
         </li>
