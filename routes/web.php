@@ -71,17 +71,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // ... (Tambahkan rute admin lainnya di sini) ...
 
-// --- RUTE TABUNGAN QURBAN (CRUD INDUK TABUNGAN) ---
-    // URL: /admin/tabungan-qurban
-    // Nama rute: admin.tabungan-qurban.store, admin.tabungan-qurban.show, dll.
+    Route::get('tabungan-qurban/cetak', [TabunganHewanQurbanController::class, 'cetak'])
+        ->name('tabungan-qurban.cetak');
+
+    Route::get('tabungan-qurban-data', [TabunganHewanQurbanController::class, 'data'])->name('tabungan-qurban.data');
+
     Route::resource('tabungan-qurban', TabunganHewanQurbanController::class);
 
-    // 2. Rute untuk mengambil data JSON
-    // URL: /admin/tabungan-qurban-data
-    // Nama rute: admin.tabungan-qurban.data
-    Route::get('tabungan-qurban-data', [TabunganHewanQurbanController::class, 'data'])->name('tabungan-qurban.data');
     Route::resource('pemasukan-qurban', PemasukanTabunganQurbanController::class)
         ->parameter('pemasukan-qurban', 'id');
+
 });
 
 

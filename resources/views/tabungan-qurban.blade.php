@@ -32,7 +32,30 @@
 
 {{-- Sesuaikan 'content' dengan @yield di layouts/app.blade.php --}}
 @section('content')
-    <div class="container-fluid">
+    <div class="container-fluid pt-4">
+
+        {{-- BARIS BARU UNTUK TOMBOL CETAK LAPORAN --}}
+        <div class="d-flex justify-content-end mb-3">
+            <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownCetak" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-print fa-sm"></i> Cetak Laporan PDF
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownCetak">
+                    <li>
+                        <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('formCetakBulanIni').submit();">
+                            Laporan Bulan Ini
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('formCetak30Hari').submit();">
+                            Laporan 30 Hari Terakhir
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        {{-- Ini adalah baris judul dan tombol "Tambah Tabungan" Anda yang sudah ada --}}
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h3 mb-0 text-gray-800">Tabungan Hewan Qurban</h1>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahTabungan">
@@ -40,6 +63,7 @@
             </button>
         </div>
 
+        {{-- Sisa dari file Anda (Card, Tabel, Modal, dll.) tetap sama --}}
         <div class="card shadow mb-4">
             <div class="card-body">
                 <div class="table-responsive">
@@ -48,7 +72,6 @@
                            data-url-show="{{ route('admin.tabungan-qurban.show', ['tabungan_qurban' => '__ID__']) }}"
                            data-url-update="{{ route('admin.tabungan-qurban.update', ['tabungan_qurban' => '__ID__']) }}"
                            data-url-destroy="{{ route('admin.tabungan-qurban.destroy', ['tabungan_qurban' => '__ID__']) }}"
-
                            data-url-setoran-destroy="{{ route('admin.pemasukan-qurban.destroy', ['id' => '__ID__']) }}"
                     >
                         <thead>
@@ -70,6 +93,14 @@
             </div>
         </div>
     </div>
+
+    {{-- FORM TERSEMBUNYI UNTUK MENGIRIM PERMINTAAN CETAK --}}
+    <form id="formCetakBulanIni" action="{{ route('admin.tabungan-qurban.cetak') }}" method="GET" target="_blank">
+        <input type="hidden" name="type" value="bulan_ini">
+    </form>
+    <form id="formCetak30Hari" action="{{ route('admin.tabungan-qurban.cetak') }}" method="GET" target="_blank">
+        <input type="hidden" name="type" value="30_hari">
+    </form>
 
     <div class="modal fade" id="modalTambahTabungan" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
