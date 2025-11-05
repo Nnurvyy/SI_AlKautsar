@@ -41,12 +41,12 @@
             </a>
         </li>
         <li class="nav-item">
-            <a href="{{ route('inventaris') }}" class="nav-link {{ request()->routeIs('inventaris') ? 'active' : '' }}">
+            <a href="{{ route('inventaris.index') }}" class="nav-link {{ request()->routeIs('inventaris.index') ? 'active' : '' }}">
                 <i class="bi bi-collection"></i> Stok & Inventori 
             </a>
         </li>
         <li class="nav-item">
-            <a href="{{ route('infaq-jumat') }}" class="nav-link {{ request()->routeIs('infaq-jumat') ? 'active' : '' }}">
+            <a href="{{ route('infaq-jumat.index') }}" class="nav-link {{ request()->routeIs('infaq-jumat.index') ? 'active' : '' }}">
                 <i class="bi bi-cash-coin"></i> Infaq Jumat
             </a>
         </li>

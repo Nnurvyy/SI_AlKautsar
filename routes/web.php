@@ -40,12 +40,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('khotib-jumat-data', [KhotibJumatController::class, 'data'])->name('khotib-jumat.data');
 
     //infaq juamt
-    Route::get('/infaq-jumat', [InfaqJumatController::class, 'index'])
-         ->name('infaq-jumat');
+    Route::resource('infaq-jumat', InfaqJumatController::class)->only([
+        'index','store', 'update', 'destroy', 'show'
+    ]);
+    Route::get('infaq-jumat-data', [InfaqJumatController::class, 'data'])->name('infaq-jumat.data');
 
     //inventaris dan stock
-    Route::get('/inventaris', [BarangInventarisController::class, 'index'])
-         ->name('inventaris');
+    Route::resource('inventaris', BarangInventarisController::class)->only([
+        'index','store', 'update', 'destroy', 'show'
+    ]);
+    Route::get('inventaris-data', [BarangInventarisController::class, 'data'])->name('inventaris.data');
 });
 
 // Halaman utama diarahkan ke login

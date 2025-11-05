@@ -36,8 +36,9 @@
                     <thead class="table-light">
                         <tr> 
                             <th scope="col" style="width: 5%;" class="text-center">No</th>
-                            <th scope="col" style="width: 35%;" class="text-center">Tanggal</th>
-                            <th scope="col" style="width: 60%;" class="text-center">Nominal</th>
+                            <th scope="col" style="width: 20%;" class="text-center">Tanggal</th>
+                            <th scope="col" style="width: 30%;" class="text-center">Nominal</th>
+                            <th scope="col" style="width: 30%;" class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -123,5 +124,5 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="{{ asset('js/khotib.js') }}"></script>
+<script src="{{ asset('js/infaq.js') }}"></script>
 @endsection
