@@ -45,12 +45,12 @@
             </a>
         </li>
         <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="{{ route('admin.inventaris.index') }}" class="nav-link {{ request()->routeIs('admin.inventaris.index') ? 'active' : '' }}">
                 <i class="bi bi-collection"></i> Stok & Inventori 
             </a>
         </li>
         <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="{{ route('admin.infaq-jumat.index') }}" class="nav-link {{ request()->routeIs('admin.infaq-jumat.index') ? 'active' : '' }}">
                 <i class="bi bi-cash-coin"></i> Infaq Jumat
             </a>
         </li>

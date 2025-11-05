@@ -8,8 +8,8 @@ use App\Http\Controllers\KhotibJumatController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\QurbanController;
 use App\Http\Controllers\LapKeuController;
-
-
+use App\Http\Controllers\InfaqJumatController;
+use App\Http\Controllers\BarangInventarisController;
 /*
 |--------------------------------------------------------------------------
 | Rute Publik (Guest / Tamu)
@@ -68,6 +68,17 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('khotib-jumat', KhotibJumatController::class);
     Route::get('khotib-jumat-data', [KhotibJumatController::class, 'data'])->name('khotib-jumat.data');
 
+    //infaq juamt
+    Route::resource('infaq-jumat', InfaqJumatController::class)->only([
+        'index','store', 'update', 'destroy', 'show'
+    ]);
+    Route::get('infaq-jumat-data', [InfaqJumatController::class, 'data'])->name('infaq-jumat.data');
+
+    //inventaris dan stock
+    Route::resource('inventaris', BarangInventarisController::class)->only([
+        'index','store', 'update', 'destroy', 'show'
+    ]);
+    Route::get('inventaris-data', [BarangInventarisController::class, 'data'])->name('inventaris.data');
     // Laporan Keuangan
     Route::get('/lapkeu', [LapKeuController::class, 'index'])->name('lapkeu.index');
     Route::get('/lapkeu/export-pdf', [LapKeuController::class, 'exportPdf'])->name('lapkeu.export.pdf');
