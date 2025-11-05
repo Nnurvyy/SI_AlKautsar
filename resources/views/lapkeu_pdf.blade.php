@@ -22,7 +22,7 @@
 
     <div class="header">
         <h1>Laporan Keuangan</h1>
-        <p>E-Masjid (Nama Masjid Kamu)</p>
+        <p>E-Masjid (Al-Kautsar 561)</p>
         <p>Dicetak pada: {{ $tanggalCetak }}</p>
     </div>
 

@@ -33,6 +33,7 @@
                             <option value="semua" selected>Semua</option>
                             <option value="per_bulan">Per Bulan</option>
                             <option value="per_tahun">Per Tahun</option>
+                            <option value="rentang_waktu">Rentang Waktu</option>
                         </select>
                     </div>
 
@@ -73,6 +74,19 @@
                             <option value="2024">2024</option>
                             <option value="2023">2023</option>
                         </select>
+                    </div>
+
+                    <div class="col-md-4" id="filter-rentang" style="display: none;">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label for="tanggal_mulai" class="form-label">Tanggal Mulai</label>
+                                <input type="date" class="form-control" id="tanggal_mulai" name="tanggal_mulai">
+                            </div>
+                            <div class="col-6">
+                                <label for="tanggal_akhir" class="form-label">Tanggal Akhir</label>
+                                <input type="date" class="form-control" id="tanggal_akhir" name="tanggal_akhir">
+                            </div>
+                        </div>
                     </div>
 
                 </div> <div class="row">
@@ -122,7 +136,8 @@
     <div class="card transaction-table border-0 shadow-sm">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
             <h5 class="mb-0 fw-bold">Data Transaksi - Semua Periode</h5>
-            <small class="text-muted">0 transaksi</small> </div>
+            <small class="text-muted">0 transaksi</small> 
+        </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
@@ -153,33 +168,32 @@
 
 @push('scripts')
 <script>
-    // Jalankan saat dokumen siap
     document.addEventListener('DOMContentLoaded', function() {
         
         const periodeFilter = document.getElementById('filter-periode');
         const filterBulanan = document.getElementById('filter-bulanan');
         const filterTahunan = document.getElementById('filter-tahunan');
+        const filterRentang = document.getElementById('filter-rentang'); 
 
-        // Fungsi untuk mengecek filter
         function toggleFilterVisibility() {
             const selectedValue = periodeFilter.value;
 
             // Sembunyikan semua dulu
             filterBulanan.style.display = 'none';
             filterTahunan.style.display = 'none';
+            filterRentang.style.display = 'none'; 
 
             // Tampilkan yang sesuai
             if (selectedValue === 'per_bulan') {
                 filterBulanan.style.display = 'block';
             } else if (selectedValue === 'per_tahun') {
                 filterTahunan.style.display = 'block';
+            } else if (selectedValue === 'rentang_waktu') { 
+                filterRentang.style.display = 'block';
             }
         }
 
-        // Jalankan fungsi saat filter berubah
         periodeFilter.addEventListener('change', toggleFilterVisibility);
-
-        // Jalankan fungsi saat halaman pertama kali dimuat
         toggleFilterVisibility();
     });
 </script>

@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Pemasukan;      // <-- 1. Import Model
-use App\Models\Pengeluaran;    // <-- 2. Import Model
-use Barryvdh\DomPDF\Facade\Pdf;  // <-- 3. Import PDF
-use Carbon\Carbon; // <-- Pastikan Carbon di-import
+use App\Models\Pemasukan;
+use App\Models\Pengeluaran;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 class LapKeuController extends Controller
 {
@@ -15,18 +15,20 @@ class LapKeuController extends Controller
         return view('lapkeu');
     }
 
-    // FUNGSI BARU UNTUK EXPORT
     public function exportPdf(Request $request)
     {
-        // 1. Ambil semua input filter dari URL
+        // 1. Ambil semua input filter
         $tipe = $request->input('tipe_transaksi', 'semua');
         $periode = $request->input('periode', 'semua');
         
-        // --- PERBAIKAN DI SINI: Ubah input menjadi integer ---
+        // Ambil input integer
         $bulan = (int)$request->input('bulan');
         $tahun_bulanan = (int)$request->input('tahun_bulanan');
         $tahun_tahunan = (int)$request->input('tahun_tahunan');
-        // --- AKHIR PERBAIKAN ---
+        
+        // 1. (BARU) Ambil input rentang tanggal
+        $tanggal_mulai = $request->input('tanggal_mulai');
+        $tanggal_akhir = $request->input('tanggal_akhir');
 
         // 2. Siapkan query builder
         $pemasukanQuery = Pemasukan::query();
@@ -40,8 +42,6 @@ class LapKeuController extends Controller
             $pemasukanQuery->whereMonth('tanggal', $bulan)->whereYear('tanggal', $tahun_bulanan);
             $pengeluaranQuery->whereMonth('tanggal', $bulan)->whereYear('tanggal', $tahun_bulanan);
             
-            // Konversi bulan (angka) ke nama bulan
-            // Variabel $bulan sekarang sudah pasti integer
             $namaBulan = Carbon::create()->month($bulan)->locale('id')->monthName;
             $periodeTeks = "Periode: " . $namaBulan . " " . $tahun_bulanan;
 
@@ -49,11 +49,22 @@ class LapKeuController extends Controller
             $pemasukanQuery->whereYear('tanggal', $tahun_tahunan);
             $pengeluaranQuery->whereYear('tanggal', $tahun_tahunan);
             $periodeTeks = "Periode: Tahun " . $tahun_tahunan;
+
+        // 2. (BARU) Tambahkan logika untuk rentang waktu
+        } elseif ($periode == 'rentang_waktu' && $tanggal_mulai && $tanggal_akhir) {
+            // Gunakan whereBetween untuk query rentang tanggal
+            $pemasukanQuery->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
+            $pengeluaranQuery->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
+            
+            // Format teks periode untuk PDF
+            $periodeTeks = "Periode: " . 
+                           Carbon::parse($tanggal_mulai)->locale('id')->translatedFormat('d F Y') . " - " . 
+                           Carbon::parse($tanggal_akhir)->locale('id')->translatedFormat('d F Y');
         }
         
-        // 5. Terapkan FILTER TIPE TRANSAKSI (setelah filter tanggal)
-        $pemasukanData = collect(); // Buat koleksi kosong
-        $pengeluaranData = collect(); // Buat koleksi kosong
+        // 5. Terapkan FILTER TIPE TRANSAKSI
+        $pemasukanData = collect();
+        $pengeluaranData = collect();
 
         if ($tipe == 'pemasukan' || $tipe == 'semua') {
             $pemasukanData = $pemasukanQuery->orderBy('tanggal', 'asc')->get();
@@ -68,20 +79,19 @@ class LapKeuController extends Controller
         $totalPengeluaran = $pengeluaranData->sum('nominal');
         $saldo = $totalPemasukan - $totalPengeluaran;
 
-        // 7. Siapkan semua data untuk dikirim ke PDF view
+        // 7. Siapkan data untuk PDF view
         $data = [
             'pemasukanData' => $pemasukanData,
             'pengeluaranData' => $pengeluaranData,
             'totalPemasukan' => $totalPemasukan,
             'totalPengeluaran' => $totalPengeluaran,
             'saldo' => $saldo,
-            'tipe' => $tipe, // Untuk logika di PDF
+            'tipe' => $tipe,
             'periodeTeks' => $periodeTeks,
             'tanggalCetak' => now()->locale('id')->translatedFormat('d F Y')
         ];
         
-        // 8. Load view PDF dan kirim data, lalu download
-        // Pastikan nama view-nya benar (lapkeu_pdf atau laporan_pdf)
+        // 8. Load view PDF
         $pdf = Pdf::loadView('lapkeu_pdf', $data); 
         return $pdf->download('laporan-keuangan-' . time() . '.pdf');
     }
