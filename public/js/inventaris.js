@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center"><div class="spinner-border text-primary"></div></td></tr>`;
 
         // Ganti endpoint API
-        const url = `/inventaris-data?page=${state.currentPage}&search=${state.search}&perPage=${state.perPage}&sortBy=${state.sortBy}&sortDir=${state.sortDir}`;
+        const url = `/admin/inventaris-data?page=${state.currentPage}&search=${state.search}&perPage=${state.perPage}&sortBy=${state.sortBy}&sortDir=${state.sortDir}`;
 
         try {
             const res = await fetch(url);
@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Konfigurasi endpoint
             // Ganti Endpoint
-            const url = id ? `/inventaris/${id}` : '/inventaris'; 
+            const url = id ? `/admin/inventaris/${id}` : '/admin/inventaris'; 
             // Tambahkan _method=PUT untuk UPDATE
             if (id) formData.append('_method', 'PUT');
 
@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.editBarangInventaris = async function(id_barang) {
         try {
             // Ganti endpoint
-            const res = await fetch(`/inventaris/${id_barang}`); 
+            const res = await fetch(`/admin/inventaris/${id_barang}`); 
             if (!res.ok) throw new Error('Data barang inventaris tidak ditemukan');
             const data = await res.json();
 
@@ -326,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('_method', 'DELETE');
 
             // Ganti endpoint
-            const res = await fetch(`/inventaris/${id_barang}`, {
+            const res = await fetch(`/admin/inventaris/${id_barang}`, {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
                 body: formData

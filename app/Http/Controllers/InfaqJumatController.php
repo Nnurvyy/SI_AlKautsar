@@ -66,16 +66,19 @@ class InfaqJumatController extends Controller
     }
 
     // Dipanggil oleh: GET /infaq-jumat/{id} (READ untuk Edit)
-    public function show($id_infaq) // Menggunakan $id_infaq agar lebih jelas
+        public function show($id_infaq) 
     {
         // Menggunakan findOrFail untuk mengambil data berdasarkan Primary Key
-        // Model akan otomatis menggunakan $primaryKey yang Anda definisikan di Model
         $infaq = InfaqJumat::findOrFail($id_infaq);
         
-        // Mengembalikan data dengan kunci 'id_infaq'
+        // PERBAIKAN: Mengambil nilai Primary Key yang benar (id_infaq_jumat) 
+        // dan melakukan pengecekan null sebelum format tanggal.
+        $idKey = $infaq->getKeyName();
+        $tanggalInfaq = $infaq->tanggal_infaq ? $infaq->tanggal_infaq->format('Y-m-d') : null;
+
         return response()->json([
-            'id_infaq' => $infaq->{$infaq->getKeyName()}, // Mengambil nilai PK secara dinamis (id_infaq_jumat)
-            'tanggal_infaq' => $infaq->tanggal_infaq->format('Y-m-d'),
+            'id_infaq' => $infaq->{$idKey},
+            'tanggal_infaq' => $tanggalInfaq, // Tanggal diformat ke string YYYY-MM-DD
             'nominal_infaq' => $infaq->nominal_infaq,
         ]);
     }

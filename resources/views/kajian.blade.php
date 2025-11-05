@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Khotib Jumat')
+@section('title', 'Manajemen Kajian') {{-- Ganti Judul --}}
 
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -24,35 +24,38 @@
                 <span class="input-group-text bg-white border-end-0">
                     <i class="bi bi-search"></i>
                 </span>
-                <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Cari khotib, imam, tema, atau tanggal...">
+                {{-- Ganti placeholder --}}
+                <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Cari penceramah, tema, atau tanggal...">
             </div>
         </div>
         
-        {{-- Tombol Tambah Khotib --}}
+        {{-- Tombol Tambah --}}
         <div class="d-flex align-items-center mt-2 mt-md-0">
-            <button class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalKhotib">
+            {{-- Ganti ID Modal --}}
+            <button class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalKajian">
                 <i class="bi bi-plus-circle me-2"></i>
-                Tambah Khutbah
+                Tambah Kajian
             </button>
         </div>
     </div>
 
     <div class="d-flex justify-content-between align-items-center p-3 bg-white rounded shadow-sm mb-4">
-        <h5 class="fw-bold mb-0">Data Khutbah Jumat</h5>
+        <h5 class="fw-bold mb-0">Data Kajian</h5>
     </div>
 
     {{-- Wrapper Tabel --}}
     <div class="card transaction-table border-0 shadow-sm">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover align-middle" id="tabelKhotib">
+                {{-- Ganti ID Tabel --}}
+                <table class="table table-hover align-middle" id="tabelKajian">
                     <thead class="table-light">
                         <tr> 
                             <th scope="col" style="width: 5%;" class="text-center">No</th>
                             <th scope="col" style="width: 10%;" class="text-center">Foto</th>
-                            <th scope="col">Nama Khotib</th>
-                            <th scope="col">Nama Imam</th>
-                            <th scope="col">Tema Khutbah</th>
+                            <th scope="col">Nama Penceramah</th> {{-- Ganti --}}
+                            <th scope="col">Tema Kajian</th> {{-- Ganti --}}
+                            <th scope="col" class="text-center">Waktu</th> {{-- Ganti --}}
                             <th scope="col" class="text-center" id="sortTanggal" style="cursor:pointer;">
                                 Tanggal <i id="sortIcon" class="bi bi-arrow-down"></i>
                             </th>
@@ -73,26 +76,26 @@
     </div>
 </div>
 
-<!-- Modal Form -->
-<div class="modal fade" id="modalKhotib" tabindex="-1">
+<div class="modal fade" id="modalKajian" tabindex="-1"> {{-- Ganti ID --}}
   <div class="modal-dialog">
     <div class="modal-content">
-      <form id="formKhotib" enctype="multipart/form-data">
+      <form id="formKajian" enctype="multipart/form-data"> {{-- Ganti ID --}}
         
-        <input type="hidden" id="id_khutbah" name="id_khutbah">
+        <input type="hidden" id="id_kajian" name="id_kajian"> {{-- Ganti ID --}}
 
         <div class="modal-header">
-          <h5 class="modal-title">Tambah Khutbah Jumat</h5>
+          <h5 class="modal-title">Tambah Kajian</h5> {{-- Ganti Judul --}}
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
 
         <div class="modal-body">
           
           <div class="mb-3">
-            <label for="foto_khotib" class="form-label">Foto</label>
-            <input type="file" class="d-none" id="foto_khotib" name="foto_khotib" accept="image/*">
+            <label for="foto_penceramah" class="form-label">Foto Penceramah</label> {{-- Ganti --}}
+            <input type="file" class="d-none" id="foto_penceramah" name="foto_penceramah" accept="image/*"> {{-- Ganti --}}
             <div class="position-relative">
-                <label for="foto_khotib" id="foto_khotib_label" class="form-control d-block text-truncate" style="cursor: pointer;">
+                {{-- Ganti --}}
+                <label for="foto_penceramah" id="foto_penceramah_label" class="form-control d-block text-truncate" style="cursor: pointer;">
                     <span class="text-muted">Choose file...</span>
                 </label>
                 <button type="button" class="btn position-absolute d-none" id="clearFile" title="Hapus foto" 
@@ -107,20 +110,26 @@
             </div>
           </div>
           <div class="mb-3">
-            <label for="nama_khotib" class="form-label">Nama Khotib <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="nama_khotib" name="nama_khotib">
+            <label for="nama_penceramah" class="form-label">Nama Penceramah <span class="text-danger">*</span></label> {{-- Ganti --}}
+            <input type="text" class="form-control" id="nama_penceramah" name="nama_penceramah"> {{-- Ganti --}}
           </div>
           <div class="mb-3">
-            <label for="nama_imam" class="form-label">Nama Imam <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="nama_imam" name="nama_imam">
+            <label for="tema_kajian" class="form-label">Tema Kajian <span class="text-danger">*</span></label> {{-- Ganti --}}
+            <input type="text" class="form-control" id="tema_kajian" name="tema_kajian"> {{-- Ganti --}}
           </div>
-          <div class="mb-3">
-            <label for="tema_khutbah" class="form-label">Tema Khutbah <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="tema_khutbah" name="tema_khutbah">
-          </div>
-          <div class="mb-3">
-            <label for="tanggal" class="form-label">Tanggal <span class="text-danger">*</span></label>
-            <input type="date" class="form-control" id="tanggal" name="tanggal">
+          <div class="row">
+            <div class="col-md-7">
+                <div class="mb-3">
+                    <label for="tanggal_kajian" class="form-label">Tanggal <span class="text-danger">*</span></label> {{-- Ganti --}}
+                    <input type="date" class="form-control" id="tanggal_kajian" name="tanggal_kajian"> {{-- Ganti --}}
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="mb-3">
+                    <label for="waktu_kajian" class="form-label">Waktu (WIB)</label> {{-- Ganti --}}
+                    <input type="time" class="form-control" id="waktu_kajian" name="waktu_kajian"> {{-- Ganti --}}
+                </div>
+            </div>
           </div>
         </div>
 
@@ -133,35 +142,22 @@
   </div>
 </div>
 
+{{-- CSS tidak perlu diubah, bisa pakai yang sama dari khotib --}}
 <style>
-
-/* CSS Modal Scroll */
-#modalKhotib .modal-dialog { max-height: 80vh; display: flex; flex-direction: column; }
-#modalKhotib .modal-content { height: 100%; display: flex; flex-direction: column; }
-#modalKhotib .modal-body { overflow-y: auto; max-height: 70vh; }
-#modalKhotib .modal-footer { position: sticky; bottom: 0; background: white; z-index: 2; border-top: 1px solid #dee2e6; }
-
-/* CSS Tombol 'x' di field */
+#modalKajian .modal-dialog { max-height: 80vh; display: flex; flex-direction: column; }
+#modalKajian .modal-content { height: 100%; display: flex; flex-direction: column; }
+#modalKajian .modal-body { overflow-y: auto; max-height: 70vh; }
+#modalKajian .modal-footer { position: sticky; bottom: 0; background: white; z-index: 2; border-top: 1px solid #dee2e6; }
 #clearFile:hover { color: #212529; }
 #clearFile:focus { box-shadow: none; }
-
-/* CSS untuk Pagination */
-#paginationLinks .pagination {
-    margin-bottom: 0;
-}
-#paginationLinks .page-item.disabled .page-link {
-    background-color: #e9ecef;
-}
-#paginationLinks .page-item.active .page-link {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-}
-#paginationLinks .page-link {
-    cursor: pointer;
-}
+#paginationLinks .pagination { margin-bottom: 0; }
+#paginationLinks .page-item.disabled .page-link { background-color: #e9ecef; }
+#paginationLinks .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; }
+#paginationLinks .page-link { cursor: pointer; }
 </style>
 
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="{{ asset('js/khotib.js') }}"></script>
+{{-- 16. (WAJIB) Buat file JS baru dan ganti link-nya --}}
+<script src="{{ asset('js/kajian.js') }}"></script>
 @endsection

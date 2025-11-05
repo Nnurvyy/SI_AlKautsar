@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('infaq_jumat', function (Blueprint $table) {
             $table->uuid('id_infaq_jumat')->primary();
-            $table->date('tanggal');
+            $table->date('tanggal_infaq');
             // PERBAIKAN: Mengganti $table->int('nominal') menjadi $table->bigInteger('nominal')
-            $table->bigInteger('nominal'); 
+            $table->bigInteger('nominal_infaq'); 
             $table->timestamps();
         });
     }

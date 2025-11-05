@@ -5,9 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use App\Models\Student; 
-use App\Models\PemasukanKategori; 
-use App\Models\Divisi;
+use App\Models\PemasukanKategori; // sesuai class baru di bawah
 
 class Pemasukan extends Model
 {

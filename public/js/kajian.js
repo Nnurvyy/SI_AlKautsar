@@ -1,69 +1,63 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- Definisi Elemen ---
-    const form = document.getElementById('formKhotib');
-    const modalKhotib = document.getElementById('modalKhotib');
+    // --- Definisi Elemen (Ganti ID) ---
+    const form = document.getElementById('formKajian');
+    const modalKajian = document.getElementById('modalKajian');
     const searchInput = document.getElementById('searchInput');
-    const tbody = document.querySelector('#tabelKhotib tbody');
+    const tbody = document.querySelector('#tabelKajian tbody');
     const token = document.querySelector('meta[name="csrf-token"]').content;
     
-    // Tombol Modal
     const submitButton = form ? form.querySelector('button[type="submit"]') : null;
     const cancelButton = form ? form.querySelector('button[data-bs-dismiss="modal"]') : null;
     const originalButtonText = submitButton ? submitButton.innerHTML : 'Simpan';
 
-    // Elemen Input File Kustom
-    const fotoInput = document.getElementById('foto_khotib');
-    const fotoLabel = document.getElementById('foto_khotib_label');
+    // Elemen Input File Kustom (Ganti ID)
+    const fotoInput = document.getElementById('foto_penceramah');
+    const fotoLabel = document.getElementById('foto_penceramah_label');
     const fotoLabelSpan = fotoLabel ? fotoLabel.querySelector('span') : null;
     const clearFileBtn = document.getElementById('clearFile');
     
-    // Elemen Preview
     const preview = document.getElementById('previewFoto');
     const previewContainer = document.getElementById('previewContainer');
 
-    // Elemen Filter & Pagination
     const statusFilter = document.getElementById('statusFilter');
     const paginationContainer = document.getElementById('paginationLinks');
     const paginationInfo = document.getElementById('paginationInfo');
-    const tableContainer = document.getElementById('tabelKhotib');
+    const tableContainer = document.getElementById('tabelKajian');
 
     const sortTanggal = document.getElementById('sortTanggal');
     const sortIcon = document.getElementById('sortIcon');
 
     if (sortTanggal) {
         sortTanggal.addEventListener('click', () => {
-            // Toggle arah sort
             state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
             sortIcon.className = state.sortDir === 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down';
-            loadKhotib();
+            loadKajian(); // Ganti
         });
     }
 
-
-    // State Management
     let state = {
         currentPage: 1,
         status: 'aktif',
         search: '',
         perPage: 10,
-        sortBy: 'tanggal',    
+        sortBy: 'tanggal_kajian', // Ganti
         sortDir: 'desc',      
         searchTimeout: null
     };
 
-
     // --- Event Listener Utama ---
 
-    // 1. Submit form (tambah / edit)
     if (form) {
         form.addEventListener('submit', async e => {
             e.preventDefault();
             setLoading(true);
 
-            const id = document.getElementById('id_khutbah').value;
+            // Ganti ID
+            const id = document.getElementById('id_kajian').value;
             const formData = new FormData(form);
-            const url = id ? `/admin/khotib-jumat/${id}` : '/admin/khotib-jumat';
+            // Ganti URL
+            const url = id ? `/admin/kajian/${id}` : '/admin/kajian';
             if (id) formData.append('_method', 'PUT');
 
             try {
@@ -76,8 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await res.json();
                 if (res.ok) {
                     Swal.fire('Berhasil!', data.message, 'success');
-                    bootstrap.Modal.getInstance(modalKhotib).hide();
-                    loadKhotib(); // Muat ulang data
+                    bootstrap.Modal.getInstance(modalKajian).hide();
+                    loadKajian(); // Ganti
                 } else {
                     if (res.status === 422 && data.errors) {
                         let errorMessages = Object.values(data.errors).map(err => err[0]).join('<br>');
@@ -88,78 +82,65 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) {
                 Swal.fire('Gagal', err.message, 'error');
             } finally {
-                // Pastikan loading di-stop, bahkan jika error
                 setLoading(false);
             }
         });
     }
 
-    // 2. Search Bar (Server-side)
     if (searchInput) {
         searchInput.addEventListener('keyup', function() {
-            // Hentikan timeout sebelumnya
             clearTimeout(state.searchTimeout);
-
-            // Set timeout baru (300ms) sebelum memicu search
             state.searchTimeout = setTimeout(() => {
                 state.search = searchInput.value;
-                state.currentPage = 1; // Reset ke halaman 1
-                loadKhotib();
+                state.currentPage = 1; 
+                loadKajian(); // Ganti
             }, 300); 
         });
     }
 
-    // 3. Listener untuk Filter Status
     if (statusFilter) {
         statusFilter.addEventListener('change', () => {
             state.status = statusFilter.value;
-            state.currentPage = 1; // Reset ke halaman 1
-            loadKhotib();
+            state.currentPage = 1; 
+            loadKajian(); // Ganti
         });
     }
 
-    // 4. Listener untuk Klik Pagination
     if (paginationContainer) {
         paginationContainer.addEventListener('click', e => {
             e.preventDefault();
-            const target = e.target.closest('a.page-link'); // Cari link yang diklik
+            const target = e.target.closest('a.page-link');
             
             if (!target || target.parentElement.classList.contains('disabled') || target.parentElement.classList.contains('active')) {
-                return; // Abaikan jika link non-aktif atau halaman saat ini
+                return;
             }
 
             const url = new URL(target.href);
-            const page = url.searchParams.get('page'); // Ambil nomor halaman dari URL
+            const page = url.searchParams.get('page'); 
             
             if (page) {
                 state.currentPage = parseInt(page);
-                loadKhotib();
+                loadKajian(); // Ganti
             }
         });
     }
 
-    // 5. Reset Modal saat ditutup
-    if (modalKhotib && form && fotoInput) {
-        modalKhotib.addEventListener('hidden.bs.modal', function () {
+    if (modalKajian && form && fotoInput) {
+        modalKajian.addEventListener('hidden.bs.modal', function () {
             form.reset();
             fotoInput.dispatchEvent(new Event('change'));
-            document.getElementById('id_khutbah').value = '';
-            setLoading(false); // Pastikan tombol simpan kembali normal
+            document.getElementById('id_kajian').value = ''; // Ganti
+            setLoading(false); 
         });
     }
 
-    // --- Fungsi Helper ---
-
-    // Fungsi untuk mengaktifkan/menonaktifkan loading tombol
+    // --- Fungsi Helper (setLoading) --- (Tidak berubah)
     function setLoading(isLoading) {
         if (!submitButton || !cancelButton) return;
-
         if (isLoading) {
             submitButton.disabled = true;
             cancelButton.disabled = true;
-            submitButton.innerHTML = `
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                Menyimpan...`;
+            submitButton.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menyimpan...`;
         } else {
             submitButton.disabled = false;
             cancelButton.disabled = false;
@@ -168,24 +149,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Fungsi Render ---
-    async function loadKhotib() {
+    async function loadKajian() { // Ganti
         if (!tbody) return;
         
-        // Tampilkan loading di tabel
         let colCount = tbody.closest('table').querySelector('thead tr').cells.length;
         tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center"><div class="spinner-border text-primary"></div></td></tr>`;
 
-        // Buat URL dengan query params
-        const url = `/admin/khotib-jumat-data?page=${state.currentPage}&status=${state.status}&search=${state.search}&perPage=${state.perPage}&sortBy=${state.sortBy}&sortDir=${state.sortDir}`;
+        // Ganti URL
+        const url = `/admin/kajian-data?page=${state.currentPage}&status=${state.status}&search=${state.search}&perPage=${state.perPage}&sortBy=${state.sortBy}&sortDir=${state.sortDir}`;
 
         try {
             const res = await fetch(url);
             if (!res.ok) throw new Error('Gagal memuat data');
             
-            const response = await res.json(); // Ini adalah response pagination Laravel default
+            const response = await res.json(); 
             
             renderTable(response.data, response.from || 1);
-            renderPagination(response); // Kirim seluruh response
+            renderPagination(response);
             
         } catch (err) {
             tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center text-danger">${err.message}</td></tr>`;
@@ -194,11 +174,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
+    // Fungsi formatTanggal (Tidak berubah)
     function formatTanggal(tanggalStr) {
         if (!tanggalStr) return '-';
-
-        // Jika formatnya dd/mm/yyyy atau dd-mm-yyyy
         const parts = tanggalStr.split(/[-/]/);
         if (parts.length === 3) {
             const [d, m, y] = parts;
@@ -209,19 +187,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         }
-
-        // Coba parse default jika format sudah ISO
         const date = new Date(tanggalStr);
         return !isNaN(date)
             ? date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
             : 'Invalid Date';
     }
 
-    /**
-     * Fungsi untuk me-render isi tabel
-     */
+    function formatWaktu(waktuStr) {
+        if (!waktuStr) return '-';
+        // Asumsi format 'HH:MM:SS' atau 'HH:MM'
+        const parts = waktuStr.split(':');
+        if (parts.length >= 2) {
+            return `${parts[0]}:${parts[1]}`;
+        }
+        return '-';
+    }
+
     function renderTable(data, startingNumber) {
-        tbody.innerHTML = ''; // Kosongkan tabel
+        tbody.innerHTML = ''; 
         
         if (data.length === 0) {
             let colCount = tbody.closest('table').querySelector('thead tr').cells.length;
@@ -230,19 +213,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         data.forEach((item, i) => {
+            // Ganti isi tabel
             const row = `
             <tr>
                 <td class="text-center">${startingNumber + i}</td>
-                <td class="text-center"><img src="${item.foto_url}" class="rounded" style="width:60px;height:60px;object-fit:cover;" alt="Foto ${item.nama_khotib}"></td>
-                <td>${item.nama_khotib}</td>
-                <td>${item.nama_imam}</td>
-                <td>${item.tema_khutbah}</td> 
-                <td class="text-center">${formatTanggal(item.tanggal)}</td>
+                <td class="text-center"><img src="${item.foto_url}" class="rounded" style="width:60px;height:60px;object-fit:cover;" alt="Foto ${item.nama_penceramah}"></td>
+                <td>${item.nama_penceramah}</td>
+                <td>${item.tema_kajian}</td>
+                <td class="text-center">${formatWaktu(item.waktu_kajian)}</td>
+                <td class="text-center">${formatTanggal(item.tanggal_kajian)}</td>
                 <td class="text-center">
-                    <button class="btn btn-warning btn-sm" onclick="editKhotib('${item.id_khutbah}')">
+                    <button class="btn btn-warning btn-sm" onclick="editKajian('${item.id_kajian}')"> 
                         <i class="bi bi-pencil"></i>
                     </button>
-                    <button class="btn btn-danger btn-sm" onclick="hapusKhotib('${item.id_khutbah}')">
+                    <button class="btn btn-danger btn-sm" onclick="hapusKajian('${item.id_kajian}')"> 
                         <i class="bi bi-trash"></i>
                     </button>
                 </td>
@@ -251,67 +235,50 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /**
-     * Fungsi untuk me-render link pagination
-     */
+    // Fungsi renderPagination (Tidak berubah)
     function renderPagination(response) {
         const { from, to, total, links } = response;
-
         if (total === 0) {
             paginationInfo.textContent = 'Menampilkan 0 dari 0 data';
             paginationContainer.innerHTML = '';
             return;
         }
-
-        // Update info: "Menampilkan 1 - 10 dari 100 data"
         paginationInfo.textContent = `Menampilkan ${from} - ${to} dari ${total} data`;
-
-        // HTML pagination
         let linksHtml = '<ul class="pagination justify-content-center mb-0">';
-        
         links.forEach(link => {
             let label = link.label;
             if (label.includes('Previous')) label = '<';
             else if (label.includes('Next')) label = '>';
-            
             const disabled = !link.url ? 'disabled' : '';
             const active = link.active ? 'active' : '';
-
-            linksHtml += `
-                <li class="page-item ${disabled} ${active}">
-                    <a class="page-link" href="${link.url || '#'}">${label}</a>
-                </li>
-            `;
+            linksHtml += `<li class="page-item ${disabled} ${active}"><a class="page-link" href="${link.url || '#'}">${label}</a></li>`;
         });
-
         linksHtml += '</ul>';
         paginationContainer.innerHTML = linksHtml;
     }
 
-
-
-    
-
-    
-    
-
     // --- Fungsi Global (Edit/Hapus) ---
-    window.editKhotib = async function(id_khutbah) {
+    window.editKajian = async function(id_kajian) { // Ganti
         try {
-            const res = await fetch(`/admin/khotib-jumat/${id_khutbah}`);
+            // Ganti URL
+            const res = await fetch(`/admin/kajian/${id_kajian}`);
             if (!res.ok) throw new Error('Data tidak ditemukan');
             const data = await res.json();
 
-            document.getElementById('id_khutbah').value = data.id_khutbah;
-            document.getElementById('nama_khotib').value = data.nama_khotib;
-            document.getElementById('nama_imam').value = data.nama_imam;
-            document.getElementById('tema_khutbah').value = data.tema_khutbah;
-            if (data.tanggal) {
-                document.getElementById('tanggal').value = data.tanggal.split('T')[0];
+            // Ganti ID
+            document.getElementById('id_kajian').value = data.id_kajian;
+            document.getElementById('nama_penceramah').value = data.nama_penceramah;
+            document.getElementById('tema_kajian').value = data.tema_kajian;
+            if (data.tanggal_kajian) {
+                document.getElementById('tanggal_kajian').value = data.tanggal_kajian.split('T')[0];
+            }
+            if (data.waktu_kajian) {
+                document.getElementById('waktu_kajian').value = data.waktu_kajian.substring(0, 5);
             }
 
-            if (data.foto_khotib) {
-                fotoLabelSpan.textContent = data.foto_khotib.split('/').pop();
+            // Ganti
+            if (data.foto_penceramah) {
+                fotoLabelSpan.textContent = data.foto_penceramah.split('/').pop();
                 fotoLabelSpan.classList.remove('text-muted');
                 clearFileBtn.classList.remove('d-none');
                 preview.src = data.foto_url;
@@ -320,13 +287,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 fotoInput.dispatchEvent(new Event('change'));
             }
 
-            new bootstrap.Modal(modalKhotib).show();
+            new bootstrap.Modal(modalKajian).show();
         } catch (err) {
             Swal.fire('Gagal', err.message, 'error');
         }
     }
 
-    window.hapusKhotib = async function(id_khutbah) {
+    window.hapusKajian = async function(id_kajian) { // Ganti
         const confirm = await Swal.fire({
             title: 'Yakin ingin menghapus?',
             text: 'Data akan dihapus permanen!',
@@ -344,7 +311,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData();
             formData.append('_method', 'DELETE');
 
-            const res = await fetch(`/admin/khotib-jumat/${id_khutbah}`, {
+            // Ganti URL
+            const res = await fetch(`/admin/kajian/${id_kajian}`, {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
                 body: formData
@@ -353,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             if (res.ok) {
                 Swal.fire('Terhapus!', data.message, 'success');
-                loadKhotib(); // Muat ulang data
+                loadKajian(); // Ganti
             } else {
                 throw new Error(data.message || 'Terjadi kesalahan');
             }
@@ -362,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Logika Input File Kustom (Tidak berubah) ---
+    // --- Logika Input File Kustom (Ganti ID) ---
     if (fotoInput && fotoLabelSpan && clearFileBtn && previewContainer && preview) {
         fotoInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -394,5 +362,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Inisialisasi ---
-    loadKhotib(); // Muat data pertama kali
+    loadKajian(); // Ganti
 });
