@@ -46,7 +46,7 @@
         </li>
         <li class="nav-item">
             <a href="{{ route('admin.inventaris.index') }}" class="nav-link {{ request()->routeIs('admin.inventaris.index') ? 'active' : '' }}">
-                <i class="bi bi-collection"></i> Stok & Inventori 
+                <i class="bi bi-collection"></i> Stok & Inventori
             </a>
         </li>
         <li class="nav-item">
@@ -54,11 +54,13 @@
                 <i class="bi bi-cash-coin"></i> Infaq Jumat
             </a>
         </li>
+
         <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="{{ route('admin.tabungan-qurban.index') }}" class="nav-link {{ request()->routeIs('admin.tabungan-qurban.*') ? 'active' : '' }}">
                 <i class="bi bi-wallet"></i> Tabungan Hewan Qurban
             </a>
         </li>
+
         <li class="nav-item">
             <a href="#" class="nav-link">
                 <i class="bi bi-file-earmark-text"></i> Laporan Tabungan Qurban

@@ -6,10 +6,15 @@ use App\Http\Controllers\PemasukanController;
 use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\KhotibJumatController;
 use App\Http\Controllers\PublicController;
-use App\Http\Controllers\QurbanController;
-use App\Http\Controllers\LapKeuController;
+use App\Http\Controllers\TabunganHewanQurbanController;
+use App\Http\Controllers\PemasukanTabunganQurbanController;
 use App\Http\Controllers\InfaqJumatController;
 use App\Http\Controllers\BarangInventarisController;
+use App\Http\Controllers\LapKeuController;
+
+
+
+
 /*
 |--------------------------------------------------------------------------
 | Rute Publik (Guest / Tamu)
@@ -54,13 +59,13 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 |
 */
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    
+
     // Dashboard (URL: /admin/dashboard)
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
-    
+
     // Pemasukan (URL: /admin/pemasukan)
     Route::resource('pemasukan', PemasukanController::class);
-    
+
     // Pengeluaran (URL: /admin/pengeluaran)
     Route::get('/pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran');
 
@@ -87,8 +92,18 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // (WAJIB) TAMBAHKAN INI UNTUK KAJIAN
     Route::resource('kajian', \App\Http\Controllers\KajianController::class);
     Route::get('kajian-data', [\App\Http\Controllers\KajianController::class, 'data'])->name('kajian.data');
-    
+
     // ... (Tambahkan rute admin lainnya di sini) ...
+
+    Route::get('tabungan-qurban/cetak', [TabunganHewanQurbanController::class, 'cetak'])
+        ->name('tabungan-qurban.cetak');
+
+    Route::get('tabungan-qurban-data', [TabunganHewanQurbanController::class, 'data'])->name('tabungan-qurban.data');
+
+    Route::resource('tabungan-qurban', TabunganHewanQurbanController::class);
+
+    Route::resource('pemasukan-qurban', PemasukanTabunganQurbanController::class)
+        ->parameter('pemasukan-qurban', 'id');
 
 });
 
@@ -104,10 +119,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 |
 */
 Route::middleware(['auth', 'role:publik'])->name('public.')->group(function () {
-    
+
     // URL: /qurban-saya
     Route::get('/qurban-saya', [QurbanController::class, 'index'])->name('qurban');
-    
+
     // ... (Tambahkan rute 'publik' terotentikasi lainnya di sini) ...
 
 });

@@ -12,7 +12,7 @@ class PenggunaSeeder extends Seeder
     /**
      * Run the database seeds.
      */
-    public function run(): void
+    public function run()
     {
         // Admin
         Pengguna::firstOrCreate(
