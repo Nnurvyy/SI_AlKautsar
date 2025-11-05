@@ -25,7 +25,7 @@
             </a>
         </li>
         <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="{{ route('admin.lapkeu.index') }}" class="nav-link {{ request()->routeIs('admin.lapkeu.*') ? 'active' : '' }}">
                 <i class="bi bi-file-earmark-text"></i> Laporan Keuangan
             </a>
         </li>
@@ -39,24 +39,34 @@
                 <i class="bi bi-person-fill"></i> Khotib Jumat
             </a>
         </li>
-        <li class="nav-item">
-            <a href="#" class="nav-link">
+       <li class="nav-item">
+            <a href="{{ route('admin.kajian.index') }}" class="nav-link {{ request()->routeIs('admin.kajian.*') ? 'active' : '' }}">
                 <i class="bi bi-person-fill"></i> Kajian
             </a>
         </li>
         <li class="nav-item">
-            <a href="#" class="nav-link">
-                <i class="bi bi-collection"></i> Stok & Inventori
+            <a href="{{ route('admin.inventaris.index') }}" class="nav-link {{ request()->routeIs('admin.inventaris.index') ? 'active' : '' }}">
+                <i class="bi bi-collection"></i> Stok & Inventori 
             </a>
         </li>
         <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="{{ route('admin.infaq-jumat.index') }}" class="nav-link {{ request()->routeIs('admin.infaq-jumat.index') ? 'active' : '' }}">
                 <i class="bi bi-cash-coin"></i> Infaq Jumat
             </a>
         </li>
         <li class="nav-item">
-            <a href="{{ route('admin.tabungan-qurban.index') }}" class="nav-link {{ request()->routeIs('admin.tabungan-qurban.*') ? 'active' : '' }}">
-                <i class="bi bi-wallet-fill"></i>  Tabungan Qurban
+            <a href="#" class="nav-link">
+                <i class="bi bi-wallet"></i> Tabungan Hewan Qurban
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="#" class="nav-link">
+                <i class="bi bi-file-earmark-text"></i> Laporan Tabungan Qurban
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="#" class="nav-link">
+                <i class="bi bi-exclamation-triangle"></i> Peringatan
             </a>
         </li>
     </ul>
