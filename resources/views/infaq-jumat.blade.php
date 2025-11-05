@@ -57,7 +57,7 @@
 
 <!-- Modal Form -->
 <div class="modal fade" id="modaltambahinfaq" tabindex="-1" aria-labelledby="modalInfaqLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <form id="formTambahInfaq">
         
