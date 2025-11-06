@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+// Gunakan Request baru
+use App\Http\Requests\TabunganQurbanRequest;
 use App\Models\TabunganHewanQurban;
 use App\Models\PemasukanTabunganQurban;
-use App\Models\Pengguna; // Import model Pengguna
-use Illuminate\Support\Facades\Auth;
+use App\Models\Pengguna;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Barryvdh\DomPDF\Facade\Pdf; // <-- 1. SAYA TAMBAHKAN INI (FIX PDF)
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class TabunganHewanQurbanController extends Controller
 {
@@ -19,175 +20,186 @@ class TabunganHewanQurbanController extends Controller
      */
     public function index(Request $request)
     {
-        // Ambil semua pengguna untuk dropdown di modal tambah
-        $pengguna = Pengguna::where('role', 'publik')->orderBy('nama')->get();
+        // Ambil pengguna untuk dropdown di modal
+        $penggunaList = Pengguna::where('role', 'publik')->orderBy('nama')->get();
 
         return view('tabungan-qurban', [
-            'penggunaList' => $pengguna
+            'penggunaList' => $penggunaList
         ]);
     }
 
     /**
-     * Menyediakan data JSON untuk DataTables
+     * Menyediakan data JSON untuk tabel (Pola KhotibJumatController)
      */
-    public function data()
+    public function data(Request $request)
     {
-        // Ambil data dengan relasi pengguna dan pemasukan
-        $query = TabunganHewanQurban::with(['pengguna', 'pemasukanTabunganQurban'])
-            ->join('pengguna', 'pengguna.id_pengguna', '=', 'tabungan_hewan_qurban.id_pengguna')
-            ->select('tabungan_hewan_qurban.*');// Penting untuk DataTables
+        $status = $request->query('status', 'semua');
+        $perPage = $request->query('perPage', 10);
+        $sortBy = $request->query('sortBy', 'total_terkumpul'); // Sort by total tabungan
+        $sortDir = $request->query('sortDir', 'desc');
 
-        return DataTables::of($query)
-            ->addIndexColumn() // Tambah kolom nomor urut
-            ->editColumn('nama_user', function ($row) {
-                return $row->pengguna->nama ?? 'N/A';
-            })
-            ->editColumn('total_hewan', function ($row) {
-                return $row->total_hewan . ' ekor';
-            })
-            ->editColumn('total_harga', function ($row) {
-                return 'Rp ' . number_format($row->total_harga_hewan_qurban, 0, ',', '.');
-            })
-            ->editColumn('total_terkumpul', function ($row) {
-                // Hitung total terkumpul dari relasi pemasukan
-                $terkumpul = $row->pemasukanTabunganQurban->sum('nominal');
-                return 'Rp ' . number_format($terkumpul, 0, ',', '.');
-            })
+        // Subquery untuk total terkumpul
+        $totalTerkumpulSubquery = PemasukanTabunganQurban::select(DB::raw('COALESCE(SUM(nominal), 0)'))
+            ->whereColumn('id_tabungan_hewan_qurban', 'tabungan_hewan_qurban.id_tabungan_hewan_qurban');
 
-            // 2. SAYA HAPUS BLOK 'sisa_target' YANG DUPLIKAT
-            // Ini adalah blok 'sisa_target' yang sudah benar (dengan logika "Lunas")
-            ->addColumn('sisa_target', function ($row) {
-                $terkumpul = $row->pemasukanTabunganQurban->sum('nominal');
-                $sisa = $row->total_harga_hewan_qurban - $terkumpul;
+        // Subquery untuk cek pembayaran bulan ini
+        $startOfMonth = Carbon::now()->startOfMonth();
+        $bayarBulanIniSubquery = PemasukanTabunganQurban::select(DB::raw(1))
+            ->whereColumn('id_tabungan_hewan_qurban', 'tabungan_hewan_qurban.id_tabungan_hewan_qurban')
+            ->where('tanggal', '>=', $startOfMonth)
+            ->limit(1);
 
-                // Logika baru untuk menampilkan "Lunas"
-                if ($sisa <= 0) {
-                    return '<span class="text-success">Lunas</span>';
-                } else {
-                    // $color = $sisa <= 0 ? 'success' : 'danger'; // Tidak perlu lagi, pasti danger
-                    return '<span class="text-danger">Rp ' . number_format($sisa, 0, ',', '.') . '</span>';
-                }
-            })
+        $query = TabunganHewanQurban::with('pengguna')
+            ->select('tabungan_hewan_qurban.*')
+            ->selectSub($totalTerkumpulSubquery, 'total_terkumpul')
+            ->selectSub($bayarBulanIniSubquery, 'bayar_bulan_ini');
 
-            // 3. SAYA KEMBALIKAN BLOK 'aksi' YANG HILANG
-            ->addColumn('aksi', function ($row) {
-                // Buat tombol aksi
-                $btnDetail = '<button class="btn btn-info btn-sm btn-detail" title="Lihat Detail" data-id="' . $row->id_tabungan_hewan_qurban . '"><i class="fas fa-eye"></i></button>';
-                $btnUpdate = '<button class="btn btn-warning btn-sm btn-edit" title="Update Tabungan" data-id="' . $row->id_tabungan_hewan_qurban . '"><i class="fas fa-edit"></i></button>';
-                $btnDelete = '<button class="btn btn-danger btn-sm btn-delete" title="Hapus Tabungan" data-id="' . $row->id_tabungan_hewan_qurban . '"><i class="fas fa-trash"></i></button>';
-                return $btnDetail . ' ' . $btnUpdate . ' ' . $btnDelete;
-            })
-            ->rawColumns(['sisa_target', 'aksi']) // Kolom yang mengandung HTML
-            ->make(true);
+        // Terapkan Filter Status (Sesuai konfirmasi Anda)
+        $query->when($status == 'lunas', function ($q) {
+            // 1. Lunas
+            $q->whereRaw(
+                '(SELECT COALESCE(SUM(nominal), 0) FROM pemasukan_tabungan_qurban WHERE id_tabungan_hewan_qurban = tabungan_hewan_qurban.id_tabungan_hewan_qurban) >= total_harga_hewan_qurban'
+            );
+        })->when($status == 'menunggak', function ($q) {
+            // 2. Menunggak (Belum lunas DAN belum bayar bulan ini)
+            $startOfMonth = Carbon::now()->startOfMonth();
+            $q->whereRaw(
+                '(SELECT COALESCE(SUM(nominal), 0) FROM pemasukan_tabungan_qurban WHERE id_tabungan_hewan_qurban = tabungan_hewan_qurban.id_tabungan_hewan_qurban) < total_harga_hewan_qurban'
+            )->whereDoesntHave('pemasukanTabunganQurban', function($sq) use ($startOfMonth) {
+                $sq->where('tanggal', '>=', $startOfMonth);
+            });
+        })->when($status == 'bayar_bulan_ini', function ($q) {
+            // 3. Sudah Bayar Bulan Ini (Belum lunas TAPI sudah bayar bulan ini)
+            $startOfMonth = Carbon::now()->startOfMonth();
+            $q->whereRaw(
+                '(SELECT COALESCE(SUM(nominal), 0) FROM pemasukan_tabungan_qurban WHERE id_tabungan_hewan_qurban = tabungan_hewan_qurban.id_tabungan_hewan_qurban) < total_harga_hewan_qurban'
+            )->whereHas('pemasukanTabunganQurban', function($sq) use ($startOfMonth) {
+                $sq->where('tanggal', '>=', $startOfMonth);
+            });
+        });
+
+        // Urutkan data
+        $allowedSorts = ['total_terkumpul', 'created_at', 'nama_hewan', 'total_harga_hewan_qurban'];
+        if (!in_array($sortBy, $allowedSorts)) $sortBy = 'total_terkumpul';
+        $sortDir = $sortDir === 'asc' ? 'asc' : 'desc';
+
+        // Jika sorting berdasarkan 'total_terkumpul', kita harus pakai orderByRaw
+        if ($sortBy == 'total_terkumpul') {
+            $data = $query->orderByRaw('total_terkumpul ' . $sortDir)->paginate($perPage);
+        } else {
+            $data = $query->orderBy($sortBy, $sortDir)->paginate($perPage);
+        }
+
+        return response()->json($data);
     }
 
     /**
-     * Menyimpan data tabungan baru. (Return JSON)
+     * Menyimpan data tabungan baru.
      */
-    public function store(Request $request)
+    public function store(TabunganQurbanRequest $request)
     {
-        $validatedData = $request->validate([
-            'id_pengguna' => 'required|string|exists:pengguna,id_pengguna',
-            'nama_hewan' => 'required|string|max:20', // Pastikan ini sesuai ENUM (kambing, sapi, dll)
-            'total_hewan' => 'required|integer|min:1',
-            'total_harga_hewan_qurban' => 'required|numeric|min:0',
-        ]);
-
-        // Total tabungan awal adalah 0
-        $validatedData['total_tabungan'] = 0; // Kolom ini ada di model Anda
+        $validatedData = $request->validated();
+        $validatedData['total_tabungan'] = 0; // Tetapkan default
 
         $tabungan = TabunganHewanQurban::create($validatedData);
 
-        return response()->json($tabungan, Response::HTTP_CREATED);
+        return response()->json([
+            'success' => true,
+            'message' => 'Tabungan qurban berhasil ditambahkan.',
+            'data' => $tabungan
+        ], Response::HTTP_CREATED);
     }
 
     /**
-     * Menampilkan data spesifik untuk modal edit/detail. (Return JSON)
+     * Menampilkan data spesifik untuk modal (termasuk riwayat setoran).
      */
-    public function show(string $id)
+    public function show(TabunganHewanQurban $tabungan_qurban)
     {
-        // Ambil data lengkap dengan relasi
-        $tabungan = TabunganHewanQurban::with(['pengguna', 'pemasukanTabunganQurban' => function($query) {
-            $query->orderBy('tanggal', 'desc'); // Urutkan setoran terbaru
-        }])->findOrFail($id);
+        // Muat relasi untuk modal detail
+        $tabungan_qurban->load(['pengguna', 'pemasukanTabunganQurban' => function($query) {
+            $query->orderBy('tanggal', 'desc');
+        }]);
 
-        return response()->json($tabungan);
+        return response()->json($tabungan_qurban);
     }
 
     /**
-     * Update data tabungan. (Return JSON)
+     * Update data tabungan.
      */
-    public function update(Request $request, string $id)
+    public function update(TabunganQurbanRequest $request, TabunganHewanQurban $tabungan_qurban)
     {
-        $tabungan = TabunganHewanQurban::findOrFail($id);
+        $validatedData = $request->validated();
+        $tabungan_qurban->update($validatedData);
 
-        $validatedData = $request->validate([
-            'id_pengguna' => 'required|string|exists:pengguna,id_pengguna',
-            'nama_hewan' => 'required|string|max:20', // Pastikan ini sesuai ENUM
-            'total_hewan' => 'required|integer|min:1',
-            'total_harga_hewan_qurban' => 'required|numeric|min:0',
+        return response()->json([
+            'success' => true,
+            'message' => 'Tabungan qurban berhasil diperbarui.',
+            'data' => $tabungan_qurban
         ]);
-
-        $tabungan->update($validatedData);
-
-        return response()->json($tabungan);
     }
 
     /**
-     * Hapus data tabungan. (Return JSON)
+     * Hapus data tabungan.
      */
-    public function destroy(string $id)
+    public function destroy(TabunganHewanQurban $tabungan_qurban)
     {
-        $tabungan = TabunganHewanQurban::findOrFail($id);
+        // Hapus juga semua pemasukan terkait (jika tidak di-set cascade on delete di DB)
+        $tabungan_qurban->pemasukanTabunganQurban()->delete();
+        $tabungan_qurban->delete();
 
-        $tabungan->delete(); // Relasi pemasukan akan terhapus (jika di-set cascade di DB)
-
-        return response()->json(null, Response::HTTP_NO_CONTENT);
+        return response()->json([
+            'success' => true,
+            'message' => 'Data tabungan berhasil dihapus.'
+        ]);
     }
 
     /**
-     * Membuat dan mengunduh laporan PDF.
+     * Membuat dan mengunduh laporan PDF (Pola LapKeuController)
      */
-    public function cetak(Request $request)
+    public function cetakPdf(Request $request)
     {
-        $request->validate(['type' => 'required|in:bulan_ini,30_hari']);
+        $periode = $request->get('periode', 'semua');
+        $bulan = $request->get('bulan', date('m'));
+        $tahun_bulanan = $request->get('tahun_bulanan', date('Y'));
+        $tahun_tahunan = $request->get('tahun_tahunan', date('Y'));
+        $tanggal_mulai = $request->get('tanggal_mulai', date('Y-m-01'));
+        $tanggal_akhir = $request->get('tanggal_akhir', date('Y-m-d'));
 
-        $today = Carbon::now();
-        $type = $request->type;
-        $judulLaporan = 'Laporan Pemasukan Tabungan Qurban';
+        $query = PemasukanTabunganQurban::with(['tabunganHewanQurban.pengguna'])
+            ->orderBy('tanggal', 'asc');
 
-        if ($type == 'bulan_ini') {
-            // "Bulan Ini" = Dari tanggal 1 bulan ini sampai hari ini
-            $tanggalMulai = $today->copy()->startOfMonth();
-            $tanggalSelesai = $today->copy();
-            $judulLaporan .= ' (Bulan Ini)';
-        } else { // 30_hari
-            // "30 Hari Terakhir" = 29 hari ke belakang + hari ini
-            $tanggalMulai = $today->copy()->subDays(29)->startOfDay();
-            $tanggalSelesai = $today->copy();
-            $judulLaporan .= ' (30 Hari Terakhir)';
+        $periodeTeks = 'Semua Periode';
+        $tanggalCetak = Carbon::now()->translatedFormat('d F Y');
+
+        switch ($periode) {
+            case 'per_bulan':
+                $query->whereMonth('tanggal', $bulan)->whereYear('tanggal', $tahun_bulanan);
+                $periodeTeks = 'Periode: ' . Carbon::create(null, $bulan)->translatedFormat('F') . ' ' . $tahun_bulanan;
+                break;
+            case 'per_tahun':
+                $query->whereYear('tanggal', $tahun_tahunan);
+                $periodeTeks = 'Periode: Tahun ' . $tahun_tahunan;
+                break;
+            case 'rentang_waktu':
+                $query->whereBetween('tanggal', [$tanggal_mulai, $tanggal_akhir]);
+                $tgl1 = Carbon::parse($tanggal_mulai)->translatedFormat('d M Y');
+                $tgl2 = Carbon::parse($tanggal_akhir)->translatedFormat('d M Y');
+                $periodeTeks = "Periode: $tgl1 s/d $tgl2";
+                break;
         }
 
-        // Ambil semua data pemasukan dalam rentang tanggal
-        $pemasukan = PemasukanTabunganQurban::with(['tabunganHewanQurban.pengguna'])
-            ->whereBetween('tanggal', [$tanggalMulai, $tanggalSelesai])
-            ->orderBy('tanggal', 'asc')
-            ->get();
-
-        $totalPemasukan = $pemasukan->sum('nominal');
+        $pemasukanData = $query->get();
+        $totalPemasukan = $pemasukanData->sum('nominal');
 
         $data = [
-            'pemasukan' => $pemasukan,
+            'pemasukanData' => $pemasukanData,
             'totalPemasukan' => $totalPemasukan,
-            'judulLaporan' => $judulLaporan,
-            'tanggalMulai' => $tanggalMulai->translatedFormat('d F Y'),
-            'tanggalSelesai' => $tanggalSelesai->translatedFormat('d F Y'),
+            'periodeTeks' => $periodeTeks,
+            'tanggalCetak' => $tanggalCetak
         ];
 
-        // Load view PDF dan kirim data
+        // Memuat view dari 'resources/views/laporan_qurban_pdf.blade.php'
         $pdf = Pdf::loadView('laporan_qurban_pdf', $data);
-
-        // Tampilkan PDF di browser
-        return $pdf->stream('laporan-tabungan-qurban.pdf');
+        return $pdf->stream('laporan-tabungan-qurban-' . time() . '.pdf');
     }
 }
