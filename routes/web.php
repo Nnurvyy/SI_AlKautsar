@@ -96,13 +96,18 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // ... (Tambahkan rute admin lainnya di sini) ...
 
-    Route::get('tabungan-qurban/cetak', [TabunganHewanQurbanController::class, 'cetak'])
-        ->name('tabungan-qurban.cetak');
+    // Rute PDF (pola lapkeu) - Rute spesifik di atas
+    Route::get('tabungan-qurban/cetak-pdf', [TabunganHewanQurbanController::class, 'cetakPdf'])
+        ->name('tabungan-qurban.cetakPdf');
 
-    Route::get('tabungan-qurban-data', [TabunganHewanQurbanController::class, 'data'])->name('tabungan-qurban.data');
+    // Rute Data (pola khotib) - Rute spesifik di atas
+    Route::get('tabungan-qurban-data', [TabunganHewanQurbanController::class, 'data'])
+        ->name('tabungan-qurban.data');
 
+    // Rute Resource (CRUD Utama) - Rute umum di bawah
     Route::resource('tabungan-qurban', TabunganHewanQurbanController::class);
 
+    // Rute Resource (CRUD Setoran/Pemasukan)
     Route::resource('pemasukan-qurban', PemasukanTabunganQurbanController::class)
         ->parameter('pemasukan-qurban', 'id');
 

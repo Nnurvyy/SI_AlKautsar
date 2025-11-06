@@ -121,16 +121,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = `
                 <tr>
                     <td class="text-center">${startingNumber + i}</td>
-                    <td>${item.nama_barang}</td>
+                    <td class="text-center">${item.nama_barang}</td>
                     <td class="text-center">${item.satuan}</td>
                     <td class="text-center">${getKondisiBadge(item.kondisi)}</td>
-                    <td class="text-center fw-bold">${item.stock}</td>
+                    <td class="text-center fw-bold">${item.stock}</td>  
                     <td class="text-center">
-                        <button class="btn btn-sm btn-info text-white me-2" onclick="editBarangInventaris('${item.id_barang}')">
-                            <i class="bi bi-pencil-square"></i> Edit
+                        <button class="btn btn-warning btn-sm" onclick="editBarangInventaris('${item.id_barang}')">
+                            <i class="bi bi-pencil"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="hapusBarangInventaris('${item.id_barang}')">
-                            <i class="bi bi-trash"></i> Hapus
+                        <button class="btn btn-danger btn-sm" onclick="hapusBarangInventaris('${item.id_barang}')">
+                            <i class="bi bi-trash"></i>
                         </button>
                     </td>
                 </tr>`;
@@ -156,8 +156,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         links.forEach(link => {
             let label = link.label;
-            if (label.includes('Previous')) label = 'Sebelumnya';
-            else if (label.includes('Next')) label = 'Selanjutnya';
+            if (label.includes('Previous')) label = '<';
+            else if (label.includes('Next')) label = '>';
             
             const disabled = !link.url ? 'disabled' : '';
             const active = link.active ? 'active' : '';

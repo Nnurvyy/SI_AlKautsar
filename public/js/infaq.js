@@ -130,13 +130,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <tr>
                     <td class="text-center">${startingNumber + i}</td>
                     <td class="text-center">${formatTanggal(item.tanggal_infaq)}</td>
-                    <td class="text-center fw-bold text-success">${formatRupiah(item.nominal_infaq)}</td>
+                    <td class="text-center fw-bold text-success">${formatRupiah(item.nominal_infaq)}</td>   
                     <td class="text-center">
-                        <button class="btn btn-sm btn-info text-white me-2" onclick="editInfaq('${item.id_infaq_jumat}')">
-                            <i class="bi bi-pencil-square"></i> Edit
+                        <button class="btn btn-warning btn-sm" onclick="editInfaq('${item.id_infaq_jumat}')">
+                            <i class="bi bi-pencil"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="hapusInfaq('${item.id_infaq_jumat}')">
-                            <i class="bi bi-trash"></i> Hapus
+                        <button class="btn btn-danger btn-sm" onclick="hapusInfaq('${item.id_infaq_jumat}')">
+                            <i class="bi bi-trash"></i>
                         </button>
                     </td>
                 </tr>`;
@@ -164,8 +164,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         links.forEach(link => {
             let label = link.label;
-            if (label.includes('Previous')) label = 'Sebelumnya';
-            else if (label.includes('Next')) label = 'Selanjutnya';
+            if (label.includes('Previous')) label = '<';
+            else if (label.includes('Next')) label = '>';
             
             const disabled = !link.url ? 'disabled' : '';
             const active = link.active ? 'active' : '';
