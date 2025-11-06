@@ -51,7 +51,7 @@ class BarangInventarisController extends Controller
                 'nama_barang' => 'required|string|max:255',
                 'satuan' => 'required|string|max:50',
                 'kondisi' => 'required|string|in:Baik,Perlu Perbaikan,Rusak Berat', // Pastikan nilai sesuai
-                'stock' => 'required|integer|min:0',
+                'stock' => 'required|integer|min:1',
             ]);
 
             BarangInventaris::create($validated);
