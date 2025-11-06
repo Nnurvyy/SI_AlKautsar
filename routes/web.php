@@ -11,6 +11,7 @@ use App\Http\Controllers\PemasukanTabunganQurbanController;
 use App\Http\Controllers\InfaqJumatController;
 use App\Http\Controllers\BarangInventarisController;
 use App\Http\Controllers\LapKeuController;
+use App\Http\Controllers\QurbanController;
 
 
 
