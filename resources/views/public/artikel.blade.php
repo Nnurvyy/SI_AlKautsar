@@ -98,11 +98,10 @@
 <div class="py-4">
     <div class="container">
         
-        {{-- Judul Halaman --}}
-        <div class="row mb-4">
-            <div class="col-12">
-                <h2 class="donasi-title-heading">Artikel-Artikel</h2>
-            </div>
+        <div class="container pt-4 pb-2">
+            <h2 class="donasi-title-heading">
+                Artikel-Artikel
+            </h2>
         </div>
 
         <div class="artikel-list-wrapper">

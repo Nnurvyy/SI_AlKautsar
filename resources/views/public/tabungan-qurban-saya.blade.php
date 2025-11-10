@@ -257,10 +257,10 @@
 
 <div class="p-3">
 
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="donasi-title-heading">Tabungan Qurban Saya</h2>
-        </div>
+    <div class="container pt-4 pb-2">
+        <h2 class="donasi-title-heading">
+            Tabungan Qurban Saya
+        </h2>
     </div>
 
     {{-- 1. KARTU INFO USER (Total terkumpul dari data olahan) --}}
