@@ -32,7 +32,11 @@ Route::get('/', [PublicController::class, 'landingPage'])->name('public.landing'
 // Halaman fitur yang bisa diakses tamu
 Route::get('/jadwal-khotib', [PublicController::class, 'jadwalKhotib'])->name('public.jadwal-khotib');
 Route::get('/jadwal-kajian', [PublicController::class, 'jadwalKajian'])->name('public.jadwal-kajian');
+Route::get('/artikel', [PublicController::class, 'artikel'])->name('public.artikel');
+Route::get('/donasi', [PublicController::class, 'donasi'])->name('public.donasi');
+Route::get('/program', [PublicController::class, 'program'])->name('public.program');
 Route::get('/jadwal-shalat-api', [PublicController::class, 'jadwalShalatApi'])->name('public.jadwal-shalat-api');
+Route::get('/tabungan-qurban-saya', [PublicController::class, 'tabunganQurbanSaya'])->name('public.tabungan-qurban-saya');
 
 
 /*
@@ -41,10 +45,20 @@ Route::get('/jadwal-shalat-api', [PublicController::class, 'jadwalShalatApi'])->
 |--------------------------------------------------------------------------
 */
 // Rute untuk menampilkan halaman login
+Route::get('/welcome', [AuthController::class, 'showWelcomeForm'])->name('auth.welcome');
+
+// 2. Halaman Sign In (Form Login)
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 
-// Rute untuk memproses data login
-Route::post('/login', [AuthController::class, 'loginProcess'])->name('login.process');
+// 3. Proses Login
+// (Dinamai 'login' agar cocok dengan form action="{{ route('login') }}")
+Route::post('/login', [AuthController::class, 'loginProcess']);
+
+// 4. Halaman Sign Up (Form Registrasi)
+Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register');
+
+// 5. Proses Registrasi
+Route::post('/register', [AuthController::class, 'registerProcess']);
 
 // Rute untuk logout (harus sudah login untuk logout)
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');

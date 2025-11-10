@@ -60,17 +60,6 @@
                 <i class="bi bi-wallet"></i> Tabungan Hewan Qurban
             </a>
         </li>
-
-        <li class="nav-item">
-            <a href="#" class="nav-link">
-                <i class="bi bi-file-earmark-text"></i> Laporan Tabungan Qurban
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="#" class="nav-link">
-                <i class="bi bi-exclamation-triangle"></i> Peringatan
-            </a>
-        </li>
     </ul>
 
     <div class="logout-form">
