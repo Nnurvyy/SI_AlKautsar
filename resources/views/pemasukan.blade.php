@@ -43,7 +43,6 @@
 
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
         
-        <!-- Search Bar & Filter -->
         <div class="d-flex align-items-center flex-wrap">
             <div class="input-group search-bar me-2" style="width: 300px;">
                 <span class="input-group-text bg-white border-end-0">
@@ -84,7 +83,6 @@
         <h5 class="fw-bold mb-0 text-custom-green">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</h5>
     </div>
 
-    <!-- Tabel Data Dummy -->
     <div class="card transaction-table border-0 shadow-sm">
         <div class="card-body">
             <div class="table-responsive">
@@ -106,21 +104,28 @@
                     <tbody>
                         @foreach ($transaksi as $item)
                         <tr>
-                            <td>{{ $item->tanggal }}</td>
+                            {{-- DIUBAH: ditambahkan class col-nowrap --}}
+                            <td class="col-nowrap">{{ $item->tanggal }}</td>
                             <td>{{ $item->kategori }}</td>
                             <td>{{ $item->divisi }}</td>
                             <td>{{ $item->santri }}</td>
                             <td>{{ $item->deskripsi }}</td>
                             <td>{{ $item->metode_pembayaran }}</td>
-                            <td class="text-end text-custom-green fw-bold">
+                            
+                            {{-- DIUBAH: ditambahkan class col-nowrap --}}
+                            <td class="text-end text-custom-green fw-bold col-nowrap">
                                 Rp {{ number_format($item->jumlah, 0, ',', '.') }}
                             </td>
-                            <td class="text-center">
+
+                            {{-- DIUBAH: ditambahkan class col-nowrap --}}
+                            <td class="text-center col-nowrap">
                                 <a href="#" class="btn btn-sm me-1" title="Edit">
-                                    <i class="bi bi-pencil text-primary fs-5"></i>
+                                    {{-- DIUBAH: fs-5 menjadi fs-6 --}}
+                                    <i class="bi bi-pencil text-primary fs-6"></i>
                                 </a>
                                 <a href="#" class="btn btn-sm" title="Hapus">
-                                    <i class="bi bi-trash text-danger fs-5"></i>
+                                    {{-- DIUBAH: fs-5 menjadi fs-6 --}}
+                                    <i class="bi bi-trash text-danger fs-6"></i>
                                 </a>
                             </td>
                         </tr>

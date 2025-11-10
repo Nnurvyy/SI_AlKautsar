@@ -60,6 +60,16 @@
                 <i class="bi bi-wallet"></i> Tabungan Hewan Qurban
             </a>
         </li>
+        <li class="nav-item">
+            <a href="#" class="nav-link">
+                <i class="bi bi-graph-up"></i> Program
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="#" class="nav-link">
+                <i class="bi bi-graph-up"></i> Donasi
+            </a>
+        </li>
     </ul>
 
     <div class="logout-form">
