@@ -81,6 +81,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Pemasukan (URL: /admin/pemasukan)
     Route::resource('pemasukan', PemasukanController::class);
 
+    Route::resource('kategori-pemasukan', \App\Http\Controllers\PemasukanKategoriController::class);
+
     // Pengeluaran (URL: /admin/pengeluaran)
     Route::get('/pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran');
 
