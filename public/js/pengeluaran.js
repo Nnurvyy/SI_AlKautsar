@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    // Setup CSRF Token
+    // CSRF Token
     $.ajaxSetup({
         headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
     });
@@ -19,12 +19,12 @@ $(document).ready(function() {
                 form[0].reset();
 
                 // PERBAIKAN: Buat form Hapus dinamis
-                let newKatId = response.data.id_kategori_pemasukan;
-                let katDeleteUrl = `/admin/kategori-pemasukan/${newKatId}`;
+                let newKatId = response.data.id_kategori_pengeluaran;
+                let katDeleteUrl = `/admin/kategori-pengeluaran/${newKatId}`;
 
                 let newRow = `
                     <tr>
-                        <td class="ps-3">${response.data.nama_kategori_pemasukan}</td>
+                        <td class="ps-3">${response.data.nama_kategori_pengeluaran}</td>
                         <td class="text-center">
                             <form action="${katDeleteUrl}" method="POST" onsubmit="return confirm('Hapus kategori ini?');">
                                 <input type="hidden" name="_token" value="${csrfToken}">
@@ -37,20 +37,20 @@ $(document).ready(function() {
                     </tr>`;
                 $('#tableBodyKategori').prepend(newRow);
 
-                // Tambah ke Dropdown Pemasukan
-                $('#selectKategoriPemasukan').append(new Option(response.data.nama_kategori_pemasukan, response.data.id_kategori_pemasukan));
+                // Tambah ke Dropdown
+                $('#selectKategoriPengeluaran').append(new Option(response.data.nama_kategori_pengeluaran, response.data.id_kategori_pengeluaran));
             },
             error: function(xhr) {
-                alert('Gagal menambah kategori. Pastikan nama belum ada.');
+                showAlert('danger', 'Gagal menambah kategori.');
             }
         });
     });
 
-    // --- 2. AJAX TAMBAH PEMASUKAN ---
-    $('#formPemasukanAjax').on('submit', function(e) {
+    // --- 2. AJAX TAMBAH PENGELUARAN ---
+    $('#formPengeluaranAjax').on('submit', function(e) {
         e.preventDefault();
         let form = $(this);
-        let btn = $('#btnSimpanPemasukan');
+        let btn = $('#btnSimpanPengeluaran');
         let csrfToken = $('meta[name="csrf-token"]').attr('content'); // Ambil token
         
         btn.prop('disabled', true).text('Menyimpan...');
@@ -60,19 +60,19 @@ $(document).ready(function() {
             url: form.attr('action'),
             data: form.serialize(),
             success: function(response) {
-                $('#modalTambahPemasukan').modal('hide');
+                $('#modalTambahPengeluaran').modal('hide');
                 form[0].reset();
                 showAlert('success', response.message);
 
-                // Format Rupiah & Tanggal JS
+                // Format Rupiah
                 let rupiah = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(response.data.nominal);
                 let date = new Date(response.data.tanggal);
                 let tglString = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 
                 // PERBAIKAN: Buat tombol Aksi dinamis
-                let newId = response.data.id_pemasukan;
-                let editUrl = `/admin/pemasukan/${newId}/edit`;
-                let deleteUrl = `/admin/pemasukan/${newId}`;
+                let newId = response.data.id_pengeluaran;
+                let editUrl = `/admin/pengeluaran/${newId}/edit`;
+                let deleteUrl = `/admin/pengeluaran/${newId}`;
 
                 let actionHtml = `
                     <td class="text-center col-nowrap">
@@ -90,18 +90,18 @@ $(document).ready(function() {
                 `;
 
                 let newRow = `
-                    <tr class="table-success">
+                    <tr class="table-danger"> <!-- Highlight Merah -->
                         <td>Baru</td>
                         <td class="col-nowrap">${tglString}</td>
-                        <td><span class="badge bg-info text-dark">${response.data.kategori_pemasukan.nama_kategori_pemasukan}</span></td>
+                        <td><span class="badge bg-warning text-dark">${response.data.kategori_pengeluaran.nama_kategori_pengeluaran}</span></td>
                         <td>${response.data.deskripsi || '-'}</td>
-                        <td class="text-end text-custom-green fw-bold col-nowrap">${rupiah}</td>
+                        <td class="text-end text-danger fw-bold col-nowrap">${rupiah}</td>
                         ${actionHtml}
                     </tr>`;
-                $('#tableBodyPemasukan').prepend(newRow);
+                $('#tableBodyPengeluaran').prepend(newRow);
             },
             error: function(xhr) {
-                alert('Gagal menyimpan. Cek inputan.');
+                showAlert('danger', 'Gagal menyimpan. Cek inputan.');
             },
             complete: function() {
                 btn.prop('disabled', false).text('Simpan');
