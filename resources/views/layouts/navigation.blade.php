@@ -4,10 +4,6 @@
         <p>E-Masjid</p>
     </div>
 
-    <!-- ====================================================== -->
-    <!--          SEMUA NAMA RUTE DI SINI DIPERBARUI            -->
-    <!-- ====================================================== -->
-
     <ul class="nav nav-pills flex-column mb-auto">
         <li class="nav-item">
             <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" aria-current="page">
@@ -19,11 +15,14 @@
                 <i class="bi bi-box-arrow-in-down"></i> Pemasukan
             </a>
         </li>
+        
+        {{-- PERBAIKAN DI SINI: Ubah route('admin.pengeluaran') jadi route('admin.pengeluaran.index') --}}
         <li class="nav-item">
-            <a href="{{ route('admin.pengeluaran') }}" class="nav-link {{ request()->routeIs('admin.pengeluaran') ? 'active' : '' }}">
+            <a href="{{ route('admin.pengeluaran.index') }}" class="nav-link {{ request()->routeIs('admin.pengeluaran.*') ? 'active' : '' }}">
                 <i class="bi bi-box-arrow-up"></i> Pengeluaran
             </a>
         </li>
+        
         <li class="nav-item">
             <a href="{{ route('admin.lapkeu.index') }}" class="nav-link {{ request()->routeIs('admin.lapkeu.*') ? 'active' : '' }}">
                 <i class="bi bi-file-earmark-text"></i> Laporan Keuangan
