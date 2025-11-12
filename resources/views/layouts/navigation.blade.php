@@ -30,7 +30,7 @@
             </a>
         </li>
         <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="{{ route('admin.grafik.index') }}" class="nav-link {{ request()->routeIs('admin.grafik.*') ? 'active' : '' }}">
                 <i class="bi bi-graph-up"></i> Grafik
             </a>
         </li>
@@ -69,6 +69,15 @@
         <li class="nav-item">
             <a href="#" class="nav-link">
                 <i class="bi bi-exclamation-triangle"></i> Peringatan
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{{ route('admin.artikel.index') }}" class="nav-link {{ request()->routeIs('admin.artikel.*') ? 'active' : '' }}">
+                <i class="bi bi-newspaper"></i> Artikel
+            </a>
+        </li><li class="nav-item">
+            <a href="{{ route('admin.event.index') }}" class="nav-link {{ request()->routeIs('admin.event.*') ? 'active' : '' }}">
+                <i class="bi bi-calendar-event"></i> Program
             </a>
         </li>
     </ul>

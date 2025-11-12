@@ -49,7 +49,7 @@ class PengeluaranSeeder extends Seeder
             );
 
             Pengeluaran::create([
-                'id_pengeluaran' => Str::uuid(), 
+                'id_pengeluaran' => Str::uuid(),
                 'tanggal' => $tanggal,
                 'nominal' => rand(20, 100) * 10000, // (200rb - 1jt)
                 'id_kategori_pengeluaran' => $kategoriPengeluaran->random()->id_kategori_pengeluaran,

@@ -10,7 +10,10 @@ use App\Http\Controllers\TabunganHewanQurbanController;
 use App\Http\Controllers\PemasukanTabunganQurbanController;
 use App\Http\Controllers\InfaqJumatController;
 use App\Http\Controllers\BarangInventarisController;
+use App\Http\Controllers\GrafikController;
 use App\Http\Controllers\LapKeuController;
+use App\Http\Controllers\ArtikelController;
+use App\Http\Controllers\EventController;
 
 
 
@@ -84,16 +87,17 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         'index','store', 'update', 'destroy', 'show'
     ]);
     Route::get('inventaris-data', [BarangInventarisController::class, 'data'])->name('inventaris.data');
+    
     // Laporan Keuangan
     Route::get('/lapkeu', [LapKeuController::class, 'index'])->name('lapkeu.index');
     Route::get('/lapkeu/export-pdf', [LapKeuController::class, 'exportPdf'])->name('lapkeu.export.pdf');
 
+    //grafik
+    Route::get('/grafik', [GrafikController::class, 'index'])->name('grafik.index');
 
     // (WAJIB) TAMBAHKAN INI UNTUK KAJIAN
     Route::resource('kajian', \App\Http\Controllers\KajianController::class);
     Route::get('kajian-data', [\App\Http\Controllers\KajianController::class, 'data'])->name('kajian.data');
-
-    // ... (Tambahkan rute admin lainnya di sini) ...
 
     // Rute PDF (pola lapkeu) - Rute spesifik di atas
     Route::get('tabungan-qurban/cetak-pdf', [TabunganHewanQurbanController::class, 'cetakPdf'])
@@ -110,6 +114,13 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('pemasukan-qurban', PemasukanTabunganQurbanController::class)
         ->parameter('pemasukan-qurban', 'id');
 
+    // Artikel
+    Route::resource('artikel', ArtikelController::class);
+    Route::get('artikel-data', [ArtikelController::class, 'data'])->name('artikel.data');
+
+    // Event
+    Route::resource('event', EventController::class);
+    Route::get('event-data', [EventController::class, 'data'])->name('event.data');
 });
 
 
