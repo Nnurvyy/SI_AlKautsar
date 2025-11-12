@@ -18,7 +18,7 @@ class PemasukanController extends Controller
         // 2. Hitung Total Pemasukan
         $totalPemasukan = Pemasukan::sum('nominal');
 
-        // 3. Ambil Data Kategori (Untuk ditampilkan di Modal Tambah & Kelola)
+        // 3. Ambil Data Kategori (PENTING: Untuk Modal Tambah & Dropdown)
         $kategori = KategoriPemasukan::orderBy('nama_kategori_pemasukan', 'asc')->get();
 
         return view('pemasukan', compact('pemasukan', 'totalPemasukan', 'kategori'));
@@ -26,6 +26,7 @@ class PemasukanController extends Controller
 
     public function store(Request $request)
     {
+        // Validasi Input
         $request->validate([
             'id_kategori_pemasukan' => 'required|exists:kategori_pemasukan,id_kategori_pemasukan',
             'nominal' => 'required',
@@ -33,25 +34,28 @@ class PemasukanController extends Controller
             'deskripsi' => 'nullable|string|max:255',
         ]);
 
-        // Hapus titik dari format ribuan
-        $nominalBersih = str_replace('.', '', $request->nominal);
-        $nominalBersih = str_replace(',', '', $nominalBersih);
+        // Hapus format ribuan (titik/koma) dari input nominal
+        $nominalBersih = str_replace(['.', ','], '', $request->nominal);
 
-        Pemasukan::create([
+        // Simpan ke Database
+        $pemasukan = Pemasukan::create([
             'id_kategori_pemasukan' => $request->id_kategori_pemasukan,
             'nominal' => $nominalBersih,
             'tanggal' => $request->tanggal,
             'deskripsi' => $request->deskripsi,
         ]);
 
-        // Redirect kembali ke halaman index dengan pesan sukses
-        return redirect()->route('admin.pemasukan.index')
-            ->with('success', 'Data pemasukan berhasil ditambahkan.');
+        // Load relasi kategori agar bisa ditampilkan namanya di Tabel JS
+        $pemasukan->load('kategoriPemasukan');
+
+        // PENTING: Return JSON untuk AJAX
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data pemasukan berhasil ditambahkan.',
+            'data' => $pemasukan
+        ]);
     }
 
-    // ... (Method edit, update, destroy biarkan seperti sebelumnya atau sesuaikan jika edit masih pisah halaman)
-    // Untuk saat ini Edit saya biarkan pisah halaman agar tidak terlalu rumit kodingannya.
-    
     public function edit($id)
     {
         $pemasukan = Pemasukan::findOrFail($id);
@@ -68,8 +72,7 @@ class PemasukanController extends Controller
             'deskripsi' => 'nullable|string|max:255',
         ]);
 
-        $nominalBersih = str_replace('.', '', $request->nominal);
-        $nominalBersih = str_replace(',', '', $nominalBersih);
+        $nominalBersih = str_replace(['.', ','], '', $request->nominal);
 
         $pemasukan = Pemasukan::findOrFail($id);
         $pemasukan->update([
