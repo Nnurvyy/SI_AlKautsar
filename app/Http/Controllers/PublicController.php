@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\KhotibJumat;  
-use Carbon\Carbon;          
+use App\Models\KhotibJumat;
+use Carbon\Carbon;
 use App\Models\Kajian; // Kita tetap import, tapi tidak dipakai di jadwalKajian
 
 class PublicController extends Controller

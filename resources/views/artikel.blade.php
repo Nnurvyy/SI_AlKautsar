@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Khotib Jumat')
+@section('title', 'Artikel')
 
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -13,9 +13,9 @@
         <div class="d-flex flex-wrap align-items-center">
             <div class="me-2 mb-2 mb-md-0">
                 <select class="form-select" id="statusFilter" style="width: 150px;">
-                    <option value="aktif" selected>Aktif</option>
-                    <option value="tidak_aktif">Tidak Aktif</option>
-                    <option value="semua">Semua</option>
+                    <option value="all" selected>Semua</option>
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
                 </select>
             </div>
 
@@ -24,39 +24,36 @@
                 <span class="input-group-text bg-white border-end-0">
                     <i class="bi bi-search"></i>
                 </span>
-                <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Cari khotib, imam, tema, atau tanggal...">
+                <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Cari Judul...">
             </div>
         </div>
         
-        {{-- Tombol Tambah Khotib --}}
+        {{-- Tombol Tambah Artikel --}}
         <div class="d-flex align-items-center mt-2 mt-md-0">
             <button class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalKhotib">
                 <i class="bi bi-plus-circle me-2"></i>
-                Tambah Khutbah
+                Tambah Artikel
             </button>
         </div>
     </div>
 
     <div class="d-flex justify-content-between align-items-center p-3 bg-white rounded shadow-sm mb-4">
-        <h5 class="fw-bold mb-0">Data Khutbah Jumat</h5>
+        <h5 class="fw-bold mb-0">Data Artikel</h5>
     </div>
 
     {{-- Wrapper Tabel --}}
     <div class="card transaction-table border-0 shadow-sm">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover align-middle" id="tabelKhotib">
+                <table class="table table-hover align-middle" id="tabelartikel">
                     <thead class="table-light">
                         <tr>
                             <th scope="col" style="width: 5%;" class="text-center">No</th>
-                            <th scope="col" style="width: 10%;" class="text-center">Foto</th>
-                            <th scope="col">Nama Khotib</th>
-                            <th scope="col">Nama Imam</th>
-                            <th scope="col">Tema Khutbah</th>
-                            <th scope="col" class="text-center" id="sortTanggal" style="cursor:pointer;">
-                                Tanggal <i id="sortIcon" class="bi bi-arrow-down"></i>
-                            </th>
-                            <th scope="col" style="width: 8%;" class="text-center">Aksi</th>
+                            <th scope="col" style="width: 30%;" class="text-center">Judul Artikel</th>
+                            <th scope="col" style="width: 15%;" class="text-center">Penulis Artikel</th>
+                            <th scope="col" style="width: 10%;" class="text-center">Status Artikel</th>
+                            <th scope="col" style="width: 20%;" class="text-center">Tanggal Terbit</th>
+                            <th scope="col" style="width: 13%;" class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -117,7 +114,7 @@
           <div class="mb-3">
             <label for="tema_khutbah" class="form-label">Tema Khutbah <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="tema_khutbah" name="tema_khutbah">
-          </div>    
+          </div>
           <div class="mb-3">
             <label for="tanggal" class="form-label">Tanggal <span class="text-danger">*</span></label>
             <input type="date" class="form-control" id="tanggal" name="tanggal">

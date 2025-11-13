@@ -69,7 +69,7 @@ class PemasukanSeeder extends Seeder
             );
 
             Pemasukan::create([
-                'id_pemasukan' => Str::uuid(), 
+                'id_pemasukan' => Str::uuid(),
                 'tanggal' => $tanggal,
                 'nominal' => rand(50, 200) * 10000,
                 'id_kategori_pemasukan' => $kategoriPemasukan->random()->id_kategori_pemasukan,

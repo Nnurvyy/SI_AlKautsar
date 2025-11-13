@@ -14,7 +14,7 @@ class AuthController extends Controller
      public function showWelcomeForm()
     {
         // Mengarah ke welcome.blade.php
-        return view('auth.welcome'); 
+        return view('auth.welcome');
     }
 
     /**
@@ -23,7 +23,7 @@ class AuthController extends Controller
     public function showLoginForm()
     {
         // Diubah: Mengarah ke auth/login.blade.php
-        return view('auth.login'); 
+        return view('auth.login');
     }
 
     /**
@@ -69,7 +69,7 @@ class AuthController extends Controller
 
     public function dashboard()
     {
-        return view('dashboard'); 
+        return view('dashboard');
     }
 
     /**
