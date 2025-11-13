@@ -11,9 +11,28 @@ class AuthController extends Controller
     /**
      * Menampilkan halaman login.
      */
+     public function showWelcomeForm()
+    {
+        // Mengarah ke welcome.blade.php
+        return view('auth.welcome');
+    }
+
+    /**
+     * Menampilkan halaman login (Sign In).
+     */
     public function showLoginForm()
     {
-        return view('auth.login'); 
+        // Diubah: Mengarah ke auth/login.blade.php
+        return view('auth.login');
+    }
+
+    /**
+     * Menampilkan halaman registrasi (Sign Up).
+     */
+    public function showRegistrationForm()
+    {
+        // BARU: Mengarah ke auth/register.blade.php
+        return view('auth.register');
     }
 
     /**
@@ -50,7 +69,7 @@ class AuthController extends Controller
 
     public function dashboard()
     {
-        return view('dashboard'); 
+        return view('dashboard');
     }
 
     /**

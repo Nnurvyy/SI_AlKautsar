@@ -10,43 +10,38 @@
     <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
             
-            {{-- Header dan Filter (Sesuai Screenshot) --}}
+            {{-- Header dan Filter yang Disesuaikan --}}
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4 class="fw-bold mb-0">Data Grafik Keuangan</h4>
                 
                 <div class="d-flex align-items-center">
                     <div class="me-2">
-                        <select class="form-select" id="filterPeriode">
-                            <option value="bulan" selected>Per Bulan</option>
-                            <option value="tahun">Per Tahun</option>
+                        {{-- Filter utama yang menentukan rentang analisis --}}
+                        <select class="form-select" id="filterRange">
+                            <option value="7_days">7 Hari Terakhir</option>
+                            <option value="30_days">30 Hari Terakhir</option>
+                            <option value="12_months" selected>12 Bulan Terakhir</option>
+                            <option value="current_year">Tahun Berjalan (YTD)</option>
+                            <option value="5_years">5 Tahun Terakhir</option>
+                            <option value="custom">Rentang Kustom (Tanggal)</option>
                         </select>
                     </div>
-                    <div>
-                        <select class="form-select" id="filterTahun">
-                            <option value="2025" selected>2025</option>
-                            {{-- Tahun lainnya akan di-load atau di-generate oleh JS --}}
-                        </select>
+                    
+                    {{-- Area ini akan digunakan untuk menampilkan Date Picker (jika 'custom' dipilih) --}}
+                    <div id="customDateRange" style="display: none;" class="d-flex">
+                        <input type="date" class="form-control me-2" id="startDate" style="width: 150px;" placeholder="Mulai">
+                        <input type="date" class="form-control" id="endDate" style="width: 150px;" placeholder="Selesai">
                     </div>
                 </div>
             </div>
 
-            {{-- Legenda Warna (Sesuai Screenshot) --}}
-            <div class="d-flex align-items-center mb-4">
-                <div class="me-4 d-flex align-items-center">
-                    {{-- Warna #198754 adalah warna default 'success' di Bootstrap --}}
-                    <span class="d-inline-block rounded-circle me-2" style="width: 12px; height: 12px; background-color: #198754;"></span>
-                    <span class="text-muted">Pemasukan</span>
-                </div>
-                <div class="d-flex align-items-center">
-                    {{-- Warna #dc3545 adalah warna default 'danger' di Bootstrap --}}
-                    <span class="d-inline-block rounded-circle me-2" style="width: 12px; height: 12px; background-color: #dc3545;"></span>
-                    <span class="text-muted">Pengeluaran</span>
-                </div>
+            <div>
+
             </div>
             
             {{-- WADAH GRAFIK (Canvas untuk Chart.js) --}}
             <div class="chart-container" style="position: relative; height: 350px;">
-                <canvas id="financialChart"></canvas> 
+                <canvas id="GrafikKeuangan"></canvas>
             </div>
 
             {{-- WADAH LABEL BULAN (Sumbu X) --}}
@@ -63,5 +58,5 @@
 {{-- SCRIPT EXTERNAL --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 {{-- Tempatkan script JS Anda di sini. Misal: --}}
-<script src="{{ asset('js/financial_chart.js') }}"></script> 
+<script src="{{ asset('js/grafikkeuangan.js') }}"></script>
 @endsection
