@@ -62,11 +62,6 @@
         </li>
         <li class="nav-item">
             <a href="#" class="nav-link">
-                <i class="bi bi-graph-up"></i> Program
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="#" class="nav-link">
                 <i class="bi bi-graph-up"></i> Donasi
             </a>
         </li>
@@ -75,7 +70,7 @@
                 <i class="bi bi-newspaper"></i> Artikel
             </a>
         </li><li class="nav-item">
-            <a href="{{ route('admin.event.index') }}" class="nav-link {{ request()->routeIs('admin.event.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.program.index') }}" class="nav-link {{ request()->routeIs('admin.program.*') ? 'active' : '' }}">
                 <i class="bi bi-calendar-event"></i> Program
             </a>
         </li>

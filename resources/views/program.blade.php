@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Event')
+@section('title', 'Program')
 
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -32,7 +32,7 @@
         <div class="d-flex align-items-center mt-2 mt-md-0">
             <button class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalProgram">
                 <i class="bi bi-plus-circle me-2"></i>
-                Tambah Event
+                Tambah Program
             </button>
         </div>
     </div>
@@ -49,11 +49,11 @@
                     <thead class="table-light">
                         <tr> 
                             <th scope="col" style="width: 5%;" class="text-center">No</th>
-                            <th scope="col" style="width: 35%;" class="text-center">Nama Program</th>
-                            <th scope="col" style="width: 20%;" class="text-center">Penyelenggara Program</th>
-                            <th scope="col" style="width: 15%;" class="text-center">Tanggal Program</th>
-                            <th scope="col" style="width: 15%;" class="text-center">Lokasi Program</th>
-                            <th scope="col" style="width: 10%;" class="text-center">Aksi</th>
+                            <th scope="col" style="width: 30%" class="text-center">Nama Program</th>
+                            <th scope="col" style="width: 15%" class="text-center">Tanggal Program</th>
+                            <th scope="col" style="width: 20%" class="text-center">Lokasi Program</th>
+                            <th scope="col" style="width: 15%" class="text-center">Status</th> <!-- Kolom Status Baru -->
+                            <th scope="col" style="width: 15%" class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -70,65 +70,84 @@
     </div>
 </div>
 
-<!-- Modal Form -->
-<div class="modal fade" id="modalKhotib" tabindex="-1">
+<!-- Modal Form Program -->
+<div class="modal fade" id="modalProgram" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
-      <form id="formKhotib" enctype="multipart/form-data">
-        
-        <input type="hidden" id="id_khutbah" name="id_khutbah">
 
-        <div class="modal-header">
-          <h5 class="modal-title">Tambah Khutbah Jumat</h5>
+      <form id="formProgram" enctype="multipart/form-data">
+        <input type="hidden" id="id_program" name="id_program">
+
+        <!-- HEADER -->
+        <div class="modal-header py-2">
+          <h5 class="modal-title fw-bold">Form Data Program</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
 
+        <!-- BODY -->
         <div class="modal-body">
-          
+
+          <!-- File Foto -->
           <div class="mb-3">
-            <label for="foto_khotib" class="form-label">Foto</label>
-            <input type="file" class="d-none" id="foto_khotib" name="foto_khotib" accept="image/*">
-            <div class="position-relative">
-                <label for="foto_khotib" id="foto_khotib_label" class="form-control d-block text-truncate" style="cursor: pointer;">
-                    <span class="text-muted">Choose file...</span>
-                </label>
-                <button type="button" class="btn position-absolute d-none" id="clearFile" title="Hapus foto" 
-                        style="top: 50%; right: 0.3rem; transform: translateY(-50%); z-index: 5; padding: 0 0.5rem; font-size: 1.2rem; color: #6c757d; line-height: 1; background: transparent; border: 0;">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-            <div id="previewContainer" class="position-relative d-none mt-2">
-                <img id="previewFoto"
-                    class="rounded mt-2 mx-auto d-block"
-                    style="width: 200px; height: 200px; object-fit: cover;">
-            </div>
+            <label class="form-label mb-1">Foto Program</label>
+            <input type="file" class="form-control" name="foto_program" id="foto_program" accept="image/*">
           </div>
+
+          <!-- Nama Program -->
           <div class="mb-3">
-            <label for="nama_khotib" class="form-label">Nama Khotib <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="nama_khotib" name="nama_khotib">
+            <label for="nama_program" class="form-label mb-1">Nama Program <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="nama_program" name="nama_program">
           </div>
+
+          <!-- Penyelenggara -->
           <div class="mb-3">
-            <label for="nama_imam" class="form-label">Nama Imam <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="nama_imam" name="nama_imam">
+            <label for="penyelenggara_program" class="form-label mb-1">Penyelenggara <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="penyelenggara_program" name="penyelenggara_program">
           </div>
+
+          <!-- Lokasi -->
           <div class="mb-3">
-            <label for="tema_khutbah" class="form-label">Tema Khutbah <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="tema_khutbah" name="tema_khutbah">
+            <label for="lokasi_program" class="form-label mb-1">Lokasi <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="lokasi_program" name="lokasi_program">
           </div>
+
+          <!-- Tanggal -->
           <div class="mb-3">
-            <label for="tanggal" class="form-label">Tanggal <span class="text-danger">*</span></label>
-            <input type="date" class="form-control" id="tanggal" name="tanggal">
+            <label for="tanggal_program" class="form-label mb-1">Tanggal Pelaksanaan<span class="text-danger">*</span></label>
+            <input type="datetime-local" class="form-control" id="tanggal_program" name="tanggal_program">
           </div>
+
+        <div class="mb-3">
+            <label for="status_program" class="form-label">Status Program</label>
+                <select class="form-select" id="status_program" name="status_program" required>
+                    <option value="" disabled selected>Pilih Status</option>
+                    <option value="belum dilaksanakan">Belum Dilaksanakan</option>
+                    <option value="sedang berjalan">Sedang Berjalan</option>
+                    <option value="sudah dijalankan">Sudah Dijalankan</option>
+                </select>
+            <div class="invalid-feedback" id="status_program_error"></div>
+        </div>            
+
+          <!-- Deskripsi -->
+          <div class="mb-1">
+            <label for="deskripsi_program" class="form-label mb-1">Deskripsi <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="deskripsi_program" name="deskripsi_program" rows="3"></textarea>
+          </div>
+
         </div>
 
-        <div class="modal-footer">
+        <!-- FOOTER -->
+        <div class="modal-footer py-2">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
           <button type="submit" class="btn btn-success">Simpan</button>
         </div>
+
       </form>
     </div>
   </div>
 </div>
+
+
 
 <style>
 
@@ -160,5 +179,5 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="{{ asset('js/khotib.js') }}"></script>
+<script src="{{ asset('js/program.js') }}"></script>
 @endsection

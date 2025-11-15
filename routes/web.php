@@ -13,7 +13,7 @@ use App\Http\Controllers\BarangInventarisController;
 use App\Http\Controllers\GrafikController;
 use App\Http\Controllers\LapKeuController;
 use App\Http\Controllers\ArtikelController;
-use App\Http\Controllers\EventController;
+use App\Http\Controllers\ProgramController;
 
 
 
@@ -133,8 +133,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('artikel-data', [ArtikelController::class, 'data'])->name('artikel.data');
 
     // Event
-    Route::resource('event', EventController::class);
-    Route::get('event-data', [EventController::class, 'data'])->name('event.data');
+    Route::resource('program', ProgramController::class);
+    Route::get('program-data', [ProgramController::class, 'data'])->name('program.data');
 });
 
 
