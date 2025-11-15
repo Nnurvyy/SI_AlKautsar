@@ -146,3 +146,7 @@ Route::middleware(['auth', 'role:publik'])->name('public.')->group(function () {
     // ... (Tambahkan rute 'publik' terotentikasi lainnya di sini) ...
 
 });
+
+Route::get('/jadwal-adzan', [PublicController::class, 'jadwalAdzan'])->name('public.jadwal-adzan');
+Route::get('/api/jadwal-adzan', [PublicController::class, 'jadwalAdzanApi'])->name('public.jadwal-adzan.api');
+

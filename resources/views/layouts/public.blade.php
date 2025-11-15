@@ -237,9 +237,9 @@
             <span>Kajian</span>
         </a>
 
-        <a href="{{ route('public.jadwal-khotib') }}" class="navbar-bottom-item {{ Request::routeIs('public.jadwal-khotib*') ? 'active' : '' }}">
-            <img src="{{ asset('images/icons/khutbah-jumat.png') }}" alt="Khotib">
-            <span>Khotib</span>
+        <a href="{{ route('public.jadwal-adzan') }}" class="navbar-bottom-item {{ Request::routeIs('public.jadwal-adzan*') ? 'active' : '' }}">
+            <img src="{{ asset('images/icons/adzan.png') }}" alt="Adzan">
+            <span>Adzan</span>
         </a>
         
         <a href="{{ route('public.donasi') }}" class="navbar-bottom-item {{ Request::routeIs('public.donasi*') ? 'active' : '' }}">
@@ -278,7 +278,11 @@
                             <img src="{{ asset('images/icons/qurban.png') }}" alt="Qurban" class="modal-list-icon">
                             <span class="fw-medium">Tabungan Qurban</span>
                         </a>
-
+                        <a href="{{ route('public.jadwal-khotib') }}" class="list-group-item list-group-item-action d-flex align-items-center py-3">
+                            <img src="{{ asset('images/icons/khutbah-jumat.png') }}" alt="Khotib" class="modal-list-icon">
+                            <span class="fw-medium">Khutbah Jumat</span>
+                        </a>
+                        
                     </div>
                 </div>
             </div>
