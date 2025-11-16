@@ -331,7 +331,7 @@
                     <i class="bi bi-box-arrow-in-right"></i>
                 </a>
             @else
-                <a href="{{ route('home') }}" class="profile-icon">
+                <a href="{{ route('public.landing') }}" class="profile-icon">
                     <i class="bi bi-person-circle"></i> 
                 </a>
             @endguest

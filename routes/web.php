@@ -127,8 +127,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         ->parameter('pemasukan-qurban', 'id');
 
 
-    Route::get('/admin/settings', [PengaturanController::class, 'edit'])->name('settings.edit');
-    Route::post('/admin/settings', [PengaturanController::class, 'update'])->name('settings.update');
+    Route::get('/settings', [PengaturanController::class, 'edit'])->name('settings.edit');
+    Route::post('/settings', [PengaturanController::class, 'update'])->name('settings.update');
 
 });
 

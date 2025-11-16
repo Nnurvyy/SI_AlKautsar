@@ -1,15 +1,26 @@
 @extends('layouts.app') 
 
+@section('title', 'Pengaturan Masjid')
+
+@push('styles')
+{{-- CSS untuk preview gambar --}}
+<style>
+    #clearFotoMasjid:hover { color: #212529; }
+    #clearFotoMasjid:focus { box-shadow: none; }
+    #foto_masjid_label { cursor: pointer; }
+</style>
+@endpush
+
 @section('content')
-<div class="container-fluid">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
+<div class="container-fluid p-4"> 
     <h1>Pengaturan Masjid</h1>
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+    {{-- Container untuk notifikasi AJAX (dihapus karena pakai SweetAlert) --}}
+    {{-- <div id="alertContainer"></div> --}}
 
-    {{-- PENTING: tambahkan enctype="multipart/form-data" untuk upload gambar --}}
-    <form action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data">
+    <form id="formSettings" action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data">
         @csrf
         
         <div class="card">
@@ -30,12 +41,36 @@
                     <small class="form-text">Cari ID Kota di API MyQuran (misal: 1204 untuk Bandung, 1218 untuk Tasikmalaya).</small>
                 </div>
                 
+                @php
+                    $foto_url = $settings->foto_masjid ? Storage::url($settings->foto_masjid) : '';
+                    $foto_name = $settings->foto_masjid ? basename($settings->foto_masjid) : '';
+                @endphp
                 <div class="mb-3">
-                    <label for="foto_masjid" class="form-label">Foto Masjid (Landing Page)</label>
-                    @if($settings->foto_masjid)
-                        <img src="{{ Storage::url($settings->foto_masjid) }}" alt="Foto Masjid" class="img-thumbnail mb-2" width="300">
-                    @endif
-                    <input type="file" class="form-control" id="foto_masjid" name="foto_masjid">
+                    <label for="foto_masjid" class="form-label">Foto Masjid (jpg/png/webp, max 2MB)</label>
+                    <input type="file" class="d-none" id="foto_masjid" name="foto_masjid" accept="image/*">
+                    
+                    {{-- ================================================= --}}
+                    {{-- PERBAIKAN: Memindahkan Tombol X ke dalam Label --}}
+                    {{-- ================================================= --}}
+                    
+                    {{-- Hapus <div> wrapper, tambahkan 'position-relative' ke label --}}
+                    <label for="foto_masjid" id="foto_masjid_label" class="form-control d-block text-truncate position-relative">
+                        <span class="{{ $foto_url ? '' : 'text-muted' }}">{{ $foto_name ?: 'Choose file...' }}</span>
+                        
+                        {{-- Tombol X sekarang ada di DALAM label --}}
+                        <button type="button" class="btn position-absolute {{ $foto_url ? '' : 'd-none' }}" id="clearFotoMasjid" title="Hapus foto" 
+                                style="top: 50%; right: 0.3rem; transform: translateY(-50%); z-index: 5; padding: 0 0.5rem; font-size: 1.2rem; color: #6c757d; line-height: 1; background: transparent; border: 0;">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </label>
+
+                    {{-- Preview Container (Tidak Berubah) --}}
+                    <div id="previewFotoMasjidContainer" class="position-relative {{ $foto_url ? '' : 'd-none' }} mt-2">
+                        <img id="previewFotoMasjid"
+                             src="{{ $foto_url }}"
+                             class="rounded mt-2 mx-auto d-block"
+                             style="width: 200px; height: 200px; object-fit: cover;">
+                    </div>
                     <small class="form-text">Kosongkan jika tidak ingin mengubah foto.</small>
                 </div>
 
@@ -67,9 +102,9 @@
         </div>
     </form>
 </div>
-
-{{-- 
-PENTING! Jalankan perintah ini 1x di terminal Anda agar gambar bisa tampil:
-php artisan storage:link 
---}}
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ asset('js/settings.js') }}"></script>
+@endpush

@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\MasjidProfil; // <-- Tambahkan ini
-use Illuminate\Support\Facades\Storage; // <-- Tambahkan ini
-use Illuminate\Support\Facades\Artisan;
+use App\Models\MasjidProfil;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException; // <-- Penting untuk AJAX
 
 class PengaturanController extends Controller
 {
@@ -14,11 +14,11 @@ class PengaturanController extends Controller
      */
     public function edit()
     {
-        // Ambil baris pertama, atau buat baru jika tabel masih kosong
-        // Model Anda akan otomatis membuat UUID jika ini baris baru
         $settings = MasjidProfil::firstOrCreate([]); 
         
-        return view('settings', compact('settings'));
+        // Pastikan view Anda ada di 'resources/views/admin/settings/edit.blade.php'
+        // Jika file Anda 'settings.blade.php', ganti 'admin.settings.edit' menjadi 'settings'
+        return view('settings', compact('settings')); 
     }
 
     /**
@@ -26,48 +26,72 @@ class PengaturanController extends Controller
      */
     public function update(Request $request)
     {
-        // Validasi input
-        $request->validate([
-            'nama_masjid' => 'required|string|max:255',
-            'lokasi_nama' => 'required|string|max:255',
-            'lokasi_id_api' => 'required|string|max:10',
-            'foto_masjid' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', // 2MB Max
-            'social_facebook' => 'nullable|url',
-            'social_instagram' => 'nullable|url',
-            'social_twitter' => 'nullable|url',
-            'social_youtube' => 'nullable|url',
-            'social_whatsapp' => 'nullable|string',
-        ]);
+        try {
+            $request->validate([
+                'nama_masjid' => 'required|string|max:255',
+                'lokasi_nama' => 'required|string|max:255',
+                'lokasi_id_api' => 'required|string|max:10',
+                'foto_masjid' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', 
+                'social_facebook' => 'nullable|url',
+                'social_instagram' => 'nullable|url',
+                'social_twitter' => 'nullable|url',
+                'social_youtube' => 'nullable|url',
+                'social_whatsapp' => 'nullable|string',
+            ]);
 
-        // Ambil data settings (yang seharusnya hanya ada 1 baris)
-        $settings = MasjidProfil::first();
+            $settings = MasjidProfil::first();
+            // Ambil semua data kecuali token, method, foto, dan hapus_foto
+            $dataToUpdate = $request->except(['_token', '_method', 'foto_masjid', 'hapus_foto_masjid']);
 
-        // Handle Upload Foto
-        if ($request->hasFile('foto_masjid')) {
-            // Hapus foto lama jika ada
-            if ($settings->foto_masjid) {
-                Storage::delete($settings->foto_masjid);
+            // 1. Jika ada FILE BARU di-upload
+            if ($request->hasFile('foto_masjid')) {
+                
+                // Hapus foto lama (jika ada) dari disk 'public'
+                if ($settings->foto_masjid && Storage::disk('public')->exists($settings->foto_masjid)) {
+                    Storage::disk('public')->delete($settings->foto_masjid);
+                }
+                
+                // Simpan foto baru ke 'storage/app/public/masjid'
+                // Ini akan mengembalikan path 'masjid/namafile.jpg' (INI YANG BENAR)
+                $path = $request->file('foto_masjid')->store('masjid', 'public');
+                $dataToUpdate['foto_masjid'] = $path;
+
+            // 2. Jika TIDAK ADA file baru, TAPI user klik "X" (Hapus Foto)
+            } else if ($request->input('hapus_foto_masjid') === '1') {
+                
+                // Hapus foto lama (jika ada) dari disk 'public'
+                if ($settings->foto_masjid && Storage::disk('public')->exists($settings->foto_masjid)) {
+                    Storage::disk('public')->delete($settings->foto_masjid);
+                }
+                // Set 'null' di database
+                $dataToUpdate['foto_masjid'] = null;
             }
-            
-            // Simpan foto baru ke 'storage/app/public/masjid'
-            // Nama file akan di-generate otomatis
-            $path = $request->file('foto_masjid')->store('public/masjid');
-            $settings->foto_masjid = $path;
+            // 3. (Jika tidak ada file baru & tidak klik "X", biarkan foto_masjid apa adanya)
+
+            // Update database
+            $settings->update($dataToUpdate);
+            $settings->refresh(); // Ambil data terbaru setelah update
+
+            // Kirim respon JSON sukses
+            return response()->json([
+                'success' => true, 
+                'message' => 'Pengaturan berhasil diperbarui!',
+                'foto_url' => $settings->foto_masjid ? Storage::url($settings->foto_masjid) : null 
+            ]);
+
+        } catch (ValidationException $e) {
+            // Kirim respon JSON jika validasi gagal
+            return response()->json([
+                'success' => false,
+                'message' => 'Input tidak valid.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            // Kirim respon JSON jika ada error lain
+            return response()->json([
+                'success' => false, 
+                'message' => 'Terjadi kesalahan server: ' . $e->getMessage()
+            ], 500);
         }
-
-        // Update data lainnya
-        $settings->nama_masjid = $request->nama_masjid;
-        $settings->lokasi_nama = $request->lokasi_nama;
-        $settings->lokasi_id_api = $request->lokasi_id_api;
-        $settings->social_facebook = $request->social_facebook;
-        $settings->social_instagram = $request->social_instagram;
-        $settings->social_twitter = $request->social_twitter;
-        $settings->social_youtube = $request->social_youtube;
-        $settings->social_whatsapp = $request->social_whatsapp;
-
-        $settings->save();
-
-        // Redirect kembali ke halaman settings dengan pesan sukses
-        return redirect()->route('admin.settings.edit')->with('success', 'Pengaturan berhasil diperbarui!');
     }
 }
