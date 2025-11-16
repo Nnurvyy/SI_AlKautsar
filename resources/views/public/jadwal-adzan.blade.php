@@ -127,17 +127,41 @@
         
             }
         
-            .card-no-border .card-header {
+                        .card-no-border .card-header {                                               
         
-                border-bottom: none !important;
+                                                                                                     
         
-                background-color: transparent !important;
+                            border-bottom: none !important;                                          
         
-                padding-bottom: 0 !important; /* Adjust padding if needed after removing border */
+                                                                                                     
         
-            }
+                            background-color: transparent !important;                                
         
-        </style>@endpush
+                                                                                                     
+        
+                            padding-bottom: 0 !important; /* Adjust padding if needed after removing 
+        
+            border */                                                                                
+        
+                                                                                                     
+        
+                        }
+        
+            
+        
+                        @media (min-width: 768px) {
+        
+                            #bulan-select {
+        
+                                min-width: 150px;
+        
+                            }
+        
+                        }
+        
+                                                                                                     
+        
+                    </style>@endpush
 
 @section('content')
 <div class="main-content">

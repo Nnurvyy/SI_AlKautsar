@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Models\KhotibJumat;  
 use Carbon\Carbon;          
-use App\Models\Kajian; // Kita tetap import, tapi tidak dipakai di jadwalKajian
+use Illuminate\Support\Facades\Log;
 
 class PublicController extends Controller
 {
@@ -262,11 +262,11 @@ class PublicController extends Controller
             ], 422);
         } catch (\Illuminate\Http\Client\RequestException $e) {
             // Handle external API errors (e.g., 404, 500 from myquran.com)
-            \Log::error('API myquran.com error: ' . $e->getMessage());
+            Log::error('API myquran.com error: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Gagal mengambil data dari sumber eksternal.'], 502); // 502 Bad Gateway
         } catch (\Exception $e) {
             // Handle any other unexpected errors
-            \Log::error('Error in jadwalAdzanApi: ' . $e->getMessage());
+            Log::error('Error in jadwalAdzanApi: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Terjadi kesalahan pada server.'], 500);
         }
     }

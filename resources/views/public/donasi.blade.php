@@ -9,6 +9,7 @@
     .swiper-container-wrapper {
         position: relative;
         padding: 0;
+        /* Media query yang saya tambahkan sebelumnya sudah dihapus */
     }
     .swiper {
         overflow: hidden;
@@ -119,48 +120,40 @@
     }
 
     /* ================================== */
-    /* */
+    /* Card Grid Bawah */
     /* ================================== */
     .donation-list-card {
         border: none;
-        border-radius: 12px; /* Tepi tumpul */
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Shadow halus */
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         margin-bottom: 1rem;
-        overflow: hidden; /* Penting untuk rounded corners */
-
-        /* === TAMBAHAN UNTUK ANIMASI HOVER === */
+        overflow: hidden;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-
-    /* === TAMBAHAN UNTUK ANIMASI HOVER === */
     .donation-list-card:hover {
-        /* Efek card terangkat */
         transform: translateY(-5px); 
-        
-        /* Shadow menjadi lebih jelas saat terangkat */
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12); 
     }
     .donation-list-card .card-img {
         object-fit: cover;
-        height: 100%; /* Gambar mengisi tinggi kolomnya */
-        min-height: 140px; /* Tinggi minimal jika teksnya pendek */
-        border-radius: 12px 0 0 12px !important; /* Tumpul di kiri */
+        height: 100%;
+        min-height: 140px;
+        border-radius: 12px 0 0 12px !important;
     }
     .donation-list-card .card-body {
-        padding: 0.75rem 1rem; /* Padding lebih kecil */
+        padding: 0.75rem 1rem;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
     }
     .donation-list-card .card-title {
-        font-size: 0.95rem; /* Judul sedikit lebih kecil */
+        font-size: 0.95rem;
         font-weight: 700;
         line-height: 1.3;
         margin-bottom: 0.5rem;
-        /* Batasi 2 baris */
         display: -webkit-box;
         -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;  
+        -webkit-box-orient: vertical; 	
         overflow: hidden;
     }
     .donation-list-card .progress-label {
@@ -171,11 +164,11 @@
     .donation-list-card .progress-amount {
         font-size: 0.9rem;
         font-weight: 700;
-        color: #1abc9c; /* Tema hijau */
+        color: #1abc9c;
         margin-bottom: 0.5rem;
     }
     .donation-list-card .progress {
-        height: 6px; /* Progress bar tipis */
+        height: 6px;
         border-radius: 6px;
     }
     .donation-list-card .progress-bar {
@@ -190,7 +183,7 @@
     .donation-list-card .days-left {
         font-size: 0.8rem;
         font-weight: 600;
-        color: #e74c3c; /* Merah */
+        color: #e74c3c;
     }
     .donation-list-card .days-left span {
         color: #6c757d;
@@ -210,32 +203,47 @@
         border-color: #16a085;
     }
 
-
+    /* Judul Halaman */
     .donasi-title-heading {
         font-family: 'Poppins', sans-serif;
-        font-weight: 700; /* Bold */
-        font-size: 1.8rem; /* Bigger */
-        color: #333; /* Dark color */
+        font-weight: 700;
+        font-size: 1.8rem;
+        color: #333;
         margin-bottom: 0.5rem;
     }
-    
     .donasi-title-heading .bi {
-        color: #1abc9c; /* Theme color */
-        font-size: 1.5rem; /* Icon size */
-        vertical-align: -2px; /* Align icon nicely */
+        color: #1abc9c;
+        font-size: 1.5rem;
+        vertical-align: -2px;
     }
-    
-    .donasi-title-sub {
-        font-size: 1rem;
-        color: #6c757d; /* Muted text */
-        margin-bottom: 1rem;
+    .donasi-title-sub { 
+        font-size: 1rem; 
+        color: #6c757d;
+        margin-bottom: 1rem; 
     }
 
-</style>
-@endpush
+    /* === Perubahan Grid Sesuai Permintaan Anda Sebelumnya === */
+    @media (min-width: 768px) {
+        .donation-list-grid {
+            display: grid;
+            /* 1 kolom di Tablet */
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+    }
+
+    @media (min-width: 992px) {
+        .donation-list-grid {
+            /* 2 kolom di Desktop */
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+                                                                        
+</style>@endpush
 
 @section('content')
 
+{{-- Ini sudah di dalam container, jadi ada jarak --}}
 <div class="container pt-4 pb-3">
     <h2 class="donasi-title-heading">
         Mari Berdonasi
@@ -245,6 +253,13 @@
     </p>
 </div>
 
+{{-- 
+    =================================================
+    PERUBAHAN 2: TAMBAHKAN <div class="container"> 
+    DI SEKELILING swiper-container-wrapper
+    =================================================
+--}}
+<div class="container">
     <div class="swiper-container-wrapper">
         <div class="swiper donasi-swiper">
             <div class="swiper-wrapper">
@@ -300,11 +315,14 @@
         <div class="swiper-button-prev donasi-button-prev"></div>
         <div class="swiper-button-next donasi-button-next"></div>
     </div>
+</div> {{-- Penutup <div class="container"> --}}
 
-<div class="container mt-3">
+
+{{-- Ini juga sudah di dalam container, jadi ada jarak --}}
+<div class="container mt-3"> 
     
-    <div class="card donation-list-card">
-        <div class="row g-0">
+    <div class="donation-list-grid">
+        <div class="card donation-list-card"> 		<div class="row g-0">
             <div class="col-4">
                 <img src="{{ asset('images/donasi/pembangunan-masjid.jpg') }}" class="card-img" alt="Pembangunan Masjid">
             </div>
@@ -372,25 +390,41 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-</div>
-@endsection
-
+                </div> 
+                </div>
+                </div> 
+                                                                    
+        </div> 
+            @endsection
 @push('scripts')
+{{-- Tidak ada perubahan di Javascript --}}
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        new Swiper('.donasi-swiper', {
-            slidesPerView: 1,
-            spaceBetween: 0,
-            loop: true, // Loop sekarang akan berfungsi karena ada > 1 slide
-            navigation: {
-                nextEl: '.donasi-button-next',
-                prevEl: '.donasi-button-prev',
-            },
-        });
-    });
+            new Swiper('.donasi-swiper', { 
+                slidesPerView: 1, 
+                spaceBetween: 15, 
+                loop: true, 
+                navigation: { 
+                    nextEl: '.donasi-button-next', 
+                    prevEl: '.donasi-button-prev', 
+                },
+                breakpoints: {
+                    768: {
+                        slidesPerView: 2,
+                        spaceBetween: 20
+                    },
+                    992: {
+                        slidesPerView: 2.5,
+                        centeredSlides: true,
+                        spaceBetween: 30
+                    },
+                    1200: {
+                        slidesPerView: 3,
+                        centeredSlides: true,
+                        spaceBetween: 30
+                    }
+                }
+            }); 	});
 </script>
 @endpush
