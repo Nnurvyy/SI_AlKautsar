@@ -12,6 +12,7 @@ use App\Http\Controllers\InfaqJumatController;
 use App\Http\Controllers\BarangInventarisController;
 use App\Http\Controllers\LapKeuController;
 use App\Http\Controllers\QurbanController;
+use App\Http\Controllers\PengaturanController;
 
 
 
@@ -124,6 +125,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Rute Resource (CRUD Setoran/Pemasukan)
     Route::resource('pemasukan-qurban', PemasukanTabunganQurbanController::class)
         ->parameter('pemasukan-qurban', 'id');
+
+
+    Route::get('/admin/settings', [PengaturanController::class, 'edit'])->name('settings.edit');
+    Route::post('/admin/settings', [PengaturanController::class, 'update'])->name('settings.update');
 
 });
 

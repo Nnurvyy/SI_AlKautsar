@@ -340,10 +340,10 @@
 
 
     <section class="hero-section" id="hero-section">
-        <img src="{{ asset('images/masjid.jpeg') }}" id="hero-bg-image" alt="Hero Background">
+        <img src="{{ $masjidSettings->foto_masjid ? Storage::url($masjidSettings->foto_masjid) : asset('images/masjid.jpeg') }}" id="hero-bg-image" alt="Hero Background">
         <div class="hero-content">
-            <h1>Masjid Al-Jabbar</h1>
-            <p>Bandung, Jawa Barat</p>
+            <h1>Masjid {{ $masjidSettings->nama_masjid }}</h1>
+            <p>{{ $masjidSettings->lokasi_nama }}</p>
         </div>
     </section>
 

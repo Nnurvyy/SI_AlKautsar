@@ -1,7 +1,7 @@
 <nav id="sidebar" class="sidebar d-flex flex-column">
     <div class="sidebar-header">
         <h5>Sistem Informasi</h5>
-        <p>E-Masjid</p>
+        <p>Smart Masjid</p>
     </div>
 
     <!-- ====================================================== -->

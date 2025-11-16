@@ -10,10 +10,6 @@ use Illuminate\Support\Facades\Log;
 
 class PublicController extends Controller
 {
-    public function landingPage()
-    {
-        return view('landing-page');
-    }
 
     /**
      * Menampilkan halaman list Jadwal Khotib Jumat
@@ -269,5 +265,25 @@ class PublicController extends Controller
             Log::error('Error in jadwalAdzanApi: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Terjadi kesalahan pada server.'], 500);
         }
+    }
+
+    public function landingPage()
+    {
+        // Ambil profil masjid jika model ada
+        $masjidSettings = null;
+        if (class_exists(\App\Models\MasjidProfil::class)) {
+            $masjidSettings = \App\Models\MasjidProfil::first();
+        }
+
+        // Fallback aman jika belum ada data
+        if (!$masjidSettings) {
+            $masjidSettings = (object)[
+                'nama_masjid' => config('app.name', 'E‑Masjid'),
+                'lokasi_nama' => 'Bandung',
+                'foto_masjid'  => null,
+            ];
+        }
+
+        return view('landing-page', compact('masjidSettings'));
     }
 }
