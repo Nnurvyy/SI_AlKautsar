@@ -262,7 +262,7 @@
                   =================================================
                 --}}
                 <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ route('public.landing') }}">
-                    <img src="{{ asset('images/icons/kajian.png') }}" alt="Brand Icon" class="navbar-brand-icon me-2">
+                    <img src="{{ asset('images/icons/masjid.png') }}" alt="Brand Icon" class="navbar-brand-icon me-2">
                     <span>Smart Masjid</span>
                 </a>
 
