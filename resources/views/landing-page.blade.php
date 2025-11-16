@@ -26,7 +26,7 @@
         }
         .hero-section {
             position: relative;
-            height: 45vh;
+            height: 35vh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -359,7 +359,6 @@
 
         <div class="feature-section-bg mt-4 py-4">
             <div class="container px-4">
-                <h4 class="section-title text-center mb-4">Fitur-Fitur</h4>
                 <div class="feature-grid">
                     
                     {{-- (DIPERBARUI) Link-link fitur --}}
@@ -367,9 +366,13 @@
                         <img src="{{ asset('images/icons/kajian.png') }}" alt="Kajian Icon" class="feature-icon-img">
                         <span>Kajian</span>
                     </a>
-                    <a href="{{ route('public.jadwal-khotib') }}" class="feature-item bg-purple">
+                    {{-- <a href="{{ route('public.jadwal-khotib') }}" class="feature-item bg-purple">
                         <img src="{{ asset('images/icons/khutbah-jumat.png') }}" alt="Khutbah Jumat Icon" class="feature-icon-img">
                         <span>Khutbah Jumat</span>
+                    </a> --}}
+                    <a href="{{ route('public.jadwal-adzan') }}" class="feature-item bg-purple">
+                        <img src="{{ asset('images/icons/adzan.png') }}" alt="Jadwal Adzan Icon" class="feature-icon-img">
+                        <span>Jadwal Adzan</span>
                     </a>
                     <a href="{{ route('public.artikel') }}" class="feature-item bg-orange">
                         <img src="{{ asset('images/icons/artikel.png') }}" alt="Artikel Icon" class="feature-icon-img">
@@ -383,7 +386,7 @@
                         <img src="{{ asset('images/icons/program.png') }}" alt="Program Icon" class="feature-icon-img">
                         <span>Program</span>
                     </a>
-                    <a href="#" class="feature-item bg-teal">
+                    <a href="{{ route('public.tabungan-qurban-saya') }}" class="feature-item bg-teal">
                         <img src="{{ asset('images/icons/qurban.png') }}" alt="Tabungan Qurban Icon" class="feature-icon-img">
                         <span>Tabungan Qurban</span>
                     </a>

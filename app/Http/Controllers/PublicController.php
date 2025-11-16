@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use App\Models\KhotibJumat;  
 use Carbon\Carbon;          
 use App\Models\Kajian; // Kita tetap import, tapi tidak dipakai di jadwalKajian
@@ -167,5 +168,106 @@ class PublicController extends Controller
             'totalTabungan',
             'hewanQurban'
         ));
+    }
+
+    public function jadwalAdzan(Request $request)
+    {
+        // Validasi input, jika ada
+        $request->validate([
+            'bulan' => 'sometimes|integer|between:1,12',
+            'tahun' => 'sometimes|integer|min:2000',
+        ]);
+
+        $kotaId = '1632'; // Tasikmalaya
+        $bulan = $request->input('bulan', date('m'));
+        $tahun = $request->input('tahun', date('Y'));
+
+        try {
+            $response = Http::get("https://api.myquran.com/v2/sholat/jadwal/{$kotaId}/{$tahun}/{$bulan}");
+            $response->throw(); // Lemparkan exception jika status code bukan 2xx
+
+            $data = $response->json();
+
+            if ($data['status'] && isset($data['data'])) {
+                $jadwal = $data['data']['jadwal'];
+                $lokasi = $data['data']['lokasi'];
+            } else {
+                // Jika status false atau data tidak ada
+                $jadwal = [];
+                $lokasi = 'Tidak Ditemukan';
+                // Mungkin tambahkan flash message untuk error
+                session()->flash('error', 'Data jadwal untuk periode yang dipilih tidak ditemukan.');
+            }
+
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            // Tangani error koneksi atau API
+            $jadwal = [];
+            $lokasi = 'Gagal Mengambil Data';
+            session()->flash('error', 'Gagal terhubung ke server jadwal sholat. Silakan coba lagi nanti.');
+        }
+
+
+        // Data untuk dropdown
+        $namaBulan = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+        ];
+
+        $listTahun = range(date('Y') - 1, date('Y') + 1);
+
+        return view('public.jadwal-adzan', compact(
+            'jadwal',
+            'lokasi',
+            'namaBulan',
+            'listTahun',
+            'bulan',
+            'tahun'
+        ));
+    }
+
+    public function jadwalAdzanApi(Request $request)
+    {
+        try {
+            $request->validate([
+                'bulan' => 'required|integer|between:1,12',
+                'tahun' => 'required|integer|min:2000',
+            ]);
+
+            $kotaId = '1632'; // Tasikmalaya
+            $bulan = $request->input('bulan');
+            $tahun = $request->input('tahun');
+
+            $response = Http::get("https://api.myquran.com/v2/sholat/jadwal/{$kotaId}/{$tahun}/{$bulan}");
+            $response->throw(); // Throws RequestException on 4xx or 5xx responses
+
+            $data = $response->json();
+
+            if ($data && $data['status'] && isset($data['data']['jadwal'])) {
+                return response()->json([
+                    'success' => true,
+                    'jadwal' => $data['data']['jadwal'],
+                    'lokasi' => $data['data']['lokasi'],
+                ]);
+            } else {
+                // The API returned status:true but the data structure is not what we expect
+                return response()->json(['success' => false, 'message' => 'Format data tidak valid.'], 500);
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors specifically
+            return response()->json([
+                'success' => false, 
+                'message' => 'Input tidak valid.', 
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            // Handle external API errors (e.g., 404, 500 from myquran.com)
+            \Log::error('API myquran.com error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Gagal mengambil data dari sumber eksternal.'], 502); // 502 Bad Gateway
+        } catch (\Exception $e) {
+            // Handle any other unexpected errors
+            \Log::error('Error in jadwalAdzanApi: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan pada server.'], 500);
+        }
     }
 }
