@@ -3,11 +3,20 @@
 @section('title', 'Pengaturan Masjid')
 
 @push('styles')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+{{-- ================================================= --}}
+{{-- 1. TAMBAHKAN CSS TEMA BOOTSTRAP 5 UNTUK SELECT2 --}}
+{{-- ================================================= --}}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+
 {{-- CSS untuk preview gambar --}}
 <style>
     #clearFotoMasjid:hover { color: #212529; }
     #clearFotoMasjid:focus { box-shadow: none; }
     #foto_masjid_label { cursor: pointer; }
+    .select2-container {
+        width: 100% !important;
+    }
 </style>
 @endpush
 
@@ -16,9 +25,6 @@
 
 <div class="container-fluid p-4"> 
     <h1>Pengaturan Masjid</h1>
-
-    {{-- Container untuk notifikasi AJAX (dihapus karena pakai SweetAlert) --}}
-    {{-- <div id="alertContainer"></div> --}}
 
     <form id="formSettings" action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data">
         @csrf
@@ -29,42 +35,49 @@
                     <label for="nama_masjid" class="form-label">Nama Masjid</label>
                     <input type="text" class="form-control" id="nama_masjid" name="nama_masjid" value="{{ old('nama_masjid', $settings->nama_masjid) }}">
                 </div>
-
+                
                 <div class="mb-3">
-                    <label for="lokasi_nama" class="form-label">Nama Lokasi (Tampilan)</label>
-                    <input type="text" class="form-control" id="lokasi_nama" name="lokasi_nama" value="{{ old('lokasi_nama', $settings->lokasi_nama) }}" placeholder="Contoh: Bandung, Jawa Barat">
+                    <label for="lokasi-select" class="form-label">Kabupaten/Kota</label>
+                    
+                    {{-- Ini adalah <select> yang akan dilihat user --}}
+                    <select id="lokasi-select" 
+                            name="lokasi_id_api" 
+                            class="form-select">
+                        {{-- Dibiarkan kosong, akan diisi oleh JS --}}
+                    </select>
+                    
+                    {{-- Ini adalah input tersembunyi untuk menyimpan NAMA KOTA --}}
+                    <input type="hidden" 
+                        name="lokasi_nama_api" 
+                        id="lokasi-nama-api" 
+                        value="{{ $selectedLokasiText }}"> {{-- Ambil dari Controller --}}
                 </div>
 
+
                 <div class="mb-3">
-                    <label for="lokasi_id_api" class="form-label">ID Lokasi (Untuk Jadwal Adzan)</label>
-                    <input type="text" class="form-control" id="lokasi_id_api" name="lokasi_id_api" value="{{ old('lokasi_id_api', $settings->lokasi_id_api) }}" placeholder="Contoh: 1204 (Untuk Bandung)">
-                    <small class="form-text">Cari ID Kota di API MyQuran (misal: 1204 untuk Bandung, 1218 untuk Tasikmalaya).</small>
+                    <label for="lokasi_nama" class="form-label">Detail Alamat</label>
+                    <input type="text" class="form-control" id="lokasi_nama" name="lokasi_nama" value="{{ old('lokasi_nama', $settings->lokasi_nama) }}" placeholder="Contoh: Jl Cempaka, No. 123, Bandung">
+                    <small class="form-text">Masukkan detail alamat</small>
                 </div>
+
                 
                 @php
                     $foto_url = $settings->foto_masjid ? Storage::url($settings->foto_masjid) : '';
                     $foto_name = $settings->foto_masjid ? basename($settings->foto_masjid) : '';
                 @endphp
                 <div class="mb-3">
-                    <label for="foto_masjid" class="form-label">Foto Masjid (jpg/png/webp, max 2MB)</label>
+                    <label for="foto_masjid" class="form-label">Foto Masjid (jpg/jpeg/png/webp, max 2MB)</label>
                     <input type="file" class="d-none" id="foto_masjid" name="foto_masjid" accept="image/*">
                     
-                    {{-- ================================================= --}}
-                    {{-- PERBAIKAN: Memindahkan Tombol X ke dalam Label --}}
-                    {{-- ================================================= --}}
-                    
-                    {{-- Hapus <div> wrapper, tambahkan 'position-relative' ke label --}}
                     <label for="foto_masjid" id="foto_masjid_label" class="form-control d-block text-truncate position-relative">
                         <span class="{{ $foto_url ? '' : 'text-muted' }}">{{ $foto_name ?: 'Choose file...' }}</span>
                         
-                        {{-- Tombol X sekarang ada di DALAM label --}}
                         <button type="button" class="btn position-absolute {{ $foto_url ? '' : 'd-none' }}" id="clearFotoMasjid" title="Hapus foto" 
                                 style="top: 50%; right: 0.3rem; transform: translateY(-50%); z-index: 5; padding: 0 0.5rem; font-size: 1.2rem; color: #6c757d; line-height: 1; background: transparent; border: 0;">
                             <i class="bi bi-x-lg"></i>
                         </button>
                     </label>
 
-                    {{-- Preview Container (Tidak Berubah) --}}
                     <div id="previewFotoMasjidContainer" class="position-relative {{ $foto_url ? '' : 'd-none' }} mt-2">
                         <img id="previewFotoMasjid"
                              src="{{ $foto_url }}"
@@ -105,6 +118,70 @@
 @endsection
 
 @push('scripts')
+{{-- Versi jQuery 3.6.0 atau 3.7.1 sama saja, keduanya berfungsi --}}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ asset('js/settings.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const lokasiSelect = $('#lokasi-select'); 
+        const lokasiNamaApiInput = $('#lokasi-nama-api'); // Ambil hidden input
+        
+        // Ambil data yang DIKIRIM OLEH CONTROLLER
+        const defaultLokasiId = @json($selectedLokasiId);
+        const defaultLokasiText = @json($selectedLokasiText);
+
+        // 1. Inisialisasi Select2
+        lokasiSelect.select2({
+            theme: "bootstrap-5",
+            placeholder: 'Cari kota...',
+            ajax: {
+                url: function (params) {
+                    var searchTerm = params.term || "";
+                    return 'https://api.myquran.com/v2/sholat/kota/cari/' + searchTerm;
+                },
+                dataType: 'json',
+                delay: 250, 
+                processResults: function (data) {
+                    if (data.status && data.data) {
+                        return {
+                            results: data.data.map(item => ({
+                                id: item.id,
+                                text: item.lokasi
+                            }))
+                        };
+                    } else {
+                        return { results: [] };
+                    }
+                },
+                cache: true
+            },
+            minimumInputLength: 3 
+        });
+
+        // 2. Cek jika kita punya ID DAN Teks (Sama seperti jadwal-adzan)
+        if (defaultLokasiId && defaultLokasiText) {
+            
+            // Buat <option> baru dari data yang DIKIRIM CONTROLLER
+            var defaultOption = new Option(defaultLokasiText, defaultLokasiId, true, true);
+            
+            // Tambahkan option itu ke select
+            lokasiSelect.append(defaultOption);
+            
+            // Beritahu Select2 untuk meng-update tampilannya
+            lokasiSelect.trigger('change');
+        }
+
+        // 3. Listener PENTING saat memilih kota BARU
+        lokasiSelect.on('select2:select', function (e) {
+            // Ambil data (ID dan Teks) dari item yg dipilih
+            var data = e.params.data;
+            
+            // Update hidden input dengan NAMA kota yang baru
+            // Agar saat disubmit, datanya ikut terkirim ke controller
+            lokasiNamaApiInput.val(data.text);
+        });
+    });
+</script>
 @endpush

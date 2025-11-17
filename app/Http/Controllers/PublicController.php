@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Http;
 use App\Models\KhotibJumat;  
 use Carbon\Carbon;          
 use Illuminate\Support\Facades\Log;
+use App\Models\MasjidProfil;
+use Illuminate\Validation\ValidationException;
 
 class PublicController extends Controller
 {
@@ -168,37 +170,35 @@ class PublicController extends Controller
 
     public function jadwalAdzan(Request $request)
     {
-        // Validasi input, jika ada
-        $request->validate([
-            'bulan' => 'sometimes|integer|between:1,12',
-            'tahun' => 'sometimes|integer|min:2000',
+        // 1. Ambil ID Kota default dari database settings
+        $settings = MasjidProfil::firstOrCreate([], [
+            'nama_masjid' => 'Nama Masjid',
+            'lokasi_nama' => 'KOTA TASIKMALAYA', // Default jika DB kosong
+            'lokasi_id_api' => '1218' // Default (Tasikmalaya) jika DB kosong
         ]);
+        $kotaId = $settings->lokasi_id_api;
+        $lokasi = $settings->lokasi_nama;
 
-        $kotaId = '1632'; // Tasikmalaya
         $bulan = $request->input('bulan', date('m'));
         $tahun = $request->input('tahun', date('Y'));
 
         try {
+            // 2. Ambil jadwal untuk load halaman awal
             $response = Http::get("https://api.myquran.com/v2/sholat/jadwal/{$kotaId}/{$tahun}/{$bulan}");
-            $response->throw(); // Lemparkan exception jika status code bukan 2xx
+            $response->throw(); 
 
             $data = $response->json();
 
             if ($data['status'] && isset($data['data'])) {
                 $jadwal = $data['data']['jadwal'];
-                $lokasi = $data['data']['lokasi'];
+                $lokasi = $data['data']['lokasi']; // Ambil nama lokasi yang benar dari API
             } else {
-                // Jika status false atau data tidak ada
                 $jadwal = [];
-                $lokasi = 'Tidak Ditemukan';
-                // Mungkin tambahkan flash message untuk error
                 session()->flash('error', 'Data jadwal untuk periode yang dipilih tidak ditemukan.');
             }
 
-        } catch (\Illuminate\Http\Client\RequestException $e) {
-            // Tangani error koneksi atau API
+        } catch (\Exception $e) {
             $jadwal = [];
-            $lokasi = 'Gagal Mengambil Data';
             session()->flash('error', 'Gagal terhubung ke server jadwal sholat. Silakan coba lagi nanti.');
         }
 
@@ -209,33 +209,40 @@ class PublicController extends Controller
             5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
             9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
         ];
+        $listTahun = range(date('Y') - 1, date('Y') + 2);
 
-        $listTahun = range(date('Y') - 1, date('Y') + 1);
-
+        // 3. Kirim $kotaId (diganti nama dari $kotaId) ke view
         return view('public.jadwal-adzan', compact(
             'jadwal',
             'lokasi',
             'namaBulan',
             'listTahun',
             'bulan',
-            'tahun'
+            'tahun',
+            'kotaId' // <-- PENTING: Kirim ID Kota default
         ));
     }
 
+    /**
+     * (DIUBAH) API untuk mengambil data jadwal (digunakan oleh JavaScript)
+     */
     public function jadwalAdzanApi(Request $request)
     {
         try {
+            // 1. Validasi input dari AJAX, tambahkan 'lokasi_id'
             $request->validate([
                 'bulan' => 'required|integer|between:1,12',
                 'tahun' => 'required|integer|min:2000',
+                'lokasi_id' => 'required|string|max:10', // <-- BARU: Wajibkan ada lokasi_id
             ]);
 
-            $kotaId = '1632'; // Tasikmalaya
+            // 2. Ambil semua data dari request
+            $kotaId = $request->input('lokasi_id'); // <-- BARU
             $bulan = $request->input('bulan');
             $tahun = $request->input('tahun');
 
             $response = Http::get("https://api.myquran.com/v2/sholat/jadwal/{$kotaId}/{$tahun}/{$bulan}");
-            $response->throw(); // Throws RequestException on 4xx or 5xx responses
+            $response->throw(); 
 
             $data = $response->json();
 
@@ -246,22 +253,18 @@ class PublicController extends Controller
                     'lokasi' => $data['data']['lokasi'],
                 ]);
             } else {
-                // The API returned status:true but the data structure is not what we expect
                 return response()->json(['success' => false, 'message' => 'Format data tidak valid.'], 500);
             }
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            // Handle validation errors specifically
+        } catch (ValidationException $e) {
             return response()->json([
                 'success' => false, 
                 'message' => 'Input tidak valid.', 
                 'errors' => $e->errors()
             ], 422);
         } catch (\Illuminate\Http\Client\RequestException $e) {
-            // Handle external API errors (e.g., 404, 500 from myquran.com)
             Log::error('API myquran.com error: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Gagal mengambil data dari sumber eksternal.'], 502); // 502 Bad Gateway
+            return response()->json(['success' => false, 'message' => 'Gagal mengambil data dari sumber eksternal.'], 502);
         } catch (\Exception $e) {
-            // Handle any other unexpected errors
             Log::error('Error in jadwalAdzanApi: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Terjadi kesalahan pada server.'], 500);
         }

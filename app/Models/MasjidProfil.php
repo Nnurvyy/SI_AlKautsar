@@ -19,6 +19,7 @@ class MasjidProfil extends Model
         'foto_masjid',
         'lokasi_nama',
         'lokasi_id_api',
+        'lokasi_nama_api',
         'social_facebook',
         'social_instagram',
         'social_twitter',

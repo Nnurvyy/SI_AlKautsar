@@ -83,6 +83,7 @@
         .bg-twitter { background-color: #1da1f2; }
         .bg-youtube { background-color: #ff0000; }
         .bg-instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .bg-whatsapp { background-color: #25D366; }
         /* ================================== */
         /* AKHIR DARI CSS FOOTER */
         /* ================================== */
@@ -368,18 +369,41 @@
     <footer class="footer mt-auto">
         <div class="container">
             <div class="footer-social-links">
-                <a href="#" class="social-icon bg-facebook" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
-                <a href="#" class="social-icon bg-twitter" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
-                <a href="#" class="social-icon bg-youtube" aria-label="Youtube"><i class="bi bi-youtube"></i></a>
-                <a href="#" class="social-icon bg-instagram" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+
+                {{-- GOAL 1: Tampilkan ikon HANYA jika link-nya ada di database --}}
+                
+                @if (!empty($settings->social_facebook))
+                    <a href="{{ $settings->social_facebook }}" class="social-icon bg-facebook" aria-label="Facebook" target="_blank" rel="noopener noreferrer"><i class="bi bi-facebook"></i></a>
+                @endif
+
+                @if (!empty($settings->social_twitter))
+                    <a href="{{ $settings->social_twitter }}" class="social-icon bg-twitter" aria-label="Twitter" target="_blank" rel="noopener noreferrer"><i class="bi bi-twitter"></i></a>
+                @endif
+
+                @if (!empty($settings->social_youtube))
+                    <a href="{{ $settings->social_youtube }}" class="social-icon bg-youtube" aria-label="Youtube" target="_blank" rel="noopener noreferrer"><i class="bi bi-youtube"></i></a>
+                @endif
+
+                @if (!empty($settings->social_instagram))
+                    <a href="{{ $settings->social_instagram }}" class="social-icon bg-instagram" aria-label="Instagram" target="_blank" rel="noopener noreferrer"><i class="bi bi-instagram"></i></a>
+                @endif
+
+                @if (!empty($settings->social_whatsapp))
+                    {{-- Asumsi $settings->social_whatsapp HANYA berisi nomor, cth: 62812... --}}
+                    <a href="https://wa.me/{{ $settings->social_whatsapp }}" class="social-icon bg-whatsapp" aria-label="WhatsApp" target="_blank" rel="noopener noreferrer"><i class="bi bi-whatsapp"></i></a>
+                @endif
+
             </div>
+            
+            {{-- GOAL 2: Ganti nama dan alamat statis dengan data dari database --}}
             <p class="footer-address">
-                <strong>Masjid Al-Jabbar</strong><br>
-                Jl. Al-Jabbar No. 1, Cimincrang, Gedebage<br>
-                Kota Bandung, Jawa Barat 40292
+                <strong>Masjid {{ $settings->nama_masjid }}</strong><br>
+                {{-- Menggunakan nl2br agar jika ada baris baru di 'lokasi_nama', akan tampil --}}
+                {!! nl2br(e($settings->lokasi_nama)) !!}
             </p>
             <div class="copyright-text">
-                Copyright © Masjid Al-Jabbar 2025
+                {{-- Ganti nama statis dan buat tahun menjadi dinamis --}}
+                Copyright © {{ $settings->nama_masjid }} {{ date('Y') }}
             </div>
         </div>
     </footer>

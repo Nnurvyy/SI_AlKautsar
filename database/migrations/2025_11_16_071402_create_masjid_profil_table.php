@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('foto_masjid')->nullable();
             $table->string('lokasi_nama')->nullable(); 
             $table->string('lokasi_id_api')->nullable(); 
+            $table->string('lokasi_nama_api')->nullable();
             $table->string('social_facebook')->nullable();
             $table->string('social_instagram')->nullable();
             $table->string('social_twitter')->nullable();

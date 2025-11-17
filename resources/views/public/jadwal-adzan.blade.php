@@ -3,6 +3,8 @@
 @section('title', 'Jadwal Adzan')
 
 @push('styles')
+{{-- 1. Tambahkan CSS Select2 --}}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <style>
     /* Make sure content fills the screen height */
     .content-wrapper {
@@ -26,10 +28,33 @@
         display: flex;
         gap: 0.5rem;
         align-items: center;
+        flex-wrap: wrap; /* Agar responsif di mobile */
+    }
+    
+    /* 2. Style untuk Select2 agar rapi */
+    #lokasi-select {
+        width: 200px;
+    }
+    .select2-container .select2-selection--single {
+        height: calc(1.5em + 0.5rem + 2px); /* Samakan tinggi dgn input form-select-sm */
+        padding: 0.25rem 0.5rem;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 1.5;
+        padding-left: 0;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: calc(1.5em + 0.5rem);
+    }
+    /* Style untuk dropdown hasil Select2 */
+    .select2-container--open .select2-dropdown {
+        z-index: 1056; /* Pastikan di atas elemen lain */
     }
 
+
     .table-container {
-        /* Adjust height dynamically with calc, subtracting header/padding */
         margin-top: 1rem;
         height: calc(100vh - 250px); 
         overflow-y: auto;
@@ -91,77 +116,50 @@
     }
     /* --- End Custom Loader --- */
 
-        /* Responsive adjustments */                                                         
-        @media (max-width: 576px) {                                                          
-            .card-header-flex {                                                              
-                flex-direction: column;                                                      
-                align-items: flex-start;                                                     
-            }                                                                                
-            .jadwal-filter-controls {                                                        
-                width: 100%;                                                                 
-            }                                                                                
-            .jadwal-filter-controls .form-select,                                            
-            .jadwal-filter-controls .btn {                                                   
-                flex-grow: 1;                                                                
-            }                                                                                
-            .table-container {                                                               
-                /* Taller on mobile to push footer down */                                   
-                height: calc(100vh - 220px);                                                 
-            }                                                                                
+    @media (max-width: 768px) {
+        .card-header-flex {
+            flex-direction: column;
+            align-items: flex-start;
         }
-        
-            .jadwal-sholat-title {
-        
-                font-size: 1.8rem; /* Increased font size */
-        
-            }
-        
-        
-        
-            .card-no-border {
-                background-color: #f8f9fa !important;
-        
-                border: none !important;
-        
-                box-shadow: none !important; /* Also remove shadow if any */
-        
-            }
-        
-                        .card-no-border .card-header {                                               
-        
-                                                                                                     
-        
-                            border-bottom: none !important;                                          
-        
-                                                                                                     
-        
-                            background-color: transparent !important;                                
-        
-                                                                                                     
-        
-                            padding-bottom: 0 !important; /* Adjust padding if needed after removing 
-        
-            border */                                                                                
-        
-                                                                                                     
-        
-                        }
-        
-            
-        
-                        @media (min-width: 768px) {
-        
-                            #bulan-select {
-        
-                                min-width: 150px;
-        
-                            }
-        
-                        }
-        
-                                                                                                     
-        
-                    </style>@endpush
+        .jadwal-filter-controls {
+            width: 100%;
+        }
+        /* Buat semua kontrol filter sama lebar di mobile */
+        .jadwal-filter-controls .form-select,
+        .jadwal-filter-controls .select2-container,
+        .jadwal-filter-controls .btn {
+            flex-grow: 1;
+            width: 100% !important;
+            margin-bottom: 0.5rem;
+        }
+        .table-container {
+            height: calc(100vh - 300px); /* Sesuaikan tinggi mobile */
+        }
+    }
+    
+    .jadwal-sholat-title {
+        font-size: 1.8rem;
+    }
+    
+    .card-no-border {
+        background-color: #f8f9fa !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .card-no-border .card-header {
+        border-bottom: none !important;
+        background-color: transparent !important;
+        padding-bottom: 0 !important;
+    }
+    
+    @media (min-width: 768px) {
+        #bulan-select {
+            min-width: 150px;
+        }
+    }
+</style>
+@endpush
 
 @section('content')
 <div class="main-content">
@@ -171,10 +169,19 @@
                 <div>
                     <h4 class="card-title mb-0 fw-bold jadwal-sholat-title">Jadwal Sholat</h4>
                     <p class="card-subtitle text-muted mb-0" id="card-subtitle">
+                        {{-- Ini akan di-update oleh JS --}}
                         {{ $lokasi }} - {{ $namaBulan[(int)$bulan] }} {{ $tahun }}
                     </p>
                 </div>
                 <div class="jadwal-filter-controls">
+                    
+                    {{-- ================================================= --}}
+                    {{-- 3. Tambahkan Select2 Lokasi --}}
+                    {{-- ================================================= --}}
+                    <select id="lokasi-select" class="form-select form-select-sm">
+                        {{-- Opsi default diisi oleh JS --}}
+                    </select>
+                    
                     <select name="bulan" id="bulan-select" class="form-select form-select-sm">
                         @foreach ($namaBulan as $num => $name)
                             <option value="{{ $num }}" {{ $num == $bulan ? 'selected' : '' }}>
@@ -252,6 +259,11 @@
 @endsection
 
 @push('scripts')
+{{-- 4. Tambahkan jQuery & JS Select2 --}}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> {{-- Ganti alert() jadi SweetAlert --}}
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const filterBtn = document.getElementById('filter-btn');
@@ -262,7 +274,49 @@ document.addEventListener('DOMContentLoaded', function () {
     const cardSubtitle = document.getElementById('card-subtitle');
     const tableContainer = document.getElementById('table-container');
     const namaBulan = @json($namaBulan);
+    
+    const defaultLokasiId = '{{ $kotaId }}';
+    const defaultLokasiText = '{{ $lokasi }}';
+    const lokasiSelect = $('#lokasi-select'); 
 
+    lokasiSelect.select2({
+        placeholder: 'Cari kota...',
+        ajax: {
+            // =================================================
+            // PERBAIKAN DI SINI:
+            // 'url' diubah dari string menjadi fungsi
+            // =================================================
+            url: function (params) {
+                // Tambahkan keyword pencarian (params.term) ke path URL
+                return 'https://api.myquran.com/v2/sholat/kota/cari/' + params.term;
+            },
+            dataType: 'json',
+            delay: 250, 
+            // 'data: function (params) { ... }' tidak diperlukan lagi
+            processResults: function (data) {
+                // Cek jika API merespon dengan 'status: true' dan ada 'data'
+                if (data.status && data.data) {
+                    return {
+                        results: data.data.map(item => ({
+                            id: item.id,
+                            text: item.lokasi
+                        }))
+                    };
+                } else {
+                    // Jika API mengembalikan status false atau format salah
+                    return { results: [] };
+                }
+            },
+            cache: true
+        },
+        minimumInputLength: 3 
+    });
+
+    // Set nilai default untuk Select2
+    var defaultOption = new Option(defaultLokasiText, defaultLokasiId, true, true);
+    lokasiSelect.append(defaultOption).trigger('change');
+
+    
     function scrollToToday() {
         const todayRow = document.getElementById('today-row');
         if (todayRow && tableContainer) {
@@ -278,7 +332,9 @@ document.addEventListener('DOMContentLoaded', function () {
     filterBtn.addEventListener('click', function() {
         const bulan = bulanSelect.value;
         const tahun = tahunSelect.value;
-        const url = `{{ route('public.jadwal-adzan.api') }}?bulan=${bulan}&tahun=${tahun}`;
+        const lokasiId = lokasiSelect.val(); 
+        
+        const url = `{{ route('public.jadwal-adzan.api') }}?lokasi_id=${lokasiId}&bulan=${bulan}&tahun=${tahun}`;
 
         spinner.classList.add('show');
         filterBtn.disabled = true;
@@ -290,70 +346,63 @@ document.addEventListener('DOMContentLoaded', function () {
                 'Accept': 'application/json',
             }
         })
-            .then(response => {
-                if (!response.ok) {
-                    // If response is not OK, try to parse JSON error
-                    return response.json().then(err => { throw err; });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    // Update subtitle
-                    cardSubtitle.textContent = `${data.lokasi} - ${namaBulan[parseInt(bulan, 10)]} ${tahun}`;
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                cardSubtitle.textContent = `${data.lokasi} - ${namaBulan[parseInt(bulan, 10)]} ${tahun}`;
+                tableBody.innerHTML = '';
 
-                    // Clear table
-                    tableBody.innerHTML = '';
+                const today = new Date();
+                const todayDateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-                    // Populate table
-                    const today = new Date();
-                    const todayDateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                data.jadwal.forEach(item => {
+                    const isToday = item.date === todayDateString;
+                    const rowId = isToday ? 'today-row' : '';
+                    const rowClass = isToday ? 'table-primary' : '';
 
-                    data.jadwal.forEach(item => {
-                        const isToday = item.date === todayDateString;
-                        const rowId = isToday ? 'today-row' : '';
-                        const rowClass = isToday ? 'table-primary' : '';
+                    const row = `
+                        <tr id="${rowId}" class="${rowClass}">
+                            <td class="text-center">${item.tanggal}</td>
+                            <td class="text-center">${item.imsak}</td>
+                            <td class="text-center">${item.subuh}</td>
+                            <td class="text-center">${item.terbit}</td>
+                            <td class="text-center">${item.dhuha}</td>
+                            <td class="text-center">${item.dzuhur}</td>
+                            <td class="text-center">${item.ashar}</td>
+                            <td class="text-center">${item.maghrib}</td>
+                            <td class="text-center">${item.isya}</td>
+                        </tr>
+                    `;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+                
+                scrollToToday();
 
-                        const row = `
-                            <tr id="${rowId}" class="${rowClass}">
-                                <td class="text-center">${item.tanggal}</td>
-                                <td class="text-center">${item.imsak}</td>
-                                <td class="text-center">${item.subuh}</td>
-                                <td class="text-center">${item.terbit}</td>
-                                <td class="text-center">${item.dhuha}</td>
-                                <td class="text-center">${item.dzuhur}</td>
-                                <td class="text-center">${item.ashar}</td>
-                                <td class="text-center">${item.maghrib}</td>
-                                <td class="text-center">${item.isya}</td>
-                            </tr>
-                        `;
-                        tableBody.insertAdjacentHTML('beforeend', row);
-                    });
-                    
-                    // Scroll to today if it's the current month/year
-                    scrollToToday();
-
-                } else {
-                    // Handle API-specific errors (e.g., data.success is false)
-                    alert('Gagal memuat data: ' + (data.message || 'Terjadi kesalahan tidak diketahui.'));
-                }
-            })
-            .catch(error => {
-                console.error('Fetch error:', error);
-                let errorMessage = 'Terjadi kesalahan saat mengambil data. Silakan coba lagi.';
-                if (error.message) {
-                    errorMessage = error.message;
-                } else if (error.errors) {
-                    // Validation errors from Laravel
-                    errorMessage = 'Input tidak valid:\n' + Object.values(error.errors).flat().join('\n');
-                }
-                alert(errorMessage);
-            })
-                        .finally(() => {                                                             
-                            spinner.classList.remove('show');
-                            filterBtn.disabled = false;
-                            filterBtn.innerHTML = 'Lihat';
-                        });    });
+            } else {
+                Swal.fire('Gagal', data.message || 'Terjadi kesalahan tidak diketahui.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            let errorMessage = 'Terjadi kesalahan saat mengambil data. Silakan coba lagi.';
+            if (error.message) {
+                errorMessage = error.message;
+            } else if (error.errors) {
+                errorMessage = 'Input tidak valid:\n' + Object.values(error.errors).flat().join('\n');
+            }
+            Swal.fire('Gagal', errorMessage, 'error');
+        })
+        .finally(() => {
+            spinner.classList.remove('show');
+            filterBtn.disabled = false;
+            filterBtn.innerHTML = 'Lihat';
+        });
+    });
 });
 </script>
 @endpush
