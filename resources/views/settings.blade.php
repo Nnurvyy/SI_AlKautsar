@@ -56,8 +56,7 @@
 
                 <div class="mb-3">
                     <label for="lokasi_nama" class="form-label">Detail Alamat</label>
-                    <input type="text" class="form-control" id="lokasi_nama" name="lokasi_nama" value="{{ old('lokasi_nama', $settings->lokasi_nama) }}" placeholder="Contoh: Jl Cempaka, No. 123, Bandung">
-                    <small class="form-text">Masukkan detail alamat</small>
+                    <input type="text" class="form-control" id="lokasi_nama" name="lokasi_nama" value="{{ old('lokasi_nama', $settings->lokasi_nama) }}" placeholder="Contoh: Jl. K.H Abdul Halim No. 36, Majalengka Kulon, Majalengka, Jawa Barat">
                 </div>
 
                 
@@ -66,8 +65,9 @@
                     $foto_name = $settings->foto_masjid ? basename($settings->foto_masjid) : '';
                 @endphp
                 <div class="mb-3">
-                    <label for="foto_masjid" class="form-label">Foto Masjid (jpg/jpeg/png/webp, max 2MB)</label>
+                    <label for="foto_masjid" class="form-label">Foto Masjid </label>
                     <input type="file" class="d-none" id="foto_masjid" name="foto_masjid" accept="image/*">
+                    <small class="form-text">(jpg/jpeg/png/webp, max 2MB)</small>
                     
                     <label for="foto_masjid" id="foto_masjid_label" class="form-control d-block text-truncate position-relative">
                         <span class="{{ $foto_url ? '' : 'text-muted' }}">{{ $foto_name ?: 'Choose file...' }}</span>
