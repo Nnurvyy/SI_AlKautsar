@@ -12,24 +12,15 @@ use App\Http\Controllers\InfaqJumatController;
 use App\Http\Controllers\BarangInventarisController;
 use App\Http\Controllers\LapKeuController;
 use App\Http\Controllers\QurbanController;
-
-
-
+use App\Http\Controllers\KajianController; // Pastikan ini di-use
 
 /*
 |--------------------------------------------------------------------------
 | Rute Publik (Guest / Tamu)
 |--------------------------------------------------------------------------
-|
-| Rute-rute ini bisa diakses oleh siapa saja, baik yang login
-| maupun yang tidak (tamu).
-|
 */
 
-// Halaman utama (/) sekarang adalah landing page publik
 Route::get('/', [PublicController::class, 'landingPage'])->name('public.landing');
-
-// Halaman fitur yang bisa diakses tamu
 Route::get('/jadwal-khotib', [PublicController::class, 'jadwalKhotib'])->name('public.jadwal-khotib');
 Route::get('/jadwal-kajian', [PublicController::class, 'jadwalKajian'])->name('public.jadwal-kajian');
 Route::get('/artikel', [PublicController::class, 'artikel'])->name('public.artikel');
@@ -44,47 +35,52 @@ Route::get('/tabungan-qurban-saya', [PublicController::class, 'tabunganQurbanSay
 | Rute Autentikasi
 |--------------------------------------------------------------------------
 */
-// Rute untuk menampilkan halaman login
+// Halaman Welcome
 Route::get('/welcome', [AuthController::class, 'showWelcomeForm'])->name('auth.welcome');
 
-// 2. Halaman Sign In (Form Login)
+// Halaman Sign In (Form Login)
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+// Proses Login (Email/Pass)
+Route::post('/login', [AuthController::class, 'loginProcess']); // Sudah di-update di AuthController
 
-// 3. Proses Login
-// (Dinamai 'login' agar cocok dengan form action="{{ route('login') }}")
-Route::post('/login', [AuthController::class, 'loginProcess']);
-
-// 4. Halaman Sign Up (Form Registrasi)
+// Halaman Sign Up (Form Registrasi)
 Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register');
+// Proses Registrasi
+Route::post('/register', [AuthController::class, 'registerProcess']); // Sudah di-update di AuthController
 
-// 5. Proses Registrasi
-Route::post('/register', [AuthController::class, 'registerProcess']);
+// Rute Logout
+// Middleware 'auth' dihapus, controller akan menangani logout (jamaah atau pengurus)
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Rute untuk logout (harus sudah login untuk logout)
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+// RUTE BARU: GOOGLE AUTH
+Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google.redirect');
+Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
 
 /*
 |--------------------------------------------------------------------------
-| Rute ADMIN (Berbasis Desktop)
+| Rute PENGURUS (Dashboard Admin)
 |--------------------------------------------------------------------------
 |
-| Dilindungi oleh middleware 'auth' DAN 'role:admin'.
-| Kita beri prefix 'admin' agar URL-nya menjadi /admin/dashboard, dll.
+| Dilindungi oleh middleware 'auth:pengurus'.
+| Prefix 'pengurus' dan nama 'pengurus.'
 |
 */
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+// GANTI: middleware(['auth', 'role:admin']) -> middleware('auth:pengurus')
+// GANTI: prefix('admin') -> prefix('pengurus')
+// GANTI: name('admin.') -> name('pengurus.')
+Route::middleware(['auth:pengurus'])->prefix('pengurus')->name('pengurus.')->group(function () {
 
-    // Dashboard (URL: /admin/dashboard)
+    // Dashboard (URL: /pengurus/dashboard)
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 
-    // Pemasukan (URL: /admin/pemasukan)
+    // Pemasukan (URL: /pengurus/pemasukan)
     Route::resource('pemasukan', PemasukanController::class);
 
-    // Pengeluaran (URL: /admin/pengeluaran)
+    // Pengeluaran (URL: /pengurus/pengeluaran)
     Route::get('/pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran');
 
-    // Khotib Jumat (URL: /admin/khotib-jumat)
+    // Khotib Jumat (URL: /pengurus/khotib-jumat)
     Route::resource('khotib-jumat', KhotibJumatController::class);
     Route::get('khotib-jumat-data', [KhotibJumatController::class, 'data'])->name('khotib-jumat.data');
 
@@ -105,10 +101,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
 
     // (WAJIB) TAMBAHKAN INI UNTUK KAJIAN
-    Route::resource('kajian', \App\Http\Controllers\KajianController::class);
-    Route::get('kajian-data', [\App\Http\Controllers\KajianController::class, 'data'])->name('kajian.data');
+    Route::resource('kajian', KajianController::class); // Hapus namespace absolut jika sudah di-use di atas
+    Route::get('kajian-data', [KajianController::class, 'data'])->name('kajian.data');
 
-    // ... (Tambahkan rute admin lainnya di sini) ...
+    // ... (Tambahkan rute pengurus lainnya di sini) ...
 
     // Rute PDF (pola lapkeu) - Rute spesifik di atas
     Route::get('tabungan-qurban/cetak-pdf', [TabunganHewanQurbanController::class, 'cetakPdf'])
@@ -130,19 +126,19 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
 /*
 |--------------------------------------------------------------------------
-| Rute PUBLIK (Sudah Login)
+| Rute JAMAAH (Publik yang Sudah Login)
 |--------------------------------------------------------------------------
 |
-| Dilindungi oleh middleware 'auth' DAN 'role:publik'.
-| Ini untuk fitur-fitur yang hanya bisa diakses oleh user 'publik'
-| yang sudah login.
+| Dilindungi oleh middleware 'auth:jamaah'.
+| GANTI: middleware(['auth', 'role:publik']) -> middleware('auth:jamaah')
+| GANTI: name('public.') -> name('jamaah.')
 |
 */
-Route::middleware(['auth', 'role:publik'])->name('public.')->group(function () {
+Route::middleware(['auth:jamaah'])->name('jamaah.')->group(function () {
 
-    // URL: /qurban-saya
+    // URL: /qurban-saya (Name: jamaah.qurban)
     Route::get('/qurban-saya', [QurbanController::class, 'index'])->name('qurban');
 
-    // ... (Tambahkan rute 'publik' terotentikasi lainnya di sini) ...
+    // ... (Tambahkan rute 'jamaah' terotentikasi lainnya di sini) ...
 
 });

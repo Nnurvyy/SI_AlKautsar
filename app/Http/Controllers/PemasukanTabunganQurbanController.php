@@ -1,9 +1,6 @@
 <?php
 
 namespace App\Http\Controllers;
-
-// Gunakan Request baru
-use App\Http\Requests\PemasukanQurbanRequest;
 use App\Models\PemasukanTabunganQurban;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -12,11 +9,16 @@ class PemasukanTabunganQurbanController extends Controller
 {
     /**
      * Menyimpan data pemasukan baru.
-     * Kita hanya butuh store dan destroy untuk modal.
      */
-    public function store(PemasukanQurbanRequest $request)
+    // GANTI: PemasukanQurbanRequest jadi Request biasa
+    public function store(Request $request)
     {
-        $validatedData = $request->validated();
+        // TAMBAHKAN VALIDASI DI SINI
+        $validatedData = $request->validate([
+            'id_tabungan_hewan_qurban' => 'required|exists:tabungan_hewan_qurban,id_tabungan_hewan_qurban',
+            'tanggal' => 'required|date',
+            'nominal' => 'required|numeric|min:1',
+        ]);
 
         $pemasukan = PemasukanTabunganQurban::create($validatedData);
 
@@ -32,9 +34,7 @@ class PemasukanTabunganQurbanController extends Controller
      */
     public function destroy(string $id)
     {
-        // Temukan atau gagal
         $pemasukan = PemasukanTabunganQurban::findOrFail($id);
-
         $pemasukan->delete();
 
         return response()->json([
@@ -42,9 +42,4 @@ class PemasukanTabunganQurbanController extends Controller
             'message' => 'Data setoran berhasil dihapus.'
         ]);
     }
-
-    /**
-     * Metode lain (index, show, update) sengaja dihapus
-     * karena tidak digunakan dalam alur modal ini.
-     */
 }
