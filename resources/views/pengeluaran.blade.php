@@ -80,7 +80,12 @@
                     </tbody>
                 </table>
             </div>
-            <div class="mt-3">{{ $pengeluaran->links() }}</div>
+            
+            {{-- PERBAIKAN DISINI: Pakai style Bootstrap 5 biar tombolnya rapi --}}
+            <div class="mt-3">
+                {{ $pengeluaran->links('pagination::bootstrap-5') }}
+            </div>
+            
         </div>
     </div>
 </div>

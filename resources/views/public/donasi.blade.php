@@ -1,83 +1,62 @@
 @extends('layouts.public')
 
 @section('content')
-
-<style>
-    .donasi-card {
-        background: #fff;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-        transition: 0.3s;
-    }
-    .donasi-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 6px 14px rgba(0,0,0,0.15);
-    }
-    .donasi-card img {
-        width: 100%;
-        height: 200px;
-        object-fit: cover;
-    }
-    .donasi-title {
-        font-size: 20px;
-        font-weight: 700;
-    }
-    .donasi-desc {
-        font-size: 14px;
-        color: #666;
-        height: 60px;
-        overflow: hidden;
-    }
-    .btn-donasi {
-        background: #1e90ff;
-        color: white;
-        padding: 8px 0;
-        border-radius: 8px;
-        font-weight: 600;
-    }
-</style>
-
 <div class="container py-5">
 
-    <h2 class="fw-bold mb-4 text-center">Program Donasi</h2>
+    <h2 class="text-center mb-4 fw-bold">Program Donasi</h2>
+
+    @if($programs->isEmpty())
+        <div class="alert alert-info text-center">
+            Belum ada program donasi tersedia.
+        </div>
+    @endif
 
     <div class="row g-4">
-
-        @forelse ($programs as $item)
+        @foreach($programs as $program)
             <div class="col-md-4">
-                <div class="donasi-card p-3">
+                <div class="card shadow-sm rounded-4 h-100">
 
-                    {{-- Gambar --}}
-                    <img src="{{ $item->gambar_url }}" alt="gambar {{ $item->judul }}">
+                    <!-- Gambar -->
+                    <img src="{{ $program->gambar_url }}" 
+                         class="card-img-top rounded-top-4"
+                         style="height: 220px; object-fit: cover;">
 
-                    {{-- Konten --}}
-                    <div class="mt-3">
+                    <div class="card-body">
 
-                        <div class="donasi-title">{{ $item->judul }}</div>
+                        <h5 class="fw-bold">{{ $program->judul }}</h5>
 
-                        <p class="donasi-desc">
-                            {{ Str::limit($item->deskripsi, 120) }}
+                        <p class="text-muted small">
+                            {{ Str::limit($program->deskripsi, 80) }}
                         </p>
 
-                        {{-- Jika kamu belum punya halaman detail, pakai "#" --}}
-                        <a href="#"
-                           class="btn btn-donasi w-100 mt-2">
+                        <!-- Progress Bar -->
+                        <div class="progress mb-2" style="height: 10px;">
+                            <div class="progress-bar" 
+                                 role="progressbar" 
+                                 style="width: {{ $program->persentase }}%;"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between small text-muted mb-3">
+                            <span>Terkumpul: Rp {{ number_format($program->dana_terkumpul) }}</span>
+                            <span>{{ $program->persentase }}%</span>
+                        </div>
+
+                        <!-- Tanggal -->
+                        <p class="small text-danger mb-2">
+                            Sisa waktu: {{ $program->sisa_hari }} hari
+                        </p>
+
+                        <!-- Tombol -->
+                        <a href="{{ route('donasi.detail', $program->id) }}" 
+                           class="btn btn-success w-100 fw-bold rounded-pill">
                             Donasi Sekarang
                         </a>
 
                     </div>
-
                 </div>
             </div>
-        @empty
-            <div class="col-12 text-center py-5">
-                <h5 class="text-muted">Belum ada program donasi.</h5>
-            </div>
-        @endforelse
-
+        @endforeach
     </div>
 
 </div>
-
 @endsection

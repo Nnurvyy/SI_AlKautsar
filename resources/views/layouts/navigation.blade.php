@@ -6,82 +6,95 @@
 
     <ul class="nav nav-pills flex-column mb-auto">
         <li class="nav-item">
-            <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" aria-current="page">
+            <a href="{{ route('admin.dashboard') }}" 
+               class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                 <i class="bi bi-grid-fill"></i> Dashboard
             </a>
         </li>
+
         <li class="nav-item">
-            <a href="{{ route('admin.pemasukan.index') }}" class="nav-link {{ request()->routeIs('admin.pemasukan.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.pemasukan.index') }}" 
+               class="nav-link {{ request()->routeIs('admin.pemasukan.*') ? 'active' : '' }}">
                 <i class="bi bi-box-arrow-in-down"></i> Pemasukan
             </a>
         </li>
 
         <li class="nav-item">
-            <a href="{{ route('admin.pengeluaran') }}" class="nav-link {{ request()->routeIs('admin.pengeluaran') ? 'active' : '' }}">
+            {{-- FIX DI SINI! --}}
+            <a href="{{ route('admin.pengeluaran.index') }}" 
+               class="nav-link {{ request()->routeIs('admin.pengeluaran.*') ? 'active' : '' }}">
                 <i class="bi bi-box-arrow-up"></i> Pengeluaran
             </a>
         </li>
 
         <li class="nav-item">
-            <a href="{{ route('admin.lapkeu.index') }}" class="nav-link {{ request()->routeIs('admin.lapkeu.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.lapkeu.index') }}" 
+               class="nav-link {{ request()->routeIs('admin.lapkeu.*') ? 'active' : '' }}">
                 <i class="bi bi-file-earmark-text"></i> Laporan Keuangan
             </a>
         </li>
+
         <li class="nav-item">
             <a href="#" class="nav-link">
                 <i class="bi bi-graph-up"></i> Grafik
             </a>
         </li>
+
         <li class="nav-item">
-            <a href="{{ route('admin.khotib-jumat.index') }}" class="nav-link {{ request()->routeIs('admin.khotib-jumat.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.khotib-jumat.index') }}" 
+               class="nav-link {{ request()->routeIs('admin.khotib-jumat.*') ? 'active' : '' }}">
                 <i class="bi bi-person-fill"></i> Khotib Jumat
             </a>
         </li>
-    <li class="nav-item">
-            <a href="{{ route('admin.kajian.index') }}" class="nav-link {{ request()->routeIs('admin.kajian.*') ? 'active' : '' }}">
+
+        <li class="nav-item">
+            <a href="{{ route('admin.kajian.index') }}" 
+               class="nav-link {{ request()->routeIs('admin.kajian.*') ? 'active' : '' }}">
                 <i class="bi bi-person-fill"></i> Kajian
             </a>
         </li>
+
         <li class="nav-item">
-            <a href="{{ route('admin.inventaris.index') }}" class="nav-link {{ request()->routeIs('admin.inventaris.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.inventaris.index') }}" 
+               class="nav-link {{ request()->routeIs('admin.inventaris.*') ? 'active' : '' }}">
                 <i class="bi bi-collection"></i> Stok & Inventori
             </a>
         </li>
+
         <li class="nav-item">
-            <a href="{{ route('admin.infaq-jumat.index') }}" class="nav-link {{ request()->routeIs('admin.infaq-jumat.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.infaq-jumat.index') }}" 
+               class="nav-link {{ request()->routeIs('admin.infaq-jumat.*') ? 'active' : '' }}">
                 <i class="bi bi-cash-coin"></i> Infaq Jumat
             </a>
         </li>
 
         <li class="nav-item">
-            <a href="{{ route('admin.tabungan-qurban.index') }}" class="nav-link {{ request()->routeIs('admin.tabungan-qurban.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.tabungan-qurban.index') }}" 
+               class="nav-link {{ request()->routeIs('admin.tabungan-qurban.*') ? 'active' : '' }}">
                 <i class="bi bi-wallet"></i> Tabungan Hewan Qurban
             </a>
         </li>
+
         <li class="nav-item">
             <a href="#" class="nav-link">
                 <i class="bi bi-graph-up"></i> Program
             </a>
         </li>
 
-        {{-- ============================================= --}}
-        {{-- INI SUDAH DIPERBAIKI --}}
-        {{-- ============================================= --}}
+        {{-- Donasi --}}
         <li class="nav-item">
-            <a href="{{ route('admin.program-donasi.index') }}" class="nav-link {{ request()->routeIs('admin.program-donasi.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.program-donasi.index') }}" 
+               class="nav-link {{ request()->routeIs('admin.program-donasi.*') ? 'active' : '' }}">
                 <i class="bi bi-box-heart"></i> Donasi
             </a>
         </li>
-        {{-- ============================================= --}}
-
     </ul>
 
     <div class="logout-form">
         <form action="{{ route('logout') }}" method="POST">
             @csrf
             <button type="submit" class="logout-btn">
-                <i class="bi bi-box-arrow-left me-2"></i>
-                Keluar
+                <i class="bi bi-box-arrow-left me-2"></i> Keluar
             </button>
         </form>
     </div>

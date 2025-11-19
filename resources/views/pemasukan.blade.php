@@ -78,7 +78,12 @@
                     </tbody>
                 </table>
             </div>
-            <div class="mt-3">{{ $pemasukan->links() }}</div>
+            
+            {{-- PERBAIKAN DISINI: Menambahkan 'pagination::bootstrap-5' agar icon tidak raksasa --}}
+            <div class="mt-3">
+                {{ $pemasukan->links('pagination::bootstrap-5') }}
+            </div>
+
         </div>
     </div>
 </div>
