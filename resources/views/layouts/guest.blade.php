@@ -39,7 +39,7 @@
             align-items: center; 
             justify-content: center;
             /* == GANTI URL BACKGROUND DI SINI == */
-            background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5)), url("{{ asset('images/bg_login.jpeg') }}");
+            background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5)), url("{{ asset('images/bg-login.jpeg') }}");
         }
 
         /* ============================================== */
