@@ -5,20 +5,22 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Pemasukan;
 use App\Models\KategoriPemasukan;
+use App\Models\Donasi; 
+use Illuminate\Support\Facades\Log;
 
 class PemasukanController extends Controller
 {
     public function index(Request $request)
     {
-        // 1. Ambil Data Pemasukan (Pagination)
-        $pemasukan = Pemasukan::with('kategoriPemasukan')
-            ->latest('tanggal')
-            ->paginate(10);
+        $query = Pemasukan::with('kategoriPemasukan')->latest('tanggal');
 
-        // 2. Hitung Total Pemasukan
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where('deskripsi', 'ilike', "%{$search}%");
+        }
+
+        $pemasukan = $query->paginate(10);
         $totalPemasukan = Pemasukan::sum('nominal');
-
-        // 3. Ambil Data Kategori (PENTING: Untuk Modal Tambah & Dropdown)
         $kategori = KategoriPemasukan::orderBy('nama_kategori_pemasukan', 'asc')->get();
 
         return view('pemasukan', compact('pemasukan', 'totalPemasukan', 'kategori'));
@@ -26,18 +28,14 @@ class PemasukanController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi Input
         $request->validate([
-            'id_kategori_pemasukan' => 'required|exists:kategori_pemasukan,id_kategori_pemasukan',
+            'id_kategori_pemasukan' => 'required',
             'nominal' => 'required',
             'tanggal' => 'required|date',
-            'deskripsi' => 'nullable|string|max:255',
         ]);
 
-        // Hapus format ribuan (titik/koma) dari input nominal
         $nominalBersih = str_replace(['.', ','], '', $request->nominal);
 
-        // Simpan ke Database
         $pemasukan = Pemasukan::create([
             'id_kategori_pemasukan' => $request->id_kategori_pemasukan,
             'nominal' => $nominalBersih,
@@ -45,15 +43,51 @@ class PemasukanController extends Controller
             'deskripsi' => $request->deskripsi,
         ]);
 
-        // Load relasi kategori agar bisa ditampilkan namanya di Tabel JS
         $pemasukan->load('kategoriPemasukan');
 
-        // PENTING: Return JSON untuk AJAX
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Data pemasukan berhasil ditambahkan.',
-            'data' => $pemasukan
-        ]);
+        return response()->json(['status' => 'success', 'message' => 'Berhasil disimpan.', 'data' => $pemasukan]);
+    }
+
+    // === BAGIAN PENTING: SHOW DETAIL (Perbaikan Error) ===
+    public function show($id)
+    {
+        try {
+            $pemasukan = Pemasukan::with('kategoriPemasukan')->findOrFail($id);
+
+            $listDonatur = [];
+            $namaKategori = strtolower($pemasukan->kategoriPemasukan->nama_kategori_pemasukan ?? '');
+
+            // LOGIKA PENCARIAN:
+            // Cari di tabel Donasi yang tanggalnya SAMA dengan tanggal pemasukan
+            
+            if (str_contains($namaKategori, 'donasi') || str_contains($namaKategori, 'infaq')) {
+                
+                // Cari donasi yang tanggalnya sama
+                $listDonatur = Donasi::whereDate('tanggal_donasi', $pemasukan->tanggal)
+                                ->latest()
+                                ->get();
+                                
+                // Kalau kosong, coba cari yang created_at nya sama (fallback)
+                if($listDonatur->isEmpty()){
+                     $listDonatur = Donasi::whereDate('created_at', $pemasukan->tanggal)->get();
+                }
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'kategori' => $pemasukan->kategoriPemasukan->nama_kategori_pemasukan ?? 'Umum',
+                    'nominal' => $pemasukan->nominal,
+                    'tanggal' => \Carbon\Carbon::parse($pemasukan->tanggal)->translatedFormat('d F Y'),
+                    'donatur' => $listDonatur
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            // Log error biar tau kenapa
+            Log::error("Error Pemasukan Show: " . $e->getMessage());
+            return response()->json(['status' => 'error', 'message' => 'Data tidak ditemukan'], 404);
+        }
     }
 
     public function edit($id)
@@ -65,15 +99,7 @@ class PemasukanController extends Controller
 
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'id_kategori_pemasukan' => 'required|exists:kategori_pemasukan,id_kategori_pemasukan',
-            'nominal' => 'required',
-            'tanggal' => 'required|date',
-            'deskripsi' => 'nullable|string|max:255',
-        ]);
-
         $nominalBersih = str_replace(['.', ','], '', $request->nominal);
-
         $pemasukan = Pemasukan::findOrFail($id);
         $pemasukan->update([
             'id_kategori_pemasukan' => $request->id_kategori_pemasukan,
@@ -81,17 +107,13 @@ class PemasukanController extends Controller
             'tanggal' => $request->tanggal,
             'deskripsi' => $request->deskripsi,
         ]);
-
-        return redirect()->route('admin.pemasukan.index')
-            ->with('success', 'Data pemasukan berhasil diperbarui.');
+        return redirect()->route('admin.pemasukan.index')->with('success', 'Data berhasil diperbarui');
     }
 
     public function destroy($id)
     {
         $pemasukan = Pemasukan::findOrFail($id);
         $pemasukan->delete();
-
-        return redirect()->route('admin.pemasukan.index')
-            ->with('success', 'Data pemasukan berhasil dihapus.');
+        return back()->with('success', 'Data berhasil dihapus');
     }
 }

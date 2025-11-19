@@ -9,13 +9,21 @@ class Donasi extends Model
 {
     use HasFactory;
 
-    public $incrementing = false;
-    protected $keyType = 'string';
+    protected $table = 'donasi'; // Nama tabel di database
+    protected $primaryKey = 'id_donasi'; // Primary Key
 
     protected $fillable = [
-        'id',
-        'program_id',
+        'id_program_donasi',
         'nama_donatur',
-        'jumlah'
+        'nominal',
+        'tanggal_donasi',
+        'keterangan',
+        'metode_pembayaran',
     ];
+
+    // Relasi ke Program Donasi (Many to One)
+    public function program()
+    {
+        return $this->belongsTo(ProgramDonasi::class, 'id_program_donasi');
+    }
 }

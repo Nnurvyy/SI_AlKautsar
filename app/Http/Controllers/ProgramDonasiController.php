@@ -98,4 +98,5 @@ class ProgramDonasiController extends Controller
         $program->delete();
         return response()->json(['message' => 'Data berhasil dihapus.'], 200);
     }
+    
 }

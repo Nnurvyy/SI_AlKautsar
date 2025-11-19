@@ -16,6 +16,7 @@ use App\Http\Controllers\KajianController;
 use App\Http\Controllers\ProgramDonasiController;
 use App\Http\Controllers\DonasiController;
 use App\Http\Controllers\PemasukanKategoriController; 
+use App\Http\Controllers\TransaksiDonasiController; // <--- WAJIB ADA: Import Controller Baru
 
 
 /*
@@ -65,11 +66,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Pemasukan
     Route::resource('pemasukan', PemasukanController::class);
-
-    // Kategori Pemasukan (Perbaikan sebelumnya)
     Route::resource('kategori-pemasukan', PemasukanKategoriController::class);
-    Route::resource('kategori-pengeluaran', App\Http\Controllers\KategoriPengeluaranController::class);
-    // Pengeluaran (PERBAIKAN DISINI: Diubah jadi resource agar 'admin.pengeluaran.index' ada)
+
+    // Pengeluaran
     Route::resource('pengeluaran', PengeluaranController::class);
 
     // Khotib Jumat
@@ -96,9 +95,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('kajian', KajianController::class);
     Route::get('kajian-data', [KajianController::class, 'data'])->name('kajian.data');
 
-    // Program Donasi
+    // Program Donasi (Master Data)
     Route::resource('program-donasi', ProgramDonasiController::class);
     Route::get('program-donasi-data', [ProgramDonasiController::class, 'data'])->name('program-donasi.data');
+
+    // === TAMBAHAN BARU: TRANSAKSI DONASI (Input Donatur) ===
+    Route::resource('transaksi-donasi', TransaksiDonasiController::class);
 
     // Tabungan Qurban
     Route::get('tabungan-qurban/cetak-pdf', [TabunganHewanQurbanController::class, 'cetakPdf'])
