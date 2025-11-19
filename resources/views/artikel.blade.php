@@ -30,10 +30,10 @@
         
         {{-- Tombol Tambah Artikel --}}
         <div class="d-flex align-items-center mt-2 mt-md-0">
-            <button class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalKhotib">
+            <a href="{{ route('admin.artikel.create') }}" class="btn btn-primary d-flex align-items-center">
                 <i class="bi bi-plus-circle me-2"></i>
                 Tambah Artikel
-            </button>
+            </a>
         </div>
     </div>
 
@@ -160,5 +160,5 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="{{ asset('js/khotib.js') }}"></script>
+<script src="{{ asset('js/artikel.js') }}"></script>
 @endsection

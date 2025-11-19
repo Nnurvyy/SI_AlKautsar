@@ -13,9 +13,10 @@
         <div class="d-flex flex-wrap align-items-center">
             <div class="me-2 mb-2 mb-md-0">
                 <select class="form-select" id="statusFilter" style="width: 150px;">
-                    <option value="aktif" selected>Aktif</option>
-                    <option value="tidak_aktif">Tidak Aktif</option>
-                    <option value="semua">Semua</option>
+                    <option value="all" selected>Semua</option>
+                    <option value="belum dilaksanakan">Belum Dilaksanakan</option>
+                    <option value="sedang berjalan">Sedang Berjalan</option>
+                    <option value="sudah dijalankan">Sudah Dijalankan</option>
                 </select>
             </div>
 

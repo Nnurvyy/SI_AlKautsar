@@ -75,67 +75,74 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 | Kita beri prefix 'admin' agar URL-nya menjadi /admin/dashboard, dll.
 |
 */
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
-    // Dashboard (URL: /admin/dashboard)
-    Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
+        // Dashboard (URL: /admin/dashboard)
+        Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 
-    // Pemasukan (URL: /admin/pemasukan)
-    Route::resource('pemasukan', PemasukanController::class);
+        // Pemasukan (URL: /admin/pemasukan)
+        Route::resource('pemasukan', PemasukanController::class);
 
-    // Pengeluaran (URL: /admin/pengeluaran)
-    Route::get('/pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran');
+        // Pengeluaran (URL: /admin/pengeluaran)
+        Route::get('/pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran');
 
-    // Khotib Jumat (URL: /admin/khotib-jumat)
-    Route::resource('khotib-jumat', KhotibJumatController::class);
-    Route::get('khotib-jumat-data', [KhotibJumatController::class, 'data'])->name('khotib-jumat.data');
+        // Khotib Jumat (URL: /admin/khotib-jumat)
+        Route::resource('khotib-jumat', KhotibJumatController::class);
+        Route::get('khotib-jumat-data', [KhotibJumatController::class, 'data'])->name('khotib-jumat.data');
 
-    //infaq juamt
-    Route::resource('infaq-jumat', InfaqJumatController::class)->only([
-        'index','store', 'update', 'destroy', 'show'
-    ]);
-    Route::get('infaq-jumat-data', [InfaqJumatController::class, 'data'])->name('infaq-jumat.data');
+        //infaq juamt
+        Route::resource('infaq-jumat', InfaqJumatController::class)->only([
+            'index','store', 'update', 'destroy', 'show'
+        ]);
+        Route::get('infaq-jumat-data', [InfaqJumatController::class, 'data'])->name('infaq-jumat.data');
 
-    //inventaris dan stock
-    Route::resource('inventaris', BarangInventarisController::class)->only([
-        'index','store', 'update', 'destroy', 'show'
-    ]);
-    Route::get('inventaris-data', [BarangInventarisController::class, 'data'])->name('inventaris.data');
-    
-    // Laporan Keuangan
-    Route::get('/lapkeu', [LapKeuController::class, 'index'])->name('lapkeu.index');
-    Route::get('/lapkeu/export-pdf', [LapKeuController::class, 'exportPdf'])->name('lapkeu.export.pdf');
+        //inventaris dan stock
+        Route::resource('inventaris', BarangInventarisController::class)->only([
+            'index','store', 'update', 'destroy', 'show'
+        ]);
+        Route::get('inventaris-data', [BarangInventarisController::class, 'data'])->name('inventaris.data');
+        
+        // Laporan Keuangan
+        Route::get('/lapkeu', [LapKeuController::class, 'index'])->name('lapkeu.index');
+        Route::get('/lapkeu/export-pdf', [LapKeuController::class, 'exportPdf'])->name('lapkeu.export.pdf');
 
-    //grafik
-    Route::get('/grafik', [GrafikController::class, 'index'])->name('grafik.index');
+        //grafik
+        Route::get('/grafik', [GrafikController::class, 'index'])->name('grafik.index');
 
-    // (WAJIB) TAMBAHKAN INI UNTUK KAJIAN
-    Route::resource('kajian', \App\Http\Controllers\KajianController::class);
-    Route::get('kajian-data', [\App\Http\Controllers\KajianController::class, 'data'])->name('kajian.data');
+        // (WAJIB) TAMBAHKAN INI UNTUK KAJIAN
+        Route::resource('kajian', \App\Http\Controllers\KajianController::class);
+        Route::get('kajian-data', [\App\Http\Controllers\KajianController::class, 'data'])->name('kajian.data');
 
-    // Rute PDF (pola lapkeu) - Rute spesifik di atas
-    Route::get('tabungan-qurban/cetak-pdf', [TabunganHewanQurbanController::class, 'cetakPdf'])
-        ->name('tabungan-qurban.cetakPdf');
+        // Rute PDF (pola lapkeu) - Rute spesifik di atas
+        Route::get('tabungan-qurban/cetak-pdf', [TabunganHewanQurbanController::class, 'cetakPdf'])
+            ->name('tabungan-qurban.cetakPdf');
 
-    // Rute Data (pola khotib) - Rute spesifik di atas
-    Route::get('tabungan-qurban-data', [TabunganHewanQurbanController::class, 'data'])
-        ->name('tabungan-qurban.data');
+        // Rute Data (pola khotib) - Rute spesifik di atas
+        Route::get('tabungan-qurban-data', [TabunganHewanQurbanController::class, 'data'])
+            ->name('tabungan-qurban.data');
 
-    // Rute Resource (CRUD Utama) - Rute umum di bawah
-    Route::resource('tabungan-qurban', TabunganHewanQurbanController::class);
+        // Rute Resource (CRUD Utama) - Rute umum di bawah
+        Route::resource('tabungan-qurban', TabunganHewanQurbanController::class);
 
-    // Rute Resource (CRUD Setoran/Pemasukan)
-    Route::resource('pemasukan-qurban', PemasukanTabunganQurbanController::class)
-        ->parameter('pemasukan-qurban', 'id');
+        // Rute Resource (CRUD Setoran/Pemasukan)
+        Route::resource('pemasukan-qurban', PemasukanTabunganQurbanController::class)
+            ->parameter('pemasukan-qurban', 'id');
 
-    // Artikel
-    Route::resource('artikel', ArtikelController::class);
-    Route::get('artikel-data', [ArtikelController::class, 'data'])->name('artikel.data');
+        // Artikel
+        Route::get('artikel-data', [ArtikelController::class, 'data'])->name('artikel.data');
+        Route::resource('artikel', ArtikelController::class)->names([
+            'store' => 'artikel.store', // Timpa nama store
+            // Timpa semua nama lain yang dibutuhkan jika diperlukan
+            'index' => 'artikel.index', 
+            'update' => 'artikel.update',
+            // ...
+        ]);
+        
 
-    // Event
-    Route::resource('program', ProgramController::class);
-    Route::get('program-data', [ProgramController::class, 'data'])->name('program.data');
-});
+        // Event
+        Route::resource('program', ProgramController::class);
+        Route::get('program-data', [ProgramController::class, 'data'])->name('program.data');
+    });
 
 
 /*

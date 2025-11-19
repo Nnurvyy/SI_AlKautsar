@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // State Management
     let state = {
         currentPage: 1,
-        status: 'aktif', // 'aktif', 'tidak_aktif', 'semua'
+        status: 'all', 
         search: '',
         perPage: 10,
         sortBy: 'tanggal_program', 
