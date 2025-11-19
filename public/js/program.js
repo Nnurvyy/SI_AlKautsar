@@ -249,17 +249,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const statusText = status || 'Belum Ditentukan'; 
                 return `<span class="${color}">${statusText}</span>`;
-            };
+            };  
             
             const row = `
             <tr>
                 <td class="text-center">${startingNumber + i}</td>
-                <td class="text-center"><img src="${item.foto_url}" class="rounded" style="width:60px;height:60px;object-fit:cover;" alt="Foto Program ${item.nama_program}"></td>
-                <td>${item.nama_program}</td>
-                <td>${item.lokasi_program}</td>
+
+                <td class="text-center">${item.nama_program}</td>
                 <td class="text-center">${formatTanggal(item.tanggal_program)}</td>
+                <td class="text-center">${item.lokasi_program}</td>
                 <td class="text-center">${statusBadge(item.status_program)}</td> <!-- Tampilkan Status dengan Badge -->
                 <td class="text-center">
+                    <button class="btn btn-info btn-sm text-white me-1" onclick="showDetailProgram('${item.id_program}')">
+                        <i class="bi bi-eye"></i>
+                    </button>
                     <button class="btn btn-warning btn-sm" onclick="editProgram('${item.id_program}')">
                         <i class="bi bi-pencil"></i>
                     </button>
@@ -309,53 +312,74 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Fungsi Global (Edit/Hapus) ---
+    /**
+ * Fungsi Global untuk Memuat Data Program ke dalam Modal Edit
+ * Dipanggil dari tombol 'Edit' di tabel.
+ */
     window.editProgram = async function(id_program) {
         try {
+            // 1. Ambil data program dari API
             const res = await fetch(`/admin/program/${id_program}`);
             if (!res.ok) throw new Error('Data tidak ditemukan');
 
             const data = await res.json();
 
-            // === Isi field utama ===
+            // Variabel global (diasumsikan sudah didefinisikan di luar fungsi):
+            const fotoInput = document.getElementById('foto_program');
+            const previewContainer = document.getElementById('previewContainer');
+            const previewFoto = document.getElementById('previewFoto');
+            const clearFileBtn = document.getElementById('clearFile');
+            const statusSelect = document.getElementById('status_program');
+            
+            // === 2. Isi field utama ===
             document.getElementById('id_program').value = data.id_program;
             document.getElementById('nama_program').value = data.nama_program;
             document.getElementById('penyelenggara_program').value = data.penyelenggara_program;
             document.getElementById('lokasi_program').value = data.lokasi_program;
             document.getElementById('deskripsi_program').value = data.deskripsi_program;
 
-            // === Status Program ===
-            const statusSelect = document.getElementById('status_program');
-            statusSelect.value = data.status_program || 'belum dilaksanakan';
+            // === 3. Status Program ===
+            // Mengisi nilai Status (menggunakan variabel global statusSelect)
+            if (statusSelect) {
+                statusSelect.value = data.status_program || 'belum dilaksanakan';
+            }
 
-            // === Tanggal (datetime-local) ===
+            // === 4. Tanggal (datetime-local) ===
+            // Format harus YYYY-MM-DDTHH:MM
             if (data.tanggal_program) {
                 document.getElementById('tanggal_program').value =
-                    data.tanggal_program.substring(0, 16);
-            }
-
-            // === Foto ===
-            const fotoInput = document.getElementById('foto_program');
-            const previewContainer = document.getElementById('previewContainer');
-            const previewFoto = document.getElementById('previewFoto');
-
-            if (data.foto_program) {
-                previewFoto.src = data.foto_url;
-                previewContainer.classList.remove('d-none');
+                    // Mengambil bagian tanggal dan waktu (0-15) lalu mengganti spasi menjadi 'T'
+                    data.tanggal_program.substring(0, 16).replace(' ', 'T'); 
             } else {
-                previewFoto.src = "";
-                previewContainer.classList.add('d-none');
+                document.getElementById('tanggal_program').value = '';
             }
 
-            // reset input file
-            fotoInput.value = "";
+            // === 5. Foto Preview & Input File ===
+            // Hapus nilai input file lama (penting agar user bisa pilih file baru)
+            if (fotoInput) fotoInput.value = ""; 
 
-            // === Tampilkan Modal ===
-            new bootstrap.Modal(document.getElementById('modalProgram')).show();
+            // Tampilkan/sembunyikan preview foto lama
+            if (previewFoto && previewContainer) {
+                if (data.foto_url) { // Menggunakan 'foto_url' dari Accessor Laravel
+                    previewFoto.src = data.foto_url;
+                    previewContainer.classList.remove('d-none');
+                    if (clearFileBtn) clearFileBtn.classList.remove('d-none');
+                } else {
+                    previewFoto.src = "";
+                    previewContainer.classList.add('d-none');
+                    if (clearFileBtn) clearFileBtn.classList.add('d-none');
+                }
+            }
+            
+            // === 6. Tampilkan Modal ===
+            // Menggunakan instance Bootstrap Modal
+            const modalInstance = bootstrap.Modal.getInstance(modalProgram) || new bootstrap.Modal(modalProgram);
+            modalInstance.show();
 
         } catch (err) {
             Swal.fire('Gagal', err.message, 'error');
         }
-    }
+    };
 
 
     window.hapusProgram = async function(id_program) {
@@ -393,6 +417,65 @@ document.addEventListener('DOMContentLoaded', () => {
             Swal.fire('Gagal', err.message, 'error');
         }
     }
+
+/**
+ * Fungsi Global untuk menampilkan detail program lengkap di modal yang lebih besar.
+ */
+    window.showDetailProgram = async function(id_program) {
+        try {
+            // Ambil data detail (endpoint yang sama, tapi hasilnya digunakan untuk detail)
+            const res = await fetch(`/admin/program/${id_program}`);
+            if (!res.ok) throw new Error('Detail program tidak ditemukan');
+
+            const data = await res.json();
+            
+            // --- Mempersiapkan data dan elemen ---
+            
+            // Asumsi fungsi formatTanggal dan statusBadge sudah ada
+            const formattedDate = formatTanggal(data.tanggal_program); 
+            
+            // 1. Isi Judul Modal
+            document.getElementById('detailNamaProgram').textContent = data.nama_program;
+
+            // 2. Isi Detail Table
+            document.getElementById('d_nama').textContent = data.nama_program;
+            document.getElementById('d_penyelenggara').textContent = data.penyelenggara_program;
+            document.getElementById('d_lokasi').textContent = data.lokasi_program;
+            document.getElementById('d_tanggal').textContent = formattedDate;
+            
+            // Menggunakan statusBadge untuk status
+            document.getElementById('d_status').innerHTML = statusBadge(data.status_program); 
+            
+            // Deskripsi (di div terpisah)
+            document.getElementById('d_deskripsi').textContent = data.deskripsi_program;
+
+            // 3. Isi Foto Program
+            const detailFoto = document.getElementById('detailFotoProgram');
+            
+            // Menggunakan foto_url dari accessor Model. Jika null, tampilkan placeholder.
+            detailFoto.src = data.foto_url || '/images/default_program.png'; 
+            
+            // 4. Tampilkan Modal Detail
+            const modalDetail = new bootstrap.Modal(document.getElementById('modalDetailProgram'));
+            modalDetail.show();
+
+        } catch (err) {
+            Swal.fire('Gagal', err.message, 'error');
+        }
+    };
+
+    // Pastikan fungsi statusBadge di scope global jika Anda belum mendefinisikannya di luar renderTable
+    const statusBadge = (status) => {
+        let color;
+        switch (status) {
+            case 'sudah dijalankan': color = 'badge bg-secondary'; break;
+            case 'sedang berjalan': color = 'badge bg-warning text-dark'; break;
+            case 'belum dilaksanakan': color = 'badge bg-success'; break;
+            default: color = 'badge bg-info';
+        }
+        const statusText = status || 'Belum Ditentukan'; 
+        return `<span class="${color}">${statusText}</span>`;
+    };
 
     // --- Logika Input File Kustom (Tidak berubah) ---
     if (fotoInput && fotoLabelSpan && clearFileBtn && previewContainer && preview) {

@@ -91,7 +91,15 @@
           <div class="mb-3">
             <label class="form-label mb-1">Foto Program</label>
             <input type="file" class="form-control" name="foto_program" id="foto_program" accept="image/*">
-          </div>
+            
+            <div id="previewContainer" class="mt-2 d-none text-center">
+                <img id="previewFoto" src="#" alt="Preview Foto Program" style="max-width: 100%; max-height: 200px; object-fit: cover;">
+                
+                <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="clearFile">
+                    <i class="bi bi-x-circle-fill"></i> Hapus Foto
+                </button>
+            </div>
+        </div>
 
           <!-- Nama Program -->
           <div class="mb-3">
@@ -147,6 +155,49 @@
   </div>
 </div>
 
+<!-- Modal Detail Program -->
+<div class="modal fade" id="modalDetailProgram" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg"> 
+    <div class="modal-content">
+      
+      <div class="modal-header py-2">
+        <h5 class="modal-title fw-bold" id="detailModalTitle">Detail Program: <span id="detailNamaProgram"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      
+      <div class="modal-body" id="detailProgramBody">
+        <div class="row">
+            
+            <div class="col-md-4 text-center mb-3">
+                <h6>Foto Program</h6>
+                <img id="detailFotoProgram" src="#" alt="Foto Program" class="img-fluid rounded shadow-sm" style="max-height: 250px; object-fit: cover;">
+            </div>
+            
+            <div class="col-md-8">
+                <table class="table table-sm table-striped table-bordered">
+                    <tbody>
+                        <tr><th>Nama Program</th><td id="d_nama"></td></tr>
+                        <tr><th>Penyelenggara</th><td id="d_penyelenggara"></td></tr>
+                        <tr><th>Lokasi</th><td id="d_lokasi"></td></tr>
+                        <tr><th>Tanggal Pelaksanaan</th><td id="d_tanggal"></td></tr>
+                        <tr><th>Status</th><td id="d_status"></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="col-12 mt-3">
+                <h6 class="fw-bold">Deskripsi Lengkap:</h6>
+                <div id="d_deskripsi" class="p-3 border rounded bg-light"></div>
+            </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 <style>
