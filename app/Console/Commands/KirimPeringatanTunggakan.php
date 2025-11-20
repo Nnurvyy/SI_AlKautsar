@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\TabunganHewanQurban;
-use App\Models\Pengguna;
+use App\Models\Jamaah;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -13,84 +13,106 @@ class KirimPeringatanTunggakan extends Command
 {
     /**
      * Nama dan signature dari console command.
-     * Ini yang akan kita panggil: php artisan qurban:kirim-peringatan
      */
     protected $signature = 'qurban:kirim-peringatan';
 
     /**
      * Deskripsi dari console command.
      */
-    protected $description = 'Kirim email peringatan ke penabung qurban yang menunggak bulan lalu.';
+    protected $description = 'Kirim email peringatan ke penabung qurban (tipe cicilan) yang tidak memenuhi target akumulasi bulanan.';
 
     /**
      * Jalankan logic command.
      */
     public function handle()
     {
-        $this->info('Memulai pengecekan tunggakan tabungan qurban...');
+        $this->info('Memulai pengecekan tunggakan tabungan qurban berdasarkan target akumulasi...');
 
-        // 1. Tentukan periode "bulan lalu"
-        $bulanLalu = Carbon::now()->subMonth();
-        $awalBulanLalu = $bulanLalu->copy()->startOfMonth();
-        $akhirBulanLalu = $bulanLalu->copy()->endOfMonth();
-
-        $this->info("Mencari penunggak yang tidak bayar pada periode: " . $awalBulanLalu->toDateString() . " s/d " . $akhirBulanLalu->toDateString());
-
-        // 2. Cari semua tabungan yang:
-        //    a) Belum lunas
-        //    b) TIDAK punya setoran di bulan lalu
-        $tabunganMenunggak = TabunganHewanQurban::with('pengguna')
+        // 1. Ambil semua tabungan yang belum lunas dan bertipe 'cicilan'
+        $tabunganCicilanAktif = TabunganHewanQurban::with('jamaah')
+            ->where('saving_type', 'cicilan')
             ->whereRaw(
                 '(SELECT COALESCE(SUM(nominal), 0) FROM pemasukan_tabungan_qurban WHERE id_tabungan_hewan_qurban = tabungan_hewan_qurban.id_tabungan_hewan_qurban) < total_harga_hewan_qurban'
             )
-            ->whereDoesntHave('pemasukanTabunganQurban', function ($query) use ($awalBulanLalu, $akhirBulanLalu) {
-                $query->whereBetween('tanggal', [$awalBulanLalu, $akhirBulanLalu]);
-            })
             ->get();
 
-        if ($tabunganMenunggak->isEmpty()) {
-            $this->info('Tidak ditemukan penunggak untuk bulan lalu. Pekerjaan selesai.');
+        if ($tabunganCicilanAktif->isEmpty()) {
+            $this->info('Tidak ditemukan tabungan cicilan aktif yang belum lunas. Pekerjaan selesai.');
             return 0;
         }
 
-        $this->info("Ditemukan " . $tabunganMenunggak->count() . " penunggak. Memulai pengiriman email...");
+        $penunggakDitemukan = 0;
+        $tanggalHariIni = Carbon::now();
 
-        // 3. Kirim email ke setiap penunggak
-        foreach ($tabunganMenunggak as $tabungan) {
-            $pengguna = $tabungan->pengguna;
+        foreach ($tabunganCicilanAktif as $tabungan) {
+            // Pastikan durasi cicilan valid
+            if ($tabungan->duration_months <= 0) continue;
 
-            // Pastikan pengguna ada dan punya email
-            if (!$pengguna || !$pengguna->email) {
-                Log::warning("Tabungan ID {$tabungan->id_tabungan_hewan_qurban} menunggak tapi tidak memiliki data pengguna/email.");
-                continue;
-            }
+            // 2. Hitung Angsuran Bulanan (cicilan per bulan)
+            $installmentAmount = round($tabungan->total_harga_hewan_qurban / $tabungan->duration_months);
 
-            // Sesuai permintaan Anda: email teks biasa
-            $teksEmail = "Halo, {$pengguna->nama}.\n\n"
-                . "Kami dari Pengelola E-Masjid Al Kautsar ingin menginformasikan bahwa kami belum menerima setoran untuk tabungan qurban Anda (Hewan: {$tabungan->nama_hewan}) pada bulan {$bulanLalu->translatedFormat('F Y')}.\n\n"
-                . "Mohon untuk segera melakukan setoran agar tabungan Anda lunas tepat waktu.\n\n"
-                . "Jika Anda merasa ini adalah kesalahan atau sudah melakukan pembayaran, silakan hubungi kami.\n\n"
-                . "Terima kasih.\n\n"
-                . "Salam,\n"
-                . "Admin Masjid Al Kautsar";
+            // 3. Hitung Jumlah Bulan Berlalu (sejak dibuat sampai bulan INI)
+            // Menggunakan created_at sebagai tanggal mulai
+            $tanggalMulai = Carbon::parse($tabungan->created_at);
 
-            try {
-                // Menggunakan Mail::raw() untuk mengirim teks biasa
-                Mail::raw($teksEmail, function ($message) use ($pengguna) {
-                    $message->to($pengguna->email, $pengguna->nama)
-                        ->subject('Peringatan Tunggakan Tabungan Qurban')
-                        ->from(config('mail.from.address'), config('mail.from.name'));
-                });
+            // Hitung selisih bulan (termasuk bulan saat ini sebagai 1 bulan)
+            // Misal created_at 15 Nov, hari ini 19 Nov -> 1 bulan berlalu
+            // Misal created_at 15 Nov, hari ini 5 Dec -> 2 bulan berlalu (Nov & Dec)
+            $monthsPassed = $tanggalHariIni->diffInMonths($tanggalMulai) + 1;
 
-                $this->info("Email peringatan berhasil dikirim ke: {$pengguna->email}");
+            // Jika tabungan sudah melewati total durasi, tapi belum lunas, anggap semua bulan sudah berlalu
+            $monthsPassed = min($monthsPassed, $tabungan->duration_months);
 
-            } catch (\Exception $e) {
-                $this->error("Gagal mengirim email ke {$pengguna->email}: " . $e->getMessage());
-                Log::error("Gagal kirim email tunggakan ke {$pengguna->email}: " . $e->getMessage());
+            // 4. Hitung Target Akumulasi yang seharusnya sudah terkumpul
+            // Target Akumulasi = Cicilan Bulanan * Bulan Berlalu
+            $accumulatedTarget = $installmentAmount * $monthsPassed;
+
+            // 5. Cek Tunggakan: Apakah total tabungan saat ini KURANG dari Target Akumulasi
+            $totalTerkumpul = $tabungan->pemasukanTabunganQurban->sum('nominal');
+
+            if ($totalTerkumpul < $accumulatedTarget) {
+                // PENUNGGAK DITEMUKAN
+                $penunggakDitemukan++;
+                $jamaah = $tabungan->jamaah;
+
+                if (!$jamaah || !$jamaah->email) {
+                    Log::warning("Tabungan ID {$tabungan->id_tabungan_hewan_qurban} menunggak tapi tidak memiliki data jamaah/email.");
+                    continue;
+                }
+
+                $sisaKekurangan = $accumulatedTarget - $totalTerkumpul;
+
+                $teksEmail = "Halo, {$jamaah->name}.\n\n"
+                    . "Kami dari Pengelola E-Masjid Al Kautsar ingin menginformasikan bahwa tabungan qurban Anda ({$tabungan->nama_hewan}, Target: " . number_format($tabungan->total_harga_hewan_qurban, 0, ',', '.') . " dalam {$tabungan->duration_months} bulan) mengalami tunggakan.\n\n"
+                    . "Berdasarkan cicilan bulanan sebesar Rp " . number_format($installmentAmount, 0, ',', '.') . ", target setoran akumulasi Anda hingga bulan ini seharusnya Rp " . number_format($accumulatedTarget, 0, ',', '.') . ".\n"
+                    . "Namun, total setoran Anda saat ini baru mencapai Rp " . number_format($totalTerkumpul, 0, ',', '.') . ".\n\n"
+                    . "Kekurangan setoran untuk memenuhi target akumulasi Anda adalah **Rp " . number_format($sisaKekurangan, 0, ',', '.') . "**.\n\n"
+                    . "Mohon segera melakukan setoran minimal senilai kekurangan di atas agar tabungan Anda kembali normal.\n\n"
+                    . "Terima kasih.\n\n"
+                    . "Salam,\n"
+                    . "Admin Masjid Al Kautsar";
+
+                try {
+                    Mail::raw($teksEmail, function ($message) use ($jamaah) {
+                        $message->to($jamaah->email, $jamaah->name)
+                            ->subject('Peringatan Tunggakan Tabungan Qurban (Target Akumulasi)')
+                            ->from(config('mail.from.address'), config('mail.from.name'));
+                    });
+
+                    $this->info("Email peringatan berhasil dikirim ke: {$jamaah->email} (Kekurangan: Rp " . number_format($sisaKekurangan, 0, ',', '.') . ")");
+
+                } catch (\Exception $e) {
+                    $this->error("Gagal mengirim email ke {$jamaah->email}: " . $e->getMessage());
+                    Log::error("Gagal kirim email tunggakan ke {$jamaah->email}: " . $e->getMessage());
+                }
+
+            } else {
+                // Sudah memenuhi target akumulasi, tidak perlu kirim peringatan
+                $this->info("Tabungan ID {$tabungan->id_tabungan_hewan_qurban} (Cicilan) sudah memenuhi target akumulasi. Dilewati.");
             }
         }
 
-        $this->info('Semua email peringatan telah diproses. Pekerjaan selesai.');
+        $this->info("Total {$penunggakDitemukan} email peringatan telah diproses. Pekerjaan selesai.");
         return 0;
     }
 }
