@@ -28,8 +28,8 @@
 
         {{-- PENGELUARAN --}}
         <li class="nav-item">
-            <a href="{{ route('pengurus.pengeluaran') }}"
-               class="nav-link {{ request()->routeIs('pengurus.pengeluaran') ? 'active' : '' }}">
+            <a href="{{ route('pengurus.pengeluaran.index') }}"
+               class="nav-link {{ request()->routeIs('pengurus.pengeluaran.*') ? 'active' : '' }}">
                 <i class="bi bi-box-arrow-up"></i> Pengeluaran
             </a>
         </li>

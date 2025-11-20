@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash; // Import Hash
 use App\Models\Jamaah;                 // Import Jamaah
 use App\Models\Pengurus;               // Import Pengurus
+use App\Models\Keuangan;               
+use App\Models\TabunganHewanQurban;             
 use Laravel\Socialite\Facades\Socialite; // Import Socialite
 use Exception;
 
@@ -193,8 +195,32 @@ class AuthController extends Controller
      */
     public function dashboard()
     {
-        // Sesuaikan nama view ini dengan struktur Anda
-        // Mungkin 'pengurus.dashboard' atau hanya 'dashboard'
-        return view('dashboard');
+        // 1. Hitung Total Pemasukan
+        $totalPemasukan = Keuangan::where('tipe', 'pemasukan')->sum('nominal');
+
+        // 2. Hitung Total Pengeluaran
+        $totalPengeluaran = Keuangan::where('tipe', 'pengeluaran')->sum('nominal');
+
+        // 3. Hitung Saldo (Pemasukan - Pengeluaran)
+        $saldo = $totalPemasukan - $totalPengeluaran;
+
+        // 4. Hitung Total Penabung Qurban (Jumlah data tabungan aktif)
+        $totalPenabungQurban = TabunganHewanQurban::count();
+
+        // 5. Ambil 5 Transaksi Terbaru (Gabungan Pemasukan & Pengeluaran)
+        // Diurutkan berdasarkan tanggal terbaru, lalu waktu input terbaru
+        $recentTransactions = Keuangan::with('kategori')
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('dashboard', compact(
+            'totalPemasukan', 
+            'totalPengeluaran', 
+            'saldo', 
+            'totalPenabungQurban',
+            'recentTransactions'
+        ));
     }
 }

@@ -6,20 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
     public function up(): void {
-        Schema::create('pemasukan', function (Blueprint $table) {
-            $table->uuid('id_pemasukan')->primary();
+        Schema::create('keuangan', function (Blueprint $table) {
+            $table->uuid('id_keuangan')->primary();
+            $table->enum('tipe', ['pemasukan', 'pengeluaran']);
             $table->date('tanggal');
             $table->bigInteger('nominal');
-            $table->uuid('id_kategori_pemasukan');
+            $table->uuid('id_kategori_keuangan');
             $table->string('deskripsi', 255)->nullable();
             $table->timestamps();
 
-            $table->foreign('id_kategori_pemasukan')->references('id_kategori_pemasukan')->on('kategori_pemasukan')->onDelete('cascade');
+            $table->foreign('id_kategori_keuangan')->references('id_kategori_keuangan')->on('kategori_keuangan')->onDelete('cascade');
         });
     }
 
     public function down(): void {
-        Schema::dropIfExists('pemasukan');
+        Schema::dropIfExists('keuangan');
     }
 };
 

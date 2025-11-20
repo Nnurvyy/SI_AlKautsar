@@ -16,6 +16,7 @@ use App\Http\Controllers\KajianController; // Pastikan ini di-use
 use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\DonasiController;
 use App\Http\Controllers\PemasukanDonasiController;
+use App\Http\Controllers\KategoriKeuanganController;
 
 
 
@@ -80,11 +81,16 @@ Route::middleware(['auth:pengurus'])->prefix('pengurus')->name('pengurus.')->gro
     // Dashboard (URL: /pengurus/dashboard)
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 
-    // Pemasukan (URL: /pengurus/pemasukan)
+    Route::get('kategori-keuangan/data', [KategoriKeuanganController::class, 'data']);
+    Route::resource('kategori-keuangan', KategoriKeuanganController::class);
+
+    // Route Pemasukan
+    Route::get('pemasukan/data', [PemasukanController::class, 'data']);
     Route::resource('pemasukan', PemasukanController::class);
 
-    // Pengeluaran (URL: /pengurus/pengeluaran)
-    Route::get('/pengeluaran', [PengeluaranController::class, 'index'])->name('pengeluaran');
+    // Route Pengeluaran
+    Route::get('pengeluaran/data', [PengeluaranController::class, 'data']);
+    Route::resource('pengeluaran', PengeluaranController::class);
 
     // Khotib Jumat (URL: /pengurus/khotib-jumat)
     Route::resource('khotib-jumat', KhotibJumatController::class);
