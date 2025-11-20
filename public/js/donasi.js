@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update Header & Stats
         document.getElementById('detailTitle').textContent = data.nama_donasi;
-        document.getElementById('input_id_donasi').value = data.id_donasi; // Set ID ke form input
+        document.getElementById('input_id_donasi').value = data.id_donasi;
 
         const target = parseFloat(data.target_dana);
         const terkumpul = parseFloat(data.total_terkumpul);
@@ -228,16 +228,34 @@ document.addEventListener('DOMContentLoaded', () => {
             tbodyRiwayat.innerHTML = `<tr><td colspan="4" class="text-center text-muted">Belum ada pemasukan.</td></tr>`;
         } else {
             data.pemasukan.forEach(p => {
+                
+                // LOGIKA BADGE METODE PEMBAYARAN
+                let badge = '';
+                if (p.metode_pembayaran === 'tunai') {
+                    badge = '<span class="badge bg-secondary" style="font-size: 0.65rem;">Tunai</span>';
+                } else if (p.metode_pembayaran === 'whatsapp') {
+                    badge = '<span class="badge bg-success" style="font-size: 0.65rem;"><i class="bi bi-whatsapp"></i> WA</span>';
+                } else if (p.metode_pembayaran === 'transfer') {
+                    badge = '<span class="badge bg-primary" style="font-size: 0.65rem;">Transfer</span>';
+                }
+
                 const row = `
                     <tr>
                         <td>${formatTanggal(p.tanggal)}</td>
+                        
                         <td>
-                            ${p.nama_donatur}
-                            ${p.pesan ? `<br><small class='text-muted fst-italic'>Msg: "${p.pesan}"</small>` : ''}
+                            <div class="fw-bold">${p.nama_donatur}</div>
+                            ${p.pesan ? `<small class='text-muted fst-italic' style="font-size: 0.75rem;">"${p.pesan}"</small>` : ''}
                         </td>
-                        <td class="text-end">${formatRupiah(p.nominal)}</td>
+
                         <td class="text-center">
-                            <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="hapusPemasukan('${p.id_pemasukan_donasi}')">
+                            ${badge}
+                        </td>
+
+                        <td class="text-end">${formatRupiah(p.nominal)}</td>
+
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="window.hapusPemasukan('${p.id_pemasukan_donasi}')">
                                 &times;
                             </button>
                         </td>

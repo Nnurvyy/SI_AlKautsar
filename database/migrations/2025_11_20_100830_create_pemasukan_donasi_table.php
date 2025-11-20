@@ -23,6 +23,7 @@ return new class extends Migration
 
             $table->date('tanggal');
             $table->string('nama_donatur');
+            $table->enum('metode_pembayaran', ['tunai', 'transfer', 'whatsapp'])->default('tunai');
             $table->bigInteger('nominal');
             $table->text('pesan')->nullable();
 

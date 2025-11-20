@@ -20,6 +20,7 @@ class PemasukanDonasi extends Model
         'id_donasi',
         'tanggal',
         'nama_donatur',
+        'metode_pembayaran',
         'nominal',
         'pesan',
     ];

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Artikel;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class ArtikelController extends Controller
 {
@@ -56,7 +57,7 @@ class ArtikelController extends Controller
         // 3. Simpan ke Database
         try {
             Artikel::create($data);
-            return redirect()->route('admin.artikel.index')->with('success', 'Artikel berhasil ditambahkan!');
+            return redirect()->route('pengurus.artikel.index')->with('success', 'Artikel berhasil ditambahkan!');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal menyimpan artikel: ' . $e->getMessage())->withInput();
         }
@@ -112,7 +113,7 @@ class ArtikelController extends Controller
 
         try {
             $artikel->update($data);
-            return redirect()->route('admin.artikel.index')->with('success', 'Artikel berhasil diperbarui!');
+            return redirect()->route('pengurus.artikel.index')->with('success', 'Artikel berhasil diperbarui!');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal memperbarui artikel: ' . $e->getMessage())->withInput();
         }
@@ -149,7 +150,7 @@ class ArtikelController extends Controller
      */
     public function artikelData(Request $request, string $id = null)
     {
-            \Log::info('artikelData terpanggil', ['id' => $id, 'query' => $request->all()]);
+            Log::info('artikelData terpanggil', ['id' => $id, 'query' => $request->all()]);
         if ($id) {
             $artikel = Artikel::select(
                 'id_artikel',

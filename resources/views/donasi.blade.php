@@ -143,6 +143,7 @@
                         <tr>
                             <th>Tanggal</th>
                             <th>Nama Donatur</th>
+                            <th>Metode Pembayaran</th>
                             <th class="text-end">Nominal</th>
                             <th class="text-center">Aksi</th>
                         </tr>
@@ -170,6 +171,14 @@
                     <div class="mb-2">
                         <label class="small">Nama Donatur / Hamba Allah</label>
                         <input type="text" class="form-control form-control-sm" name="nama_donatur" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="small">Metode Pembayaran</label>
+                        <select class="form-select form-select-sm" name="metode_pembayaran" required>
+                            <option value="tunai" selected>Tunai (Cash)</option>
+                            <option value="whatsapp">Konfirmasi WA / Manual</option>
+                            <option value="transfer">Payment Gateway / Transfer</option>
+                        </select>
                     </div>
                     <div class="mb-2">
                         <label class="small">Tanggal</label>

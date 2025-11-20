@@ -13,6 +13,7 @@ class PemasukanDonasiController extends Controller
         $validated = $request->validate([
             'id_donasi' => 'required|exists:donasi,id_donasi',
             'nama_donatur' => 'required|string|max:255',
+            'metode_pembayaran' => 'required|in:tunai,transfer,whatsapp',
             'tanggal' => 'required|date',
             'nominal' => 'required|numeric|min:1',
             'pesan' => 'nullable|string'
