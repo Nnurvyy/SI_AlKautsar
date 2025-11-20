@@ -5,336 +5,387 @@
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 <style>
-    /* Style untuk Card Kajian Rutin (Lama - tidak terpakai) */
-    /* ... (style lama Anda) ... */
-    .kajian-list-card {
-        background: #ffffff;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        border: 1px solid #eee;
-        overflow: hidden; 
-    }
-    .kajian-avatar {
-        width: 90px;
-        height: 90px;
-        object-fit: cover;
-    }
-    .kajian-info {
-        padding: 0.75rem 1rem;
-    }
-    .kajian-info h6 {
-        font-size: 1rem;
-    }
-    .kajian-info p {
-        font-size: 0.85rem;
-        margin-bottom: 0.5rem;
-    }
-    /* ... (akhir style lama) ... */
-
-
-    /* ================================================= */
-    /* == STYLE JUDUL (DARI DONASI) == */
-    /* ================================================= */
-
+    /* Base styles (Mobile) */
     .donasi-title-heading {
-        font-family: 'Poppins', sans-serif; 
+        font-family: 'Poppins', sans-serif;
         font-weight: 700;
         font-size: 1.8rem;
         color: #333;
         margin-bottom: 0.5rem;
     }
-
-    /* ================================================= */
-    /* == STYLE KAJIAN EVENT (VERSI BARU - Teks di Bawah) == */
-    /* ================================================= */
+    
+    .donasi-title-sub {
+        font-size: 1rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+    }
 
     .kajian-event-card {
         width: 100%;
-        border-radius: 16px; /* Tepi tumpul */
-        overflow: hidden; /* Penting agar gambar tidak "bocor" */
+        border-radius: 16px;
+        overflow: hidden;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         border: none;
-        background-color: #ffffff; /* Card jadi putih polos */
+        background-color: #ffffff;
     }
     .kajian-event-img {
         width: 100%;
-        height: 320px; /* Tinggi gambar dibuat tetap agar seragam */
         object-fit: cover;
+        aspect-ratio: 16/9; /* Mobile aspect ratio */
     }
-    
     .kajian-event-content {
-        padding: 1rem; /* Padding standar untuk card-body */
+        padding: 1rem;
     }
-    
-    /* Style Teks di dalam Card Event (WARNA BARU) */
     .kajian-event-content h6 {
         font-weight: 700;
-        font-size: 1.25rem; /* Ukuran diperbesar */
-        color: #212529; 
+        font-size: 1.25rem;
+        color: #212529;
         margin-bottom: 0.25rem;
     }
     .kajian-event-content p {
-        font-size: 1.0rem; /* Ukuran diperbesar */
-        color: #495057; 
-        margin-bottom: 0.5rem; /* Tambah margin bawah agar ada jarak ke badge */
+        font-size: 1.0rem;
+        color: #495057;
+        margin-bottom: 0.5rem;
         line-height: 1.4;
     }
-    /* Override text-muted dan small */
     .kajian-event-content .text-muted,
     .kajian-event-content .small {
-        color: #495057 !important; 
-        font-size: 1.0rem; /* Ukuran diperbesar */
+        color: #495057 !important;
+        font-size: 1.0rem;
     }
-    /* Style Badge di dalam card */
     .kajian-event-content .badge {
         font-size: 0.75rem;
         font-weight: 600;
         padding: 0.4em 0.8em;
-        background-color: #0d6efd !important; 
+        background-color: #0d6efd !important;
         color: #ffffff !important;
         text-shadow: none;
         border-radius: 6px;
     }
-    /* Margin-bottom untuk paragraf tema (mb-1) di HTML akan jadi kecil, 
-       jadi kita paskan di sini */
-    .kajian-event-content p.mb-1 {
-        margin-bottom: 0.5rem !important;
-    }
-
-    
-    /* ======================================================== */
-    /* == PERUBAHAN WARNA BADGE TANGGAL KHUSUS KAJIAN EVENT == */
-    /* ======================================================== */
-    .kajian-event-content .tanggal-badge {
-        background-color: #6c757d; /* Warna abu-abu (Bootstrap secondary) */
+    .tanggal-badge {
+        font-size: 0.9rem;
+        font-weight: 600;
+        padding: 0.5em 0.75em;
+        background-color: #343a40;
         color: #ffffff;
+        border-radius: 8px;
+        display: inline-block;
+        margin-top: 0.5rem;
     }
 
-
-    /* ================================================= */
-    /* == STYLE SWIPER (TIDAK BERUBAH) == */
-    /* ================================================= */
-    .swiper-container-wrapper {
-        position: relative;
-        padding: 0;
-    }
-    .swiper {
-        overflow: hidden;
-        padding-bottom: 1.5rem;
-    }
-    .swiper-slide {
-        width: 100%;
-        height: auto;
-    }
-    .swiper-button-next,
-    .swiper-button-prev {
-        position: absolute;
-        top: 40%; /* Posisi panah di tengah gambar */
-        transform: translateY(-50%);
-        z-index: 10;
-        color: white; /* Panah tetap putih */
-        transition: color 0.2s ease;
-        width: auto;
-        height: auto;
-        background-color: transparent;
-        border-radius: 0;
-        box-shadow: none;
-    }
-    .swiper-button-prev:hover,
-    .swiper-button-next:hover {
-        color: #f0f0f0;
-    }
-    .swiper-button-next::after,
-    .swiper-button-prev::after {
-        font-size: 32px;
-        font-weight: 700;
-        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5); /* Shadow agar terlihat */
-    }
-    .swiper-button-prev {
-        left: 20px;
-    }
-    .swiper-button-next {
-        right: 20px;
-    }
-    .swiper-button-disabled {
-        opacity: 0;
-        pointer-events: none;
-    }
-
-    /* ================================================= */
-    /* == STYLE KAJIAN RUTIN (TIDAK BERUBAH) == */
-    /* ================================================= */
     .kajian-list-card-new {
         border: none;
-        border-radius: 12px; 
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); 
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
         margin-bottom: 1rem;
-        overflow: hidden; 
-        background: linear-gradient(to bottom right, #ffffff, #aaadaf);
+        overflow: hidden;
+        background: linear-gradient(to bottom right, #ffffff, #f1f3f5);
         transition: transform 0.3s ease, box-shadow 0.3s ease;
+        display: flex;
+        flex-direction: row;
     }
     .kajian-list-card-new:hover {
-        transform: translateY(-5px); 
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12); 
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
     }
+    
     .kajian-list-card-new .card-img {
         object-fit: cover;
-        height: 100%; 
-        min-height: 140px; 
-        border-radius: 12px 0 0 12px !important; 
+        width: 110px; /* Lebar fix */
+        height: 110px; /* Tinggi fix (1:1) */
+        border-radius: 12px 0 0 12px !important;
     }
+    
+    /* =================================================
+      PERUBAHAN: Menghapus height: 110px
+      =================================================
+    */
     .kajian-list-card-new .card-body {
-        padding: 0.75rem 1rem; 
+        padding: 0.75rem 1rem;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        height: 100%; 
+        flex: 1; /* Ambil sisa ruang */
+        /* height: 110px; <-- DIHAPUS */
+        min-height: 110px; /* Tambahkan min-height agar tetap rapi */
     }
+    
     .kajian-list-card-new .card-title {
-        font-size: 0.95rem; 
+        font-size: 0.95rem;
         font-weight: 700;
-        color: #212529; 
+        color: #212529;
         line-height: 1.3;
-        margin-bottom: 0.5rem;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical; 	
-        overflow: hidden;
     }
     .kajian-list-card-new .card-text-tema {
         font-size: 0.85rem;
-        color: #495057; 
-        margin-bottom: 0.5rem;
-        line-height: 1.4;
+        color: #495057;
     }
-    
-    /* Ini adalah style dasar badge tanggal (dipakai oleh Kajian Rutin) */
-    .tanggal-badge {
-        font-size: 0.9rem; /* Ukuran diperbesar */
-        font-weight: 600;
-        padding: 0.5em 0.75em;
-        background-color: #343a40; /* Warna Netral (Abu Gelap) */
-        color: #ffffff; 			/* Teks putih */
-        border-radius: 8px;
-        display: inline-block; 
-        margin-top: 0.5rem; 
+
+
+    /* Desktop layout (Breakpoint >= 992px) */
+    @media (min-width: 992px) {
+        
+        /* KAJIAN EVENT (Left Column) */
+        .kajian-event-swiper { height: 100%; }
+        .swiper-wrapper { /* biarkan dinamis */ }
+        .swiper-slide { height: auto; }
+        .kajian-event-card { display: flex; }
+
+        .kajian-event-img {
+            aspect-ratio: 4 / 5; 
+            width: 100%; 
+            object-fit: cover;
+            border-radius: 16px 0 0 16px !important; 
+        }
+        .kajian-event-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 2rem; 
+            height: 100%; 
+        }
+        .kajian-event-content .tanggal-badge {
+            align-self: flex-start;
+        }
+
+
+        /* KAJIAN RUTIN (Right Column) */
+        .kajian-list-card-new {
+            background: #f1f3f5; 
+            box-shadow: none;
+            border-radius: 20px; 
+            padding: 0.75rem;
+            background-image: none; 
+            display: flex;
+            flex-direction: row;
+        }
+        .kajian-list-card-new:hover {
+            transform: none; 
+            box-shadow: none;
+        }
+        
+        .kajian-list-card-new .card-img {
+            width: 110px;
+            height: 110px;
+            border-radius: 12px !important; /* Kotak rounded */
+            object-fit: cover;
+            min-height: auto; 
+        }
+        
+        .kajian-list-card-new .card-body {
+            height: auto; 
+            min-height: 0; /* Hapus min-height di desktop */
+            padding: 0.5rem 0 0.5rem 1rem; 
+            justify-content: space-between;
+            flex: 1;
+        }
+        .kajian-list-card-new .card-title {
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+        .kajian-list-card-new .card-text-tema {
+            font-size: 0.8rem;
+            margin-bottom: 0.25rem;
+        }
+        .kajian-list-card-new .tanggal-badge {
+            font-size: 0.75rem;
+            padding: 0.4em 0.6em;
+            margin-top: 0.25rem;
+        }
+
+        /* Pagination Styles */
+        .pagination .page-item .page-link {
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin: 0 2px;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #0a58ca;
+        }
+        .pagination .page-item.disabled .page-link {
+            background-color: #e9ecef;
+            color: #6c757d;
+        }
     }
 </style>
 @endpush
 
 @section('content')
-<div class="container pt-4 pb-2">
-    <h2 class="donasi-title-heading">
-        Kajian-Kajian
-    </h2>
-</div>
-<div class="pt-3 pb-2">
-    <div class="swiper-container-wrapper">
-        <div class="swiper kajian-event-swiper">
-            <div class="swiper-wrapper">
 
-                @forelse($kajianEvent as $kajian)
-                    <div class="swiper-slide">
-                        
-                        <div class="kajian-event-card">
-                            
-                            {{-- 1. FOTO --}}
-                            <img src="{{ $kajian->foto_url ?? asset('images/events/hannan-attaki.jpeg') }}" alt="{{ $kajian->tema_kajian }}"
-                                 class="kajian-event-img">
-                            
-                            {{-- 2. KONTEN --}}
-                            <div class="kajian-event-content">
-                                {{-- Badge "Event" oranye --}} 
-                                <span class="badge mb-2">Event</span>
-                                <h6 class="fw-bold">{{ $kajian->nama_penceramah }}</h6>
-                                <p class="text-muted small mb-1">Tema: "{{ $kajian->tema_kajian }}"</p>
-                                
-                                {{-- Badge Tanggal (Warna barunya akan diambil dari CSS override) --}}
-                                <span class="tanggal-badge">
-                                    {{ \Carbon\Carbon::parse($kajian->tanggal_kajian)->format('d M Y') }}
-                                    @if($kajian->waktu_kajian)
-                                        , Pukul {{ \Carbon\Carbon::parse($kajian->waktu_kajian)->format('H:i') }}
-                                    @endif
-                                </span>
-                            </div>
-                        </div>
+<div class="container"> 
 
-                    </div>
-                @empty
-                    <div class="swiper-slide">
-                        {{-- Card "empty" disesuaikan agar mirip --}}
-                        <div class="kajian-event-card" style="height: 380px; display: flex; justify-content: center; align-items: center; background: #f8f9fa;">
-                            <div class="text-center">
-                                <img src="{{ asset('images/icons/kajian.png') }}" alt="Kajian" style="width: 80px; height: 80px; opacity: 0.5;" class="mx-auto mb-3">
-                                <p class="text-muted">Belum ada kajian event terbaru.</p>
-                            </div>
-                        </div>
-                    </div>
-                @endforelse
+    {{-- Desktop Layout (>= 992px) --}}
+    <div class="d-none d-lg-block" style="padding-top: 2rem; padding-bottom: 2rem;">
 
-            </div>
+        {{-- Judul Halaman --}}
+        <div class="mb-4">
+            <h1 class="donasi-title-heading" style="font-size: 2.2rem; margin-bottom: 0;">Kajian-Kajian</h1>
+            <p class="donasi-title-sub">Ikuti kajian event dan rutin terbaru kami.</p>
         </div>
-        {{-- Panah navigasi (tetap di luar) --}}
-        <div class="swiper-button-prev event-button-prev"></div>
-        <div class="swiper-button-next event-button-next"></div>
-    </div>
-</div>
 
-{{-- Bagian Kajian Rutin (Tidak Diubah) --}}
-<div class="feature-section-bg py-4">
-    <div class="container">
-        <h2 class="donasi-title-heading" style="font-size: 1.5rem; margin-bottom: 1rem;">Kajian Rutin</h2>
-        
-        @forelse($kajianRutin as $kajian)
-            <div class="card kajian-list-card-new">
-                <div class="row g-0">
-                    <div class="col-4">
-                        <img src="{{ $kajian->foto_url ?? asset('images/default.png') }}" class="card-img" alt="Foto {{ $kajian->nama_penceramah }}">
+        <div class="row">
+            {{-- KIRI: KAJIAN EVENT --}}
+            <div class="col-lg-7">
+                <div class="swiper kajian-event-swiper">
+                    <div class="swiper-wrapper">
+                        @forelse($kajianEvent as $kajian)
+                        <div class="swiper-slide">
+                            <div class="kajian-event-card">
+                                <div class="row g-0">
+                                    <div class="col-md-6">
+                                        <img src="{{ $kajian->foto_url ?? asset('images/events/default.jpg') }}" alt="{{ $kajian->tema_kajian }}" class="kajian-event-img">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="kajian-event-content">
+                                            <h3 class="fw-bold donasi-title-heading" style="font-size: 1.5rem;">KAJIAN EVENT</h3>
+                                            
+                                            <h6 class="fw-bold mt-2">{{ $kajian->nama_penceramah }}</h6>
+                                            <p class="text-muted small mb-1">Tema: "{{ $kajian->tema_kajian }}"</p>
+                                            <span class="tanggal-badge">
+                                                {{ \Carbon\Carbon::parse($kajian->tanggal_kajian)->format('d M Y') }}
+                                                @if($kajian->waktu_kajian), Pukul {{ \Carbon\Carbon::parse($kajian->waktu_kajian)->format('H:i') }}@endif
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @empty
+                        <div class="swiper-slide">
+                            <div class="d-flex justify-content-center align-items-center h-100">
+                                <p>Tidak ada kajian event.</p>
+                            </div>
+                        </div>
+                        @endforelse
                     </div>
-                    <div class="col-8">
-                        <div class="card-body">
-                            <div>
-                                <h5 class="card-title">{{ $kajian->nama_penceramah }}</h5>
-                                <p class="card-text-tema">
-                                    Tema: "{{ $kajian->tema_kajian }}"
-                                </p>
-                            </div>
-                            
-                            <div>
-                                {{-- Badge Tanggal (Ini akan tetap memakai warna #343a40) --}}
-                                <span class="tanggal-badge">
-                                    {{ \Carbon\Carbon::parse($kajian->tanggal_kajian)->format('d M Y') }}
-                                    @if($kajian->waktu_kajian)
-                                        , {{ \Carbon\Carbon::parse($kajian->waktu_kajian)->format('H:i') }}
-                                    @endif
-                                </span>
-                            </div>
+                    @if($kajianEvent->count() > 1)
+                    <div class="swiper-button-next"></div>
+                    <div class="swiper-button-prev"></div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- KANAN: KAJIAN RUTIN --}}
+            <div class="col-lg-5">
+                <h2 class="donasi-title-heading mb-4">Kajian Rutin</h2>
+                @forelse($kajianRutin as $kajian)
+                <div class="card kajian-list-card-new">
+                    <img src="{{ $kajian->foto_url ?? asset('images/default.png') }}" class="card-img" alt="Foto {{ $kajian->nama_penceramah }}">
+                    <div class="card-body">
+                        <div>
+                            <h5 class="card-title">{{ $kajian->nama_penceramah }}</h5>
+                            <p class="card-text-tema">Tema: "{{ $kajian->tema_kajian }}"</p>
+                        </div>
+                        <div>
+                            <span class="tanggal-badge">
+                                {{ \Carbon\Carbon::parse($kajian->tanggal_kajian)->format('d M Y') }}
+                                @if($kajian->waktu_kajian), {{ \Carbon\Carbon::parse($kajian->waktu_kajian)->format('H:i') }}@endif
+                            </span>
                         </div>
                     </div>
                 </div>
+                @empty
+                <p>Tidak ada kajian rutin.</p>
+                @endforelse
+
+                {{-- Pagination Links --}}
+                <div class="d-flex justify-content-end mt-4">
+                    @if(method_exists($kajianRutin, 'links'))
+                        {{ $kajianRutin->links() }}
+                    @endif
+                </div>
             </div>
+        </div>
+    </div>
+
+    {{-- Mobile & Tablet Layout (< 992px) --}}
+    <div class="d-lg-none">
+        
+        <div class="pt-4 pb-3">
+            <h2 class="donasi-title-heading">Kajian-Kajian</h2>
+            <p class="donasi-title-sub">Ikuti kajian event dan rutin terbaru kami.</p>
+        </div>
+
+        <div class="swiper kajian-event-swiper-mobile mb-4">
+            <div class="swiper-wrapper">
+                @forelse($kajianEvent as $kajian)
+                <div class="swiper-slide">
+                    <div class="kajian-event-card">
+                        <img src="{{ $kajian->foto_url ?? asset('images/events/default.jpg') }}" alt="{{ $kajian->tema_kajian }}" class="kajian-event-img">
+                        <div class="kajian-event-content">
+                            <h6 class="fw-bold">{{ $kajian->nama_penceramah }}</h6>
+                            <p class="text-muted small mb-1">Tema: "{{ $kajian->tema_kajian }}"</p>
+                            <span class="tanggal-badge">
+                                {{ \Carbon\Carbon::parse($kajian->tanggal_kajian)->format('d M Y') }}
+                                @if($kajian->waktu_kajian), Pukul {{ \Carbon\Carbon::parse($kajian->waktu_kajian)->format('H:i') }}@endif
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                @empty
+                <div class="swiper-slide">
+                    <p>Tidak ada kajian event.</p>
+                </div>
+                @endforelse
+            </div>
+            @if($kajianEvent->count() > 1)
+            <div class="swiper-pagination"></div>
+            @endif
+        </div>
+
+        {{-- Judul "Kajian Rutin" untuk mobile/tablet --}}
+        <h2 class="donasi-title-heading mt-4">Kajian Rutin</h2>
+        
+        @forelse($kajianRutin as $kajian)
+        <div class="card kajian-list-card-new">
+            <img src="{{ $kajian->foto_url ?? asset('images/default.png') }}" class="card-img" alt="Foto {{ $kajian->nama_penceramah }}">
+            <div class="card-body">
+                <div>
+                    <h5 class="card-title">{{ $kajian->nama_penceramah }}</h5>
+                    <p class="card-text-tema">Tema: "{{ $kajian->tema_kajian }}"</p>
+                </div>
+                <div>
+                    <span class="tanggal-badge">
+                        {{ \Carbon\Carbon::parse($kajian->tanggal_kajian)->format('d M Y') }}
+                        @if($kajian->waktu_kajian), {{ \Carbon\Carbon::parse($kajian->waktu_kajian)->format('H:i') }}@endif
+                    </span>
+                </div>
+            </div>
+        </div>
         @empty
-            <div class="alert alert-info text-center">
-                Belum ada jadwal kajian rutin yang tersedia.
-            </div>
+        <p>Tidak ada kajian rutin.</p>
         @endforelse
     </div>
+
 </div>
 @endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        new Swiper('.kajian-event-swiper', {
-            slidesPerView: 1,
-            spaceBetween: 0,
-            loop: {{ $kajianEvent->count() > 1 ? 'true' : 'false' }}, // <-- Loop dinamis
-            navigation: {
-                nextEl: '.event-button-next',
-                prevEl: '.event-button-prev',
-            },
-        });
+    document.addEventListener('DOMContentLoaded', function () {
+        if (window.innerWidth >= 992) {
+            new Swiper('.kajian-event-swiper', {
+                loop: {{ $kajianEvent->count() > 1 ? 'true' : 'false' }},
+                navigation: {
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                },
+                autoHeight: true, 
+                observer: true,
+                observeParents: true,
+            });
+        } else {
+            new Swiper('.kajian-event-swiper-mobile', {
+                loop: {{ $kajianEvent->count() > 1 ? 'true' : 'false' }},
+                pagination: {
+                    el: '.swiper-pagination',
+                    clickable: true,
+                },
+            });
+        }
     });
 </script>
 @endpush

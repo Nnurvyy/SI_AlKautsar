@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#FFFFFF">
     <title>@yield('title', 'E-Masjid')</title>
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -83,6 +86,7 @@
         .bg-twitter { background-color: #1da1f2; }
         .bg-youtube { background-color: #ff0000; }
         .bg-instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .bg-whatsapp { background-color: #25D366; }
         /* ================================== */
         /* AKHIR DARI CSS FOOTER */
         /* ================================== */
@@ -145,7 +149,7 @@
 
 
         /* ================================== */
-        /* */
+        /* CSS MODAL */
         /* ================================== */
         .modal.fade .modal-dialog.modal-bottom {
             transform: translateY(100%); /* Mulai dari bawah */
@@ -181,19 +185,69 @@
             margin-right: 1rem;
         }
         /* ================================== */
-        /* */
+        /* AKHIR CSS MODAL */
         /* ================================== */
 
 
         /* Media query untuk desktop */
         @media (min-width: 992px) {
-            /* Kosong, tidak perlu override body */
+            
+            .navbar-brand-icon {
+                height: 32px; /* Sesuaikan tinggi ikon brand */
+                width: auto;
+            }
+
+            /* =================================================
+              PERUBAHAN 1: CSS untuk Navbar Desktop (Ikon Kiri)
+              =================================================
+            */
+            .navbar-nav .nav-link {
+                display: flex;
+                flex-direction: row; /* Diubah ke 'row' */
+                align-items: center;
+                padding-top: 0.5rem;
+                padding-bottom: 0.5rem;
+                margin-left: 0.5rem;
+                margin-right: 0.5rem;
+                text-align: left; /* Diubah ke 'left' */
+            }
+            .navbar-nav .nav-link .nav-icon-img {
+                width: 24px;
+                height: 24px;
+                object-fit: contain;
+                margin-bottom: 0; /* Dihapus */
+                margin-right: 8px; /* Ditambahkan */
+            }
+            .navbar-nav .nav-link .nav-icon-text {
+                font-size: 0.9rem; /* Diperbesar sedikit */
+                font-weight: 500;
+                color: #6c757d; 
+                transition: color 0.2s ease;
+            }
+
+            /* Style untuk link aktif */
+            .navbar-nav .nav-link.active .nav-icon-text {
+                color: #4caf50 !important; 
+                font-weight: 600;
+            }
+
+            /* Hover effect opsional */
+            .navbar-nav .nav-link:not(.active):hover .nav-icon-text {
+                color: #333;
+            }
+
+            .dropdown-icon-img {
+                width: 20px;
+                height: 20px;
+                object-fit: contain;
+                margin-right: 10px;
+                vertical-align: -3px; 
+            }
         }
 
         /* Media query untuk mobile */
         @media (max-width: 991.98px) {
             .footer {
-                /* Padding ekstra agar copyright tidak tertutup navbar */
                 padding-bottom: 80px;
             }
         }
@@ -203,25 +257,156 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
 
-    <div class="container-fluid p-0">
+    <header class="d-none d-lg-block shadow-sm" style="position: sticky; top: 0; z-index: 1030; background-color: white;">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white">
+            <div class="container">
+                
+                {{-- =================================================
+                  PERUBAHAN 2: Menambahkan teks "Smart Masjid"
+                  =================================================
+                --}}
+                <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ route('public.landing') }}">
+                    <img src="{{ asset('images/icons/masjid.png') }}" alt="Brand Icon" class="navbar-brand-icon me-2">
+                    <span>Smart Masjid</span>
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+                    aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="mainNavbar">
+                    
+                    {{-- Struktur HTML sudah benar (img + span) --}}
+                    <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link {{ Request::is('/') ? 'active' : '' }}" href="{{ route('public.landing') }}">
+                                <img src="{{ asset('images/icons/home.png') }}" alt="Beranda" class="nav-icon-img">
+                                <span class="nav-icon-text">Beranda</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ Request::routeIs('public.jadwal-kajian*') ? 'active' : '' }}" href="{{ route('public.jadwal-kajian') }}">
+                                <img src="{{ asset('images/icons/kajian.png') }}" alt="Kajian" class="nav-icon-img">
+                                <span class="nav-icon-text">Kajian</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ Request::routeIs('public.jadwal-adzan*') ? 'active' : '' }}" href="{{ route('public.jadwal-adzan') }}">
+                                <img src="{{ asset('images/icons/adzan.png') }}" alt="Adzan" class="nav-icon-img">
+                                <span class="nav-icon-text">Jadwal Adzan</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ Request::routeIs('public.donasi*') ? 'active' : '' }}" href="{{ route('public.donasi') }}">
+                                <img src="{{ asset('images/icons/donasi.png') }}" alt="Donasi" class="nav-icon-img">
+                                <span class="nav-icon-text">Donasi</span>
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            {{-- =================================================
+                              PERUBAHAN 3: Menambahkan ikon ke "Lainnya"
+                              =================================================
+                            --}}
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <img src="{{ asset('images/icons/more (1).png') }}" alt="Lainnya" class="nav-icon-img">
+                                <span class="nav-icon-text">Lainnya</span>
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                <li>
+                                    <a class="dropdown-item {{ Request::routeIs('public.artikel*') ? 'active' : '' }}" href="{{ route('public.artikel') }}">
+                                        <img src="{{ asset('images/icons/artikel.png') }}" alt="Artikel" class="dropdown-icon-img">
+                                        Artikel
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ Request::routeIs('public.program*') ? 'active' : '' }}" href="{{ route('public.program') }}">
+                                        <img src="{{ asset('images/icons/program.png') }}" alt="Program" class="dropdown-icon-img">
+                                        Program
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('public.tabungan-qurban-saya') }}">
+                                        <img src="{{ asset('images/icons/qurban.png') }}" alt="Qurban" class="dropdown-icon-img">
+                                        Tabungan Qurban
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('public.jadwal-khotib') }}">
+                                        <img src="{{ asset('images/icons/khutbah-jumat.png') }}" alt="Khotib" class="dropdown-icon-img">
+                                        Khutbah Jumat
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <div class="d-flex align-items-center">
+                        @auth
+                            @if (Auth::user()->role == 'admin')
+                                <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-success me-2">
+                                    <i class="bi bi-speedometer2"></i> Dashboard
+                                </a>
+                            @else
+                                <a href="#" class="btn btn-outline-primary me-2">
+                                    <i class="bi bi-person-circle"></i> Profil
+                                </a>
+                            @endif
+                            <a href="#" onclick="event.preventDefault(); document.getElementById('logoutForm').submit();" class="btn btn-danger">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </a>
+                        @else
+                            <a href="{{ route('auth.welcome') }}" class="btn btn-success">
+                                <i class="bi bi-box-arrow-in-right"></i> Login
+                            </a>
+                        @endauth
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container-fluid p-0 flex-grow-1">
         @yield('content')
     </div>
 
     <footer class="footer mt-auto">
         <div class="container">
             <div class="footer-social-links">
-                <a href="#" class="social-icon bg-facebook" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
-                <a href="#" class="social-icon bg-twitter" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
-                <a href="#" class="social-icon bg-youtube" aria-label="Youtube"><i class="bi bi-youtube"></i></a>
-                <a href="#" class="social-icon bg-instagram" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+
+                {{-- GOAL 1: Tampilkan ikon HANYA jika link-nya ada di database --}}
+                
+                @if (!empty($settings->social_facebook))
+                    <a href="{{ $settings->social_facebook }}" class="social-icon bg-facebook" aria-label="Facebook" target="_blank" rel="noopener noreferrer"><i class="bi bi-facebook"></i></a>
+                @endif
+
+                @if (!empty($settings->social_twitter))
+                    <a href="{{ $settings->social_twitter }}" class="social-icon bg-twitter" aria-label="Twitter" target="_blank" rel="noopener noreferrer"><i class="bi bi-twitter"></i></a>
+                @endif
+
+                @if (!empty($settings->social_youtube))
+                    <a href="{{ $settings->social_youtube }}" class="social-icon bg-youtube" aria-label="Youtube" target="_blank" rel="noopener noreferrer"><i class="bi bi-youtube"></i></a>
+                @endif
+
+                @if (!empty($settings->social_instagram))
+                    <a href="{{ $settings->social_instagram }}" class="social-icon bg-instagram" aria-label="Instagram" target="_blank" rel="noopener noreferrer"><i class="bi bi-instagram"></i></a>
+                @endif
+
+                @if (!empty($settings->social_whatsapp))
+                    {{-- Asumsi $settings->social_whatsapp HANYA berisi nomor, cth: 62812... --}}
+                    <a href="https://wa.me/{{ $settings->social_whatsapp }}" class="social-icon bg-whatsapp" aria-label="WhatsApp" target="_blank" rel="noopener noreferrer"><i class="bi bi-whatsapp"></i></a>
+                @endif
+
             </div>
+            
+            {{-- GOAL 2: Ganti nama dan alamat statis dengan data dari database --}}
             <p class="footer-address">
-                <strong>Masjid Al-Jabbar</strong><br>
-                Jl. Al-Jabbar No. 1, Cimincrang, Gedebage<br>
-                Kota Bandung, Jawa Barat 40292
+                <strong>Masjid {{ $settings->nama_masjid }}</strong><br>
+                {{-- Menggunakan nl2br agar jika ada baris baru di 'lokasi_nama', akan tampil --}}
+                {!! nl2br(e($settings->lokasi_nama)) !!}
             </p>
             <div class="copyright-text">
-                Copyright © Masjid Al-Jabbar 2025
+                {{-- Ganti nama statis dan buat tahun menjadi dinamis --}}
+                Copyright © {{ $settings->nama_masjid }} {{ date('Y') }}
             </div>
         </div>
     </footer>
@@ -237,9 +422,9 @@
             <span>Kajian</span>
         </a>
 
-        <a href="{{ route('public.jadwal-khotib') }}" class="navbar-bottom-item {{ Request::routeIs('public.jadwal-khotib*') ? 'active' : '' }}">
-            <img src="{{ asset('images/icons/khutbah-jumat.png') }}" alt="Khotib">
-            <span>Khotib</span>
+        <a href="{{ route('public.jadwal-adzan') }}" class="navbar-bottom-item {{ Request::routeIs('public.jadwal-adzan*') ? 'active' : '' }}">
+            <img src="{{ asset('images/icons/adzan.png') }}" alt="Adzan">
+            <span>Adzan</span>
         </a>
         
         <a href="{{ route('public.donasi') }}" class="navbar-bottom-item {{ Request::routeIs('public.donasi*') ? 'active' : '' }}">
@@ -278,13 +463,28 @@
                             <img src="{{ asset('images/icons/qurban.png') }}" alt="Qurban" class="modal-list-icon">
                             <span class="fw-medium">Tabungan Qurban</span>
                         </a>
-
+                        <a href="{{ route('public.jadwal-khotib') }}" class="list-group-item list-group-item-action d-flex align-items-center py-3">
+                            <img src="{{ asset('images/icons/khutbah-jumat.png') }}" alt="Khotib" class="modal-list-icon">
+                            <span class="fw-medium">Khutbah Jumat</span>
+                        </a>
+                        
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').then(function(registration) {
+            console.log('ServiceWorker berhasil didaftarkan.');
+            }, function(err) {
+            console.log('ServiceWorker gagal didaftarkan: ', err);
+            });
+        });
+        }
+    </script>
     @stack('scripts')
 </body>
 </html>

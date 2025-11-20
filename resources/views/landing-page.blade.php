@@ -26,7 +26,7 @@
         }
         .hero-section {
             position: relative;
-            height: 45vh;
+            height: 35vh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -239,89 +239,117 @@
         /* */
         
         /* ================================== */
-        /* 2. DESKTOP STYLES (>= 992px)        */
+        /* 2. TABLET STYLES (768px - 991.98px) */
         /* ================================== */
-        @media (min-width: 992px) {
-            .hero-top-nav {
-                display: none;
-            }
+        @media (min-width: 768px) and (max-width: 991.98px) {
+            
             .hero-section {
-                height: 60vh;
-                border-radius: 0 0 24px 24px;
+                height: 50vh; /* 1/2 layar */
             }
-            .hero-content h1 {
-                font-size: 3.5rem;
+
+            .prayer-times-in-card {
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+                gap: 0.75rem;
+                overflow-x: visible;
             }
-            .about-card-container {
-                display: none;
-            }
-            .feature-grid {
-                grid-template-columns: repeat(6, 1fr);
-            }
-            .prayer-times-desktop {
-                background: white;
-                border-radius: 16px;
-                padding: 1.5rem;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            }
-            .prayer-item {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 0.8rem 0;
-                border-bottom: 1px dashed #eee;
-                font-size: 1rem;
-            }
-            .prayer-item:last-child {
-                border-bottom: none;
-            }
-            .prayer-item .name {
-                font-weight: 600;
-            }
-            .prayer-item .time {
-                font-weight: 600;
-            }
-            .prayer-item.active {
-                color: #34c759;
+            .prayer-times-in-card .prayer-card {
+                width: auto;
+                flex-basis: auto;
             }
         }
+
+        /* ================================== */
+        /* 3. DESKTOP STYLES (>= 992px)        */
+        /* ================================== */
+        @media (min-width: 992px) { 
+            
+            .hero-top-nav { 
+                display: none; /* Sembunyikan nav di desktop */
+            } 
+            
+            .hero-section { 
+                height: 80vh; /* Full screen */
+                border-radius: 0; 
+            } 
+            .hero-section::before {
+                /* Gradasi lebih merata dari atas ke bawah */
+                background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6));
+            }
+            .hero-content {
+                position: absolute; 
+                top: 50%; /* Tengah vertikal */
+                left: 50%; /* Tengah horizontal */
+                transform: translate(-50%, -50%); /* Menyesuaikan posisi ke tengah */
+                width: 100%;
+            }
+            .hero-content h1 { 
+                font-size: 2.8rem; /* Sesuaikan ukuran font */
+            } 
+            
+            /* =================================================
+              Style Adzan Card di Desktop
+              =================================================
+            */
+            .prayer-times-in-card {
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+                gap: 1rem; /* Jarak lebih besar */
+                overflow-x: visible;
+            }
+            .prayer-times-in-card .prayer-card {
+                width: auto;
+                flex-basis: auto;
+                padding: 1.25rem 0.5rem; /* Buat card lebih tinggi */
+            }
+            .prayer-times-in-card .prayer-card .time {
+                font-size: 1.25rem; /* Font waktu lebih besar */
+            }
+            .prayer-times-in-card .prayer-card .name {
+                font-size: 0.9rem; /* Font nama lebih besar */
+            }
+
+            .feature-grid { 
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1.5rem; 
+            } 
+        } 
     </style>
 @endpush
 
 @section('content')
 
-    <nav class="hero-top-nav d-lg-none">
-        <div class="d-flex justify-content-between align-items-center">
-            <span class="navbar-brand">Smart Masjid</span>
-            @auth
-                @if (Auth::user()->role == 'admin')
-                    <a href="{{ route('admin.dashboard') }}" class="profile-icon">
-                        <i class="bi bi-speedometer2"></i>
-                    </a>
-                @else
-                    <a href="#" class="profile-icon">
-                        <i class="bi bi-person-circle"></i>
-                    </a>
-                @endif
-            @else
-                <a href="{{ route('auth.welcome') }}" class="profile-icon">
+    <nav class="hero-top-nav">
+        <div class="container d-flex justify-content-between align-items-center px-4">
+            
+            <a class="navbar-brand" href="{{ url('/') }}">
+                Smart Masjid
+            </a>
+            
+            @guest
+                <a href="{{ route('login') }}" class="profile-icon">
                     <i class="bi bi-box-arrow-in-right"></i>
                 </a>
-            @endauth
+            @else
+                <a href="{{ route('public.landing') }}" class="profile-icon">
+                    <i class="bi bi-person-circle"></i> 
+                </a>
+            @endguest
         </div>
     </nav>
 
+
     <section class="hero-section" id="hero-section">
-        <img src="{{ asset('images/masjid.jpeg') }}" id="hero-bg-image" alt="Hero Background">
+        <img src="{{ $masjidSettings->foto_masjid ? Storage::url($masjidSettings->foto_masjid) : asset('images/masjid.jpeg') }}" id="hero-bg-image" alt="Hero Background">
         <div class="hero-content">
-            <h1>Masjid Al-Jabbar</h1>
-            <p>Bandung, Jawa Barat</p>
+            <h1>Masjid {{ $masjidSettings->nama_masjid }}</h1>
+            <p>{{ $masjidSettings->lokasi_nama }}</p>
         </div>
     </section>
 
     <div>
-
-        <div class="container about-card-container d-lg-none">
+        {{-- Card Adzan (Tampil di semua ukuran layar) --}}
+        <div class="container about-card-container">
             <div class="about-card">
                 <div>
                     <h5>Jadwal Adzan</h5>
@@ -354,22 +382,22 @@
             </div>
         </div>
 
-        {{-- <div class="container about-card-container d-lg-none mt-3"> ... (Kartu Tentang Kami) ... </div> --}}
-        {{-- <div class="container about-card-container d-lg-none mt-3"> ... (Kartu Smart Masjid) ... </div> --}}
-
+        {{-- Grid Fitur (Tampil di semua ukuran layar) --}}
         <div class="feature-section-bg mt-4 py-4">
             <div class="container px-4">
-                <h4 class="section-title text-center mb-4">Fitur-Fitur</h4>
                 <div class="feature-grid">
                     
-                    {{-- (DIPERBARUI) Link-link fitur --}}
                     <a href="{{ route('public.jadwal-kajian') }}" class="feature-item bg-pink">
                         <img src="{{ asset('images/icons/kajian.png') }}" alt="Kajian Icon" class="feature-icon-img">
                         <span>Kajian</span>
                     </a>
-                    <a href="{{ route('public.jadwal-khotib') }}" class="feature-item bg-purple">
+                    {{-- <a href="{{ route('public.jadwal-khotib') }}" class="feature-item bg-purple">
                         <img src="{{ asset('images/icons/khutbah-jumat.png') }}" alt="Khutbah Jumat Icon" class="feature-icon-img">
                         <span>Khutbah Jumat</span>
+                    </a> --}}
+                    <a href="{{ route('public.jadwal-adzan') }}" class="feature-item bg-purple">
+                        <img src="{{ asset('images/icons/adzan.png') }}" alt="Jadwal Adzan Icon" class="feature-icon-img">
+                        <span>Jadwal Adzan</span>
                     </a>
                     <a href="{{ route('public.artikel') }}" class="feature-item bg-orange">
                         <img src="{{ asset('images/icons/artikel.png') }}" alt="Artikel Icon" class="feature-icon-img">
@@ -383,13 +411,16 @@
                         <img src="{{ asset('images/icons/program.png') }}" alt="Program Icon" class="feature-icon-img">
                         <span>Program</span>
                     </a>
-                    <a href="#" class="feature-item bg-teal">
+                    <a href="{{ route('public.tabungan-qurban-saya') }}" class="feature-item bg-teal">
                         <img src="{{ asset('images/icons/qurban.png') }}" alt="Tabungan Qurban Icon" class="feature-icon-img">
                         <span>Tabungan Qurban</span>
                     </a>
                 </div>
             </div>
         </div>
+
+        {{-- Layout kustom desktop sudah dihapus --}}
+
     </div>
     
     {{-- (PENTING) Form logout juga harus ada di dalam @section('content') --}}
@@ -432,38 +463,44 @@
                         const jadwal = data.data.jadwal;
                         const now = new Date(); 
 
+                        // Hanya perlu referensi ke elemen mobile (krn layoutnya sama)
                         const prayerTimes = [
-                            { name: 'subuh', time: jadwal.subuh, id: 'time-subuh-m' },
-                            { name: 'dzuhur', time: jadwal.dzuhur, id: 'time-dzuhur-m' },
-                            { name: 'ashar', time: jadwal.ashar, id: 'time-ashar-m' },
-                            { name: 'maghrib', time: jadwal.maghrib, id: 'time-maghrib-m' },
-                            { name: 'isya', time: jadwal.isya, id: 'time-isya-m' }
+                            { name: 'subuh', time: jadwal.subuh, id_m: 'time-subuh-m' },
+                            { name: 'dzuhur', time: jadwal.dzuhur, id_m: 'time-dzuhur-m' },
+                            { name: 'ashar', time: jadwal.ashar, id_m: 'time-ashar-m' },
+                            { name: 'maghrib', time: jadwal.maghrib, id_m: 'time-maghrib-m' },
+                            { name: 'isya', time: jadwal.isya, id_m: 'time-isya-m' }
                         ];
 
-                        let nextPrayerElement = null;
+                        let nextPrayerElementMobile = null;
 
                         prayerTimes.forEach(prayer => {
-                            document.getElementById(prayer.id).textContent = prayer.time;
+                            const mobileEl = document.getElementById(prayer.id_m);
+                            if (mobileEl) mobileEl.textContent = prayer.time;
                         });
 
                         for (const prayer of prayerTimes) {
                             const prayerDate = createPrayerDate(prayer.time);
-                            if (prayerDate > now) { 
-                                nextPrayerElement = document.getElementById(prayer.id).closest('.prayer-card');
-                                break; 
+                            if (prayerDate > now) {
+                                nextPrayerElementMobile = document.getElementById(prayer.id_m)?.closest('.prayer-card');
+                                break;
                             }
                         }
-                        
-                        if (!nextPrayerElement) {
-                            nextPrayerElement = document.getElementById('time-subuh-m').closest('.prayer-card');
+
+                        if (!nextPrayerElementMobile) {
+                            nextPrayerElementMobile = document.getElementById('time-subuh-m')?.closest('.prayer-card');
                         }
 
-                        document.querySelectorAll('.prayer-times-in-card .prayer-card').forEach(card => {
-                            card.classList.remove('active');
-                        });
+                        document.querySelectorAll('.prayer-times-in-card .prayer-card').forEach(card => card.classList.remove('active'));
 
-                        if (nextPrayerElement) {
-                            nextPrayerElement.classList.add('active');
+                        if (nextPrayerElementMobile) {
+                            nextPrayerElementMobile.classList.add('active');
+                            
+                            nextPrayerElementMobile.scrollIntoView({
+                                behavior: 'smooth',
+                                inline: 'center', // Ini kuncinya
+                                block: 'nearest'
+                            });
                         }
                     } else {
                         throw new Error('Data API tidak valid');
@@ -476,20 +513,17 @@
                     });
                 });
             
-            // SCRIPT INISIALISASI SWIPER TELAH DIHAPUS DARI SINI
-
             const scrollTopBtn = document.querySelector('.scroll-to-top');
 
             if (scrollTopBtn) {
                 window.addEventListener('scroll', () => {
-                    if (window.scrollY > 300) { // Muncul setelah scroll 300px
+                    if (window.scrollY > 300) { 
                         scrollTopBtn.classList.add('show');
                     } else {
                         scrollTopBtn.classList.remove('show');
                     }
                 });
 
-                // (Opsional) Efek smooth scroll saat diklik
                 scrollTopBtn.addEventListener('click', function (e) {
                     e.preventDefault();
                     document.querySelector(this.getAttribute('href')).scrollIntoView({

@@ -13,6 +13,10 @@ use App\Http\Controllers\BarangInventarisController;
 use App\Http\Controllers\LapKeuController;
 use App\Http\Controllers\QurbanController;
 use App\Http\Controllers\KajianController; // Pastikan ini di-use
+use App\Http\Controllers\PengaturanController;
+
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -121,6 +125,10 @@ Route::middleware(['auth:pengurus'])->prefix('pengurus')->name('pengurus.')->gro
     Route::resource('pemasukan-qurban', PemasukanTabunganQurbanController::class)
         ->parameter('pemasukan-qurban', 'id');
 
+
+    Route::get('/settings', [PengaturanController::class, 'edit'])->name('settings.edit');
+    Route::post('/settings', [PengaturanController::class, 'update'])->name('settings.update');
+
 });
 
 
@@ -142,3 +150,7 @@ Route::middleware(['auth:jamaah'])->name('jamaah.')->group(function () {
     // ... (Tambahkan rute 'jamaah' terotentikasi lainnya di sini) ...
 
 });
+
+Route::get('/jadwal-adzan', [PublicController::class, 'jadwalAdzan'])->name('public.jadwal-adzan');
+Route::get('/api/jadwal-adzan', [PublicController::class, 'jadwalAdzanApi'])->name('public.jadwal-adzan.api');
+
