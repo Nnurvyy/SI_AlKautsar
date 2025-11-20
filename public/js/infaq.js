@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center"><div class="spinner-border text-primary"></div></td></tr>`;
 
         // Buat URL dengan query params untuk server
-        const url = `/admin/infaq-jumat-data?page=${state.currentPage}&search=${state.search}&perPage=${state.perPage}&sortBy=${state.sortBy}&sortDir=${state.sortDir}`;
+        const url = `/pengurus/infaq-jumat-data?page=${state.currentPage}&search=${state.search}&perPage=${state.perPage}&sortBy=${state.sortBy}&sortDir=${state.sortDir}`;
 
         try {
             const res = await fetch(url);
@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData(form);
             
             // Konfigurasi endpoint
-            const url = id ? `/admin/infaq-jumat/${id}` : '/admin/infaq-jumat';
+            const url = id ? `/pengurus/infaq-jumat/${id}` : '/pengurus/infaq-jumat';
             // Tambahkan _method=PUT untuk UPDATE
             if (id) formData.append('_method', 'PUT');
 
@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fungsi untuk memuat data edit ke modal
     window.editInfaq = async function(id_infaq) {
         try {
-            const res = await fetch(`/admin/infaq-jumat/${id_infaq}`); // Asumsi endpoint single data
+            const res = await fetch(`/pengurus/infaq-jumat/${id_infaq}`); // Asumsi endpoint single data
             if (!res.ok) throw new Error('Data infaq tidak ditemukan');
             const data = await res.json();
 
@@ -322,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData();
             formData.append('_method', 'DELETE');
 
-            const res = await fetch(`/admin/infaq-jumat/${id_infaq}`, {
+            const res = await fetch(`/pengurus/infaq-jumat/${id_infaq}`, {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
                 body: formData

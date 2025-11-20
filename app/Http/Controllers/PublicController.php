@@ -281,7 +281,7 @@ class PublicController extends Controller
         // Fallback aman jika belum ada data
         if (!$masjidSettings) {
             $masjidSettings = (object)[
-                'nama_masjid' => config('app.name', 'E‑Masjid'),
+                'nama_masjid' => config('app.name', 'Smart‑Masjid'),
                 'lokasi_nama' => 'Bandung',
                 'foto_masjid'  => null,
             ];

@@ -44,7 +44,7 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" href="#">Profile</a></li>
-                        <li><a class="dropdown-item" href="{{ route('admin.settings.edit') }}">Settings</a></li>
+                        <li><a class="dropdown-item" href="{{ route('pengurus.settings.edit') }}">Settings</a></li>
                         <li><a class="dropdown-item" href="{{ route('public.landing') }}">Landing Page</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>

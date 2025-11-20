@@ -26,7 +26,7 @@
 <div class="container-fluid p-4"> 
     <h1>Pengaturan Masjid</h1>
 
-    <form id="formSettings" action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data">
+    <form id="formSettings" action="{{ route('pengurus.settings.update') }}" method="POST" enctype="multipart/form-data">
         @csrf
         
         <div class="card">
