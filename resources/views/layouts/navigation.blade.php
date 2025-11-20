@@ -42,7 +42,14 @@
             </a>
         </li>
 
-        {{-- GRAFIK (Belum ada rute di web.php, biarkan #) --}}
+        {{-- MENU BARU: TRANSAKSI DONASI --}}
+        <li class="nav-item">
+            <a href="{{ route('admin.transaksi-donasi.index') }}" 
+               class="nav-link {{ request()->routeIs('admin.transaksi-donasi.*') ? 'active' : '' }}">
+                <i class="bi bi-wallet2"></i> Transaksi Donasi
+            </a>
+        </li>
+
         <li class="nav-item">
             <a href="#" class="nav-link">
                 <i class="bi bi-graph-up"></i> Grafik
@@ -89,15 +96,11 @@
             </a>
         </li>
 
-        {{-- PROGRAM & DONASI (Belum ada rute di web.php) --}}
+        {{-- Program (Mungkin ini maksudnya Program Donasi?) --}}
         <li class="nav-item">
-            <a href="#" class="nav-link">
-                <i class="bi bi-graph-up"></i> Program
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="#" class="nav-link">
-                <i class="bi bi-graph-up"></i> Donasi
+            <a href="{{ route('admin.program-donasi.index') }}" 
+               class="nav-link {{ request()->routeIs('admin.program-donasi.*') ? 'active' : '' }}">
+                <i class="bi bi-box-heart"></i> Program Donasi
             </a>
         </li>
     </ul>
@@ -106,8 +109,7 @@
         <form action="{{ route('logout') }}" method="POST">
             @csrf
             <button type="submit" class="logout-btn">
-                <i class="bi bi-box-arrow-left me-2"></i>
-                Keluar
+                <i class="bi bi-box-arrow-left me-2"></i> Keluar
             </button>
         </form>
     </div>
