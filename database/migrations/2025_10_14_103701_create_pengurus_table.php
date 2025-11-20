@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pengguna', function (Blueprint $table) {
-            $table->uuid('id_pengguna')->primary();
-            $table->string('nama');
+        Schema::create('pengurus', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
             $table->string('email')->unique();
-            $table->string('password');
-            $table->enum('role', ['admin', 'publik'])->default('publik');
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password')->nullable(); // Nullable untuk login Google
+            $table->string('google_id')->nullable(); // Untuk ID Google
             $table->rememberToken();
             $table->timestamps();
         });
@@ -27,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pengguna');
+        Schema::dropIfExists('pengurus');
     }
 };

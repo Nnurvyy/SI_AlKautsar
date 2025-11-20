@@ -3,45 +3,34 @@
 @section('title', 'Tabungan Qurban')
 
 @push('styles')
-    {{-- CSS Kustom untuk status dan modal --}}
     <style>
         .badge.bg-danger { background-color: #dc3545 !important; }
         .badge.bg-success { background-color: #198754 !important; }
         .badge.bg-primary { background-color: #0d6efd !important; }
-
-        /* CSS Modal Scroll */
+        .badge.bg-secondary { background-color: #6c757d !important; }
         #modalTabungan .modal-dialog, #modalDetailTabungan .modal-dialog { max-height: 80vh; }
         #modalTabungan .modal-body, #modalDetailTabungan .modal-body { overflow-y: auto; max-height: 70vh; }
-
-        /* Fix z-index modal bertumpuk */
         #modalTambahSetoran { z-index: 1060; }
         #modalDetailTabungan { z-index: 1050; }
         #modalTabungan { z-index: 1050; }
-
-        /* CSS Kustom untuk Statistik */
         .card-stat { background-color: #f8f9fa; border-radius: .5rem; padding: 1rem; text-align: center; }
         .card-stat h5 { font-size: 0.9rem; color: #6c757d; margin-bottom: .5rem; }
         .card-stat .amount { font-size: 1.5rem; font-weight: 700; }
-
-        /* CSS untuk Pagination */
         #paginationLinks .pagination { margin-bottom: 0; }
         #paginationLinks .page-item.disabled .page-link { background-color: #e9ecef; }
-        #paginationLinks .page-item.active .page-link { z-index: 1; } /* fix z-index */
+        #paginationLinks .page-item.active .page-link { z-index: 1; }
         #paginationLinks .page-link { cursor: pointer; }
     </style>
 @endpush
 
 @section('content')
 
-    {{--
-        Template untuk mengisi dropdown pengguna di JS.
-        Ini tidak akan ditampilkan.
-    --}}
-    <template id="penggunaListTemplate">
-        <option value="">-- Pilih User --</option>
-        @if(isset($penggunaList))
-            @foreach ($penggunaList as $pengguna)
-                <option value="{{ $pengguna->id_pengguna }}">{{ $pengguna->nama }}</option>
+    {{-- Template untuk dropdown JAMAAH --}}
+    <template id="jamaahListTemplate">
+        <option value="">-- Pilih Jamaah --</option>
+        @if(isset($jamaahList))
+            @foreach ($jamaahList as $jamaah)
+                <option value="{{ $jamaah->id }}">{{ $jamaah->name }}</option>
             @endforeach
         @endif
     </template>
@@ -49,9 +38,7 @@
 
     <div class="container-fluid p-4">
 
-        {{--
-          BAGIAN 1: FILTER LAPORAN PDF (Pola LapKeu)
-        --}}
+        {{-- Filter PDF (Tidak ada perubahan) --}}
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-header bg-white py-3">
                 <h5 class="mb-0 fw-bold">
@@ -59,8 +46,7 @@
                 </h5>
             </div>
             <div class="card-body">
-                {{-- Form ini menargetkan rute PDF baru --}}
-                <form action="{{ route('admin.tabungan-qurban.cetakPdf') }}" method="GET" target="_blank">
+                <form action="{{ route('pengurus.tabungan-qurban.cetakPdf') }}" method="GET" target="_blank">
                     <div class="row g-3 align-items-end mb-3">
                         <div class="col-md-3">
                             <label for="filter-periode" class="form-label">Periode Waktu</label>
@@ -72,7 +58,6 @@
                             </select>
                         </div>
 
-                        {{-- Filter dinamis (sama seperti lapkeu) --}}
                         <div class="col-md-4" id="filter-bulanan" style="display: none;">
                             <div class="row g-2">
                                 <div class="col-6">
@@ -129,19 +114,15 @@
             </div>
         </div>
 
-
-        {{--
-          BAGIAN 2: TABEL DATA (Pola KhotibJumat)
-        --}}
+        {{-- Tabel Data --}}
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
             <div class="d-flex flex-wrap align-items-center">
-                {{-- Filter Status Baru --}}
                 <div class="me-2 mb-2 mb-md-0">
                     <select class="form-select" id="statusFilter" style="width: 200px;">
                         <option value="semua" selected>Semua Status</option>
                         <option value="lunas">Lunas</option>
-                        <option value="menunggak">Menunggak</option>
-                        <option value="bayar_bulan_ini">Sudah Bayar Bulan Ini</option>
+                        <option value="menunggak">Menunggak (Gagal Target Akumulasi)</option>
+                        <option value="mencicil">Mencicil / Bebas</option>
                     </select>
                 </div>
             </div>
@@ -161,24 +142,24 @@
         <div class="card transaction-table border-0 shadow-sm">
             <div class="card-body">
                 <div class="table-responsive">
-                    {{-- Tabel ini sekarang dikontrol oleh JS Vanilla --}}
                     <table class="table table-hover align-middle" id="tabelTabungan">
                         <thead class="table-light">
                         <tr>
                             <th scope="col" style="width: 5%;" class="text-center">No</th>
                             <th scope="col">Nama Penabung & Hewan</th>
-                            <th scope="col" class="text-end">Total Target</th>
-                            {{-- Tombol Sortir Baru --}}
-                            <th scope="col" class="text-end" id="sortTotalTerkumpul" style="cursor:pointer;">
+                            {{-- --- PERUBAHAN DI SINI: Pisahkan Target dan Tipe --- --}}
+                            <th scope="col" class="text-end" style="width: 12%;">Total Target</th>
+                            <th scope="col" class="text-center" style="width: 8%;">Tipe</th>
+                            <th scope="col" class="text-end" style="width: 10%;">Cicilan Bulanan</th>
+                            <th scope="col" class="text-end" id="sortTotalTerkumpul" style="cursor:pointer; width: 12%;">
                                 Total Terkumpul <i id="sortIcon" class="bi bi-arrow-down"></i>
                             </th>
-                            <th scope="col" class="text-end">Sisa Target</th>
-                            <th scope="col" class="text-center">Status</th>
+                            <th scope="col" class="text-end" style="width: 10%;">Sisa Target</th>
+                            <th scope="col" style="width: 12%;" class="text-center">Status</th>
                             <th scope="col" style="width: 12%;" class="text-center">Aksi</th>
                         </tr>
                         </thead>
                         <tbody>
-                        {{-- Data dimuat lewat JS --}}
                         </tbody>
                     </table>
                 </div>
@@ -191,12 +172,7 @@
         </div>
     </div>
 
-
-    {{--
-      BAGIAN 3: MODAL-MODAL
-    --}}
-
-    <!-- Modal Form Tambah/Edit Tabungan (Pola Khotib) -->
+    {{-- Modal Form Tambah/Edit Tabungan --}}
     <div class="modal fade" id="modalTabungan" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -211,9 +187,8 @@
 
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="id_pengguna" class="form-label">Nama User <span class="text-danger">*</span></label>
-                            {{-- Dropdown ini akan diisi oleh JS dari template --}}
-                            <select id="id_pengguna" name="id_pengguna" class="form-select" required>
+                            <label for="id_jamaah" class="form-label">Nama Jamaah <span class="text-danger">*</span></label>
+                            <select id="id_jamaah" name="id_jamaah" class="form-select" required>
                                 <option value="">-- Memuat... --</option>
                             </select>
                         </div>
@@ -235,6 +210,21 @@
                             <label for="total_harga_hewan_qurban" class="form-label">Total Harga (Target) <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" id="total_harga_hewan_qurban" name="total_harga_hewan_qurban" required min="0" value="0">
                         </div>
+
+                        {{-- --- INPUT BARU: Jenis Tabungan --- --}}
+                        <div class="mb-3">
+                            <label for="saving_type" class="form-label">Jenis Tabungan <span class="text-danger">*</span></label>
+                            <select id="saving_type" name="saving_type" class="form-select" required>
+                                <option value="cicilan">Cicilan Waktu (Target Harga/Bulan)</option>
+                                <option value="bebas">Tabungan Bebas (Fleksibel)</option>
+                            </select>
+                        </div>
+
+                        {{-- --- INPUT BARU: Durasi Cicilan (Hanya untuk tipe Cicilan) --- --}}
+                        <div class="mb-3" id="duration_months_group">
+                            <label for="duration_months" class="form-label">Durasi Cicilan (Bulan) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="duration_months" name="duration_months" min="1" placeholder="Contoh: 12">
+                        </div>
                     </div>
 
                     <div class="modal-footer">
@@ -247,7 +237,7 @@
     </div>
 
 
-    <!-- Modal Detail & Riwayat Setoran (Pola Lama) -->
+    <!-- Modal Detail & Riwayat Setoran -->
     <div class="modal fade" id="modalDetailTabungan" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -256,14 +246,21 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <p class="text-muted mb-3">Tipe: <strong id="detailSavingType"></strong></p>
                     <div class="row mb-4">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+                            <div class="card-stat">
+                                <h5>Cicilan Bulanan</h5>
+                                <span class="amount text-success" id="detailInstallmentAmount">Rp 0</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
                             <div class="card-stat">
                                 <h5>Total Tabungan</h5>
                                 <span class="amount text-primary" id="detailTotalTabungan">Rp 0</span>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <div class="card-stat">
                                 <h5>Sisa Target</h5>
                                 <span class="amount text-danger" id="detailSisaTarget">Rp 0</span>
@@ -287,7 +284,6 @@
                         </tr>
                         </thead>
                         <tbody id="tabelRiwayatSetoran">
-                        {{-- Data dimuat oleh JS --}}
                         </tbody>
                     </table>
 
@@ -300,7 +296,7 @@
     </div>
 
 
-    <!-- Modal Tambah Setoran (Pola Lama) -->
+    <!-- Modal Tambah Setoran -->
     <div class="modal fade" id="modalTambahSetoran" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -332,9 +328,6 @@
 @endsection
 
 @push('scripts')
-    {{-- Hapus jQuery & DataTables, ganti dengan JS Vanilla baru --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <!-- Arahkan ke nama file JS yang sudah benar -->
     <script src="{{ asset('js/tabungan_qurban.js') }}"></script>
 @endpush

@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#FFFFFF">
     <title>{{ config('app.name', 'E-Masjid') }} - @yield('title', 'Selamat Datang')</title>
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     
@@ -36,7 +39,7 @@
             align-items: center; 
             justify-content: center;
             /* == GANTI URL BACKGROUND DI SINI == */
-            background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5)), url("{{ asset('images/bg_login.jpeg') }}");
+            background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5)), url("{{ asset('images/bg-login.jpeg') }}");
         }
 
         /* ============================================== */

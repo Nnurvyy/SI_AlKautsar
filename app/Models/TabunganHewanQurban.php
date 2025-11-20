@@ -1,41 +1,41 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class TabunganHewanQurban extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory;
 
     protected $table = 'tabungan_hewan_qurban';
     protected $primaryKey = 'id_tabungan_hewan_qurban';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
     protected $fillable = [
+        'id_tabungan_hewan_qurban',
+        'id_jamaah',
         'nama_hewan',
         'total_hewan',
         'total_tabungan',
-        'id_pengguna',
         'total_harga_hewan_qurban',
+        // --- TAMBAHAN BARU ---
+        'saving_type',
+        'duration_months',
+        // --- AKHIR TAMBAHAN BARU ---
     ];
 
-    public function pengguna()
+    // Relasi ke Jamaah
+    public function jamaah()
     {
-        return $this->belongsTo(Pengguna::class, 'id_pengguna');
+        return $this->belongsTo(Jamaah::class, 'id_jamaah', 'id');
     }
 
-    /**
-     * TAMBAHKAN FUNGSI INI
-     * (Agar Trait HasUuids tahu kolom mana yang harus diisi)
-     */
-    public function uniqueIds()
-    {
-        return ['id_tabungan_hewan_qurban'];
-    }
-
-    // RELASI KE PEMASUKAN TABUNGAN QURBAN
+    // Relasi ke Pemasukan
     public function pemasukanTabunganQurban()
     {
-        return $this->hasMany(PemasukanTabunganQurban::class, 'id_tabungan_hewan_qurban');
+        return $this->hasMany(PemasukanTabunganQurban::class, 'id_tabungan_hewan_qurban', 'id_tabungan_hewan_qurban');
     }
 }

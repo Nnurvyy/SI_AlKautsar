@@ -47,8 +47,8 @@
         <tr>
             <td class="text-center">{{ $index + 1 }}</td>
             <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}</td>
-            <td>{{ $item->tabunganHewanQurban->pengguna->nama ?? 'N/A' }}</td>
-            {{-- Gunakan Str::ucfirst untuk membuat 'sapi' menjadi 'Sapi' --}}
+            {{-- GANTI: jamaah->name --}}
+            <td>{{ $item->tabunganHewanQurban->jamaah->name ?? 'N/A' }}</td>
             <td>{{ Str::ucfirst($item->tabunganHewanQurban->nama_hewan ?? 'N/A') }}</td>
             <td class="text-end">Rp {{ number_format($item->nominal, 0, ',', '.') }}</td>
         </tr>

@@ -4,12 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#FFFFFF">
     <title>Dashboard - E-Masjid</title>
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
+    <!-- ================================== -->
+    <!-- == TAMBAHAN CSS UNTUK DATATABLES == -->
+    <link href="https://cdn.datatables.net/2.0.10/css/dataTables.bootstrap5.css" rel="stylesheet">
+    <!-- ================================== -->
+
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+    @stack('styles')
 
 </head>
 <body>
@@ -34,13 +43,14 @@
                     <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <div class="user-avatar me-2">A</div>
                         <div>
-                            <div class="fw-bold">{{ Auth::user()->name }}</div>
+                            <div class="fw-bold">{{ Auth::user()->nama }}</div> <!-- Ganti jadi 'nama' -->
                             <div class="small text-muted">{{ Auth::user()->email }}</div>
                         </div>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" href="#">Profile</a></li>
-                        <li><a class="dropdown-item" href="#">Settings</a></li>
+                        <li><a class="dropdown-item" href="{{ route('pengurus.settings.edit') }}">Settings</a></li>
+                        <li><a class="dropdown-item" href="{{ route('public.landing') }}">Landing Page</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form-dropdown').submit();">
@@ -66,7 +76,14 @@
         </div>
     </div>
 
+    <!-- ================================== -->
+    <!-- == TAMBAHAN JS UNTUK JQUERY & DATATABLES == -->
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/2.0.10/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.0.10/js/dataTables.bootstrap5.js"></script>
+    <!-- ================================== -->
+
 
     <script>
         // Ambil elemen-elemen
@@ -81,13 +98,10 @@
 
             sidebar.classList.toggle('toggled');
 
-            // Di desktop, kita geser konten.
-            // Di mobile, kita TIDAK geser konten (karena overlay).
             if (!isMobile) {
                 mainContent.classList.toggle('toggled');
             }
 
-            // Tampilkan/sembunyikan backdrop HANYA di mobile
             if (isMobile) {
                 backdrop.classList.toggle('show');
             }
@@ -109,15 +123,25 @@
         navLinks.forEach(function(link) {
             link.addEventListener('click', function() {
                 const isMobile = window.innerWidth < 992;
-                // Hanya tutup jika sidebar sedang terbuka dan di mobile
                 if (sidebar.classList.contains('toggled') && isMobile) {
                     toggleSidebar();
                 }
             });
         });
     </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').then(function(registration) {
+            console.log('ServiceWorker berhasil didaftarkan.');
+            }, function(err) {
+            console.log('ServiceWorker gagal didaftarkan: ', err);
+            });
+        });
+        }
+    </script>
 
-    @stack('scripts')
+    @stack('scripts') <!-- Ini akan memuat program-donasi.js -->
 
 </body>
 </html>

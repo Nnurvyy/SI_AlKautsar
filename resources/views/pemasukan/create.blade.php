@@ -4,43 +4,66 @@
 
 @section('content')
 <div class="container p-4">
-    <h4 class="mb-4 fw-bold">Tambah Pemasukan</h4>
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <h4 class="mb-4 fw-bold">Tambah Pemasukan</h4>
 
-    <form action="{{ route('pemasukan.store') }}" method="POST">
-        @csrf
+            {{-- Perhatikan route-nya menggunakan admin.pemasukan.store --}}
+            <form action="{{ route('admin.pemasukan.store') }}" method="POST">
+                @csrf
 
-        {{-- Kategori Pemasukan --}}
-        <div class="mb-3">
-            <label class="form-label">Kategori Pemasukan</label>
-            <select name="id_kategori_pemasukan" class="form-select" required>
-                <option value="">Pilih Kategori</option>
-                @foreach($kategori as $k)
-                    <option value="{{ $k->id_kategori_pemasukan }}">{{ $k->nama_kategori_pemasukan }}</option>
-                @endforeach
-            </select>
+                {{-- Kategori Pemasukan --}}
+                <div class="mb-3">
+                    <label class="form-label">Kategori Pemasukan</label>
+                    <select name="id_kategori_pemasukan" class="form-select @error('id_kategori_pemasukan') is-invalid @enderror" required>
+                        <option value="">Pilih Kategori</option>
+                        @foreach($kategori as $k)
+                            <option value="{{ $k->id_kategori_pemasukan }}" {{ old('id_kategori_pemasukan') == $k->id_kategori_pemasukan ? 'selected' : '' }}>
+                                {{ $k->nama_kategori_pemasukan }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('id_kategori_pemasukan')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                {{-- Nominal --}}
+                <div class="mb-3">
+                    <label class="form-label">Nominal (Rp)</label>
+                    <input type="number" name="nominal" class="form-control @error('nominal') is-invalid @enderror" placeholder="Masukkan jumlah pemasukan" value="{{ old('nominal') }}" required>
+                    @error('nominal')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                {{-- Deskripsi --}}
+                <div class="mb-3">
+                    <label class="form-label">Deskripsi</label>
+                    <textarea name="deskripsi" class="form-control @error('deskripsi') is-invalid @enderror" rows="3" placeholder="Keterangan tambahan (Opsional)">{{ old('deskripsi') }}</textarea>
+                    @error('deskripsi')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                {{-- Tanggal --}}
+                <div class="mb-3">
+                    <label class="form-label">Tanggal</label>
+                    <input type="date" name="tanggal" class="form-control @error('tanggal') is-invalid @enderror" value="{{ old('tanggal', date('Y-m-d')) }}" required>
+                    @error('tanggal')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                {{-- Tombol --}}
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-save me-1"></i> Simpan
+                    </button>
+                    <a href="{{ route('admin.pemasukan.index') }}" class="btn btn-secondary">Batal</a>
+                </div>
+            </form>
         </div>
-
-        {{-- Nominal --}}
-        <div class="mb-3">
-            <label class="form-label">Nominal</label>
-            <input type="number" name="nominal" class="form-control" placeholder="Masukkan jumlah pemasukan" required>
-        </div>
-
-        {{-- Deskripsi --}}
-        <div class="mb-3">
-            <label class="form-label">Deskripsi</label>
-            <textarea name="deskripsi" class="form-control" rows="3" placeholder="Opsional"></textarea>
-        </div>
-
-        {{-- Tanggal --}}
-        <div class="mb-3">
-            <label class="form-label">Tanggal</label>
-            <input type="date" name="tanggal" class="form-control" required>
-        </div>
-
-        {{-- Tombol --}}
-        <button type="submit" class="btn btn-success">Simpan</button>
-        <a href="{{ route('pemasukan.index') }}" class="btn btn-secondary">Batal</a>
-    </form>
+    </div>
 </div>
 @endsection
