@@ -4,29 +4,25 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
+return new class extends Migration {
+    public function up(): void {
         Schema::create('kajian', function (Blueprint $table) {
             $table->uuid('id_kajian')->primary();
             $table->string('nama_penceramah', 100);
             $table->string('tema_kajian', 255);
+
+            // ENUM event / harian
+            $table->enum('jenis_kajian', ['event', 'harian'])->default('harian');
+
             $table->date('tanggal_kajian');
             $table->time('waktu_kajian')->nullable();
-            $table->string('foto_penceramah')->nullable(); 
+            $table->string('foto_penceramah')->nullable();
+
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
+    public function down(): void {
         Schema::dropIfExists('kajian');
     }
 };

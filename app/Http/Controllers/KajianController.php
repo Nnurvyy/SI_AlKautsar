@@ -2,114 +2,64 @@
 
 namespace App\Http\Controllers;
 
-// 1. Ganti Request dan Model
-use App\Http\Requests\KajianRequest; // <-- Nanti kita buat file ini
-use App\Models\Kajian; // <-- Gunakan model Kajian
-use Illuminate\Http\Request; 
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Carbon\Carbon; 
+use Illuminate\Http\Request;
+use App\Models\Kajian;
 
 class KajianController extends Controller
 {
     public function index()
     {
-        // 2. Ganti view ke 'kajian'
         return view('kajian');
     }
 
     public function data(Request $request)
     {
-        $status = $request->query('status', 'aktif');
-        $search = $request->query('search', '');
-        $perPage = $request->query('perPage', 10);
-        // 3. Ganti kolom default
-        $sortBy = $request->query('sortBy', 'tanggal_kajian'); 
-        $sortDir = $request->query('sortDir', 'desc');  
+        $query = Kajian::orderBy('created_at', 'DESC');
 
-        // 4. Ganti Model
-        $query = Kajian::query();
-
-        // 5. Ganti kolom tanggal
-        if ($status === 'aktif') {
-            $query->where('tanggal_kajian', '>=', Carbon::today());
-        } elseif ($status === 'tidak_aktif') {
-            $query->where('tanggal_kajian', '<', Carbon::today());
+        if ($request->jenis && $request->jenis !== 'semua') {
+            $query->where('jenis_kajian', $request->jenis);
         }
 
-        // 6. Ganti kolom pencarian
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $searchLower = strtolower($search);
-
-                $q->whereRaw('LOWER(nama_penceramah) LIKE ?', ["%{$searchLower}%"])
-                ->orWhereRaw('LOWER(tema_kajian) LIKE ?', ["%{$searchLower}%"])
-                ->orWhereRaw("LOWER(to_char(tanggal_kajian, 'DD Mon YYYY')) LIKE ?", ["%{$searchLower}%"])
-                ->orWhereRaw("LOWER(to_char(tanggal_kajian, 'DD Month YYYY')) LIKE ?", ["%{$searchLower}%"])
-                ->orWhereRaw("LOWER(to_char(tanggal_kajian, 'YYYY-MM-DD')) LIKE ?", ["%{$searchLower}%"]);
-            });
-        }
-
-        // 7. Ganti kolom sort
-        $allowedSorts = ['tanggal_kajian', 'nama_penceramah', 'tema_kajian']; 
-        if (!in_array($sortBy, $allowedSorts)) $sortBy = 'tanggal_kajian';
-        $sortDir = $sortDir === 'asc' ? 'asc' : 'desc';
-
-        $data = $query->orderBy($sortBy, $sortDir)->paginate($perPage);
-
-        return response()->json($data);
+        return response()->json($query->get());
     }
 
-    // 8. Ganti Request
-    public function store(KajianRequest $request)
+    public function store(Request $request)
     {
-        $data = $request->validated();
+        $request->validate([
+            'foto_penceramah' => 'nullable|mimes:jpg,jpeg,png|max:2048',
+            'jenis_kajian' => 'required',
+            'nama_penceramah' => 'required',
+            'tema_kajian' => 'required',
+            'tanggal_kajian' => 'required',
+            'waktu_kajian' => 'required',
+        ]);
 
-        // 9. Ganti nama file & folder
+        // Upload foto
         if ($request->hasFile('foto_penceramah')) {
-            $data['foto_penceramah'] = $request->file('foto_penceramah')->store('kajian', 'public');
+            $foto = time().'.'.$request->foto_penceramah->extension();
+            $request->foto_penceramah->move(public_path('uploads/kajian'), $foto);
+        } else {
+            $foto = $request->old_foto ?? null;
         }
 
-        // 10. Ganti Model
-        Kajian::create($data);
+        Kajian::updateOrCreate(
+            ['id_kajian' => $request->id_kajian],
+            [
+                'foto' => $foto,
+                'jenis_kajian' => $request->jenis_kajian,
+                'nama_penceramah' => $request->nama_penceramah,
+                'tema_kajian' => $request->tema_kajian,
+                'tanggal_kajian' => $request->tanggal_kajian,
+                'waktu_kajian' => $request->waktu_kajian,
+            ]
+        );
 
-        return response()->json(['success' => true, 'message' => 'Kajian berhasil ditambahkan.']);
+        return response()->json(['status' => true]);
     }
 
-    // 11. Ganti Model
-    public function show(Kajian $kajian)
+    public function delete($id)
     {
-        return response()->json($kajian);
-    }
-
-    // 12. Ganti Request dan Model
-    public function update(KajianRequest $request, Kajian $kajian)
-    {
-        $data = $request->validated();
-
-        // 13. Ganti nama file & folder
-        if ($request->hasFile('foto_penceramah')) {
-            if ($kajian->foto_penceramah && Storage::disk('public')->exists($kajian->foto_penceramah)) {
-                Storage::disk('public')->delete($kajian->foto_penceramah);
-            }
-            $data['foto_penceramah'] = $request->file('foto_penceramah')->store('kajian', 'public');
-        }
-
-        $kajian->update($data);
-
-        return response()->json(['success' => true, 'message' => 'Kajian berhasil diperbarui.']);
-    }
-
-    // 14. Ganti Model
-    public function destroy(Kajian $kajian)
-    {
-        // 15. Ganti nama file
-        if ($kajian->foto_penceramah && Storage::disk('public')->exists($kajian->foto_penceramah)) {
-            Storage::disk('public')->delete($kajian->foto_penceramah);
-        }
-
-        $kajian->delete();
-
-        return response()->json(['success' => true, 'message' => 'Data kajian dihapus.']);
+        Kajian::where('id_kajian', $id)->delete();
+        return response()->json(['status' => true]);
     }
 }

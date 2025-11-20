@@ -16,12 +16,12 @@ use App\Http\Controllers\KajianController;
 use App\Http\Controllers\ProgramDonasiController;
 use App\Http\Controllers\DonasiController;
 use App\Http\Controllers\PemasukanKategoriController; 
-use App\Http\Controllers\TransaksiDonasiController; // <--- WAJIB ADA: Import Controller Baru
+use App\Http\Controllers\TransaksiDonasiController;
 
 
 /*
 |--------------------------------------------------------------------------
-| Rute Publik (Guest / Tamu)
+| Rute Publik
 |--------------------------------------------------------------------------
 */
 
@@ -56,60 +56,56 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
 
 /*
 |--------------------------------------------------------------------------
-| Rute ADMIN (Berbasis Desktop)
+| Rute ADMIN
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
-    // Dashboard
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 
-    // Pemasukan
     Route::resource('pemasukan', PemasukanController::class);
     Route::resource('kategori-pemasukan', PemasukanKategoriController::class);
 
-    // Pengeluaran
     Route::resource('pengeluaran', PengeluaranController::class);
 
-    // Khotib Jumat
     Route::resource('khotib-jumat', KhotibJumatController::class);
     Route::get('khotib-jumat-data', [KhotibJumatController::class, 'data'])->name('khotib-jumat.data');
 
-    // Infaq Jumat
     Route::resource('infaq-jumat', InfaqJumatController::class)->only([
         'index','store', 'update', 'destroy', 'show'
     ]);
     Route::get('infaq-jumat-data', [InfaqJumatController::class, 'data'])->name('infaq-jumat.data');
 
-    // Inventaris
     Route::resource('inventaris', BarangInventarisController::class)->only([
         'index','store', 'update', 'destroy', 'show'
     ]);
     Route::get('inventaris-data', [BarangInventarisController::class, 'data'])->name('inventaris.data');
 
-    // Laporan Keuangan
     Route::get('/lapkeu', [LapKeuController::class, 'index'])->name('lapkeu.index');
     Route::get('/lapkeu/export-pdf', [LapKeuController::class, 'exportPdf'])->name('lapkeu.export.pdf');
 
-    // Kajian
-    Route::resource('kajian', KajianController::class);
-    Route::get('kajian-data', [KajianController::class, 'data'])->name('kajian.data');
+    /*
+    |--------------------------------------------------------------------------
+    | FIX BAGIAN KAJIAN — SUDAH COCOK DENGAN NAVBAR
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/kajian', [KajianController::class, 'index'])->name('kajian.index');
+    Route::get('/kajian/data', [KajianController::class, 'data'])->name('kajian.data');
+    Route::post('/kajian/store', [KajianController::class, 'store'])->name('kajian.store');
+    Route::delete('/kajian/delete/{id}', [KajianController::class, 'delete'])->name('kajian.delete');
 
-    // Program Donasi (Master Data)
+
     Route::resource('program-donasi', ProgramDonasiController::class);
     Route::get('program-donasi-data', [ProgramDonasiController::class, 'data'])->name('program-donasi.data');
 
-    // === TAMBAHAN BARU: TRANSAKSI DONASI (Input Donatur) ===
     Route::resource('transaksi-donasi', TransaksiDonasiController::class);
 
-    // Tabungan Qurban
     Route::get('tabungan-qurban/cetak-pdf', [TabunganHewanQurbanController::class, 'cetakPdf'])
         ->name('tabungan-qurban.cetakPdf');
     Route::get('tabungan-qurban-data', [TabunganHewanQurbanController::class, 'data'])
         ->name('tabungan-qurban.data');
     Route::resource('tabungan-qurban', TabunganHewanQurbanController::class);
 
-    // Pemasukan Qurban
     Route::resource('pemasukan-qurban', PemasukanTabunganQurbanController::class)
         ->parameter('pemasukan-qurban', 'id');
 
@@ -118,7 +114,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
 /*
 |--------------------------------------------------------------------------
-| Rute PUBLIK (Sudah Login)
+| Rute Publik setelah login
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:publik'])->name('public.')->group(function () {

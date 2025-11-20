@@ -12,20 +12,23 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('donasi', function (Blueprint $table) {
-            $table->id();
+            // Sesuaikan Primary Key dengan Model ($primaryKey = 'id_donasi')
+            $table->bigIncrements('id_donasi'); 
 
-            // program_id mengikuti program_donasi yang pakai UUID
-            $table->uuid('program_id');
+            // Sesuaikan Foreign Key dengan Controller ($request->id_program_donasi)
+            $table->uuid('id_program_donasi');
 
-            $table->string('nama');
+            // Sesuaikan nama kolom dengan Controller & Model
+            $table->string('nama_donatur');
             $table->bigInteger('nominal');
-            $table->string('metode')->nullable();     // Transfer / QRIS / COD
-            $table->text('pesan')->nullable();
+            $table->date('tanggal_donasi');
+            $table->string('metode_pembayaran')->nullable(); 
+            $table->text('keterangan')->nullable();
 
             $table->timestamps();
 
-            // foreign key
-            $table->foreign('program_id')
+            // Foreign key ke tabel program_donasi (PK-nya 'id')
+            $table->foreign('id_program_donasi')
                 ->references('id')
                 ->on('program_donasi')
                 ->onDelete('cascade');

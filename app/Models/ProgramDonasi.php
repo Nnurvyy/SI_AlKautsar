@@ -45,7 +45,7 @@ class ProgramDonasi extends Model
 
     public function donasi()
     {
-        return $this->hasMany(Donasi::class, 'program_id');
+        return $this->hasMany(Donasi::class, 'id_program_donasi');
     }
 
     // Hitung persentase donasi

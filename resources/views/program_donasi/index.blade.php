@@ -3,6 +3,9 @@
 @section('title', 'Manajemen Program Donasi')
 
 @section('content')
+{{-- PENTING: Meta CSRF Token wajib ada di head, kita taruh sini buat jaga-jaga --}}
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
 <div class="container-fluid p-4">
     
     {{-- Header --}}
@@ -46,7 +49,8 @@
                             <td>{{ $loop->iteration + $programDonasi->firstItem() - 1 }}</td>
                             <td>
                                 @if($p->gambar)
-                                    <img src="{{ asset('storage/'.$p->gambar) }}" alt="Img" class="rounded" width="60" height="40" style="object-fit: cover;">
+                                    {{-- Menampilkan gambar --}}
+                                    <img src="{{ asset('storage/'.$p->gambar) }}" alt="Img" class="rounded border" width="60" height="40" style="object-fit: cover;">
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
@@ -63,7 +67,7 @@
                                 <small class="text-muted">{{ round($persen) }}%</small>
                             </td>
                             <td class="text-center">
-                                {{-- TOMBOL BARU: INPUT DONASI LANGSUNG --}}
+                                {{-- Tombol Input Donasi --}}
                                 <button class="btn btn-sm btn-success me-1 btn-input-donasi" 
                                     data-id="{{ $p->id_program_donasi ?? $p->id }}" 
                                     data-nama="{{ $p->judul ?? $p->nama_program }}"
@@ -71,7 +75,7 @@
                                     <i class="bi bi-wallet2"></i> + Donasi
                                 </button>
 
-                                {{-- Tombol Mata (Detail) --}}
+                                {{-- Tombol Detail --}}
                                 <button class="btn btn-sm btn-info text-white me-1 btn-detail-program" 
                                     data-id="{{ $p->id_program_donasi ?? $p->id }}" 
                                     title="Lihat Detail">
@@ -107,8 +111,55 @@
 </div>
 
 {{-- ========================================== --}}
-{{-- MODAL BARU: INPUT DONASI (POPUP) --}}
+{{-- MODAL TAMBAH PROGRAM (FORM UPLOAD) --}}
 {{-- ========================================== --}}
+<div class="modal fade" id="modalTambahProgram" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Buat Program Baru</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            {{-- Form ini akan di-handle oleh JavaScript (AJAX) --}}
+            <form id="formTambahProgram" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label>Judul Program <span class="text-danger">*</span></label>
+                        <input type="text" name="judul" class="form-control" placeholder="Contoh: Renovasi Masjid" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Deskripsi <span class="text-danger">*</span></label>
+                        <textarea name="deskripsi" class="form-control" rows="3" placeholder="Jelaskan programnya..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label>Target Dana (Rp) <span class="text-danger">*</span></label>
+                        <input type="number" name="target_dana" class="form-control" placeholder="Contoh: 10000000" required>
+                    </div>
+                    {{-- Hidden field --}}
+                    <input type="hidden" name="dana_terkumpul" value="0">
+                    
+                    <div class="mb-3">
+                        <label>Batas Waktu (Tanggal Selesai) <span class="text-danger">*</span></label>
+                        <input type="date" name="tanggal_selesai" class="form-control" required>
+                    </div>
+                     <div class="mb-3">
+                        <label>Gambar Program (Opsional)</label>
+                        <input type="file" name="gambar" class="form-control" accept="image/*">
+                        <small class="text-muted">Format: jpg, png, jpeg. Max: 2MB</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Program</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+{{-- MODAL INPUT DONASI --}}
 <div class="modal fade" id="modalInputDonasi" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -119,13 +170,11 @@
             <form id="formDonasiViaProgram">
                 @csrf
                 <div class="modal-body">
-                    {{-- Program Terpilih Otomatis --}}
                     <div class="alert alert-light border mb-3">
                         <small class="text-muted d-block">Donasi Untuk Program:</small>
                         <strong class="text-success fs-5" id="labelNamaProgram">-</strong>
                         <input type="hidden" name="id_program_donasi" id="inputProgramId">
                     </div>
-
                     <div class="mb-3">
                         <label class="form-label">Nama Donatur</label>
                         <input type="text" name="nama_donatur" class="form-control" placeholder="Hamba Allah / Nama Jelas" required>
@@ -139,8 +188,8 @@
                         <input type="date" name="tanggal_donasi" class="form-control" value="{{ date('Y-m-d') }}" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Keterangan / Doa</label>
-                        <textarea name="keterangan" class="form-control" rows="2" placeholder="Opsional..."></textarea>
+                        <label class="form-label">Keterangan</label>
+                        <textarea name="keterangan" class="form-control" rows="2" placeholder="Doa atau catatan..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -152,7 +201,7 @@
     </div>
 </div>
 
-{{-- MODAL DETAIL PROGRAM (Existing) --}}
+{{-- MODAL DETAIL --}}
 <div class="modal fade" id="modalDetailProgram" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -191,54 +240,21 @@
     </div>
 </div>
 
-{{-- Modal Tambah Program (Standard) --}}
-<div class="modal fade" id="modalTambahProgram" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Buat Program Baru</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form action="{{ route('admin.program-donasi.store') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label>Judul Program</label>
-                        <input type="text" name="judul" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Target Dana (Rp)</label>
-                        <input type="number" name="target_dana" class="form-control" value="0">
-                    </div>
-                    {{-- Input hidden dummy biar gak error validasi controller lama --}}
-                    <input type="hidden" name="dana_terkumpul" value="0">
-                    
-                    <div class="mb-3">
-                        <label>Batas Waktu (Tanggal Selesai)</label>
-                        <input type="date" name="tanggal_selesai" class="form-control" required>
-                    </div>
-                     <div class="mb-3">
-                        <label>Gambar (Opsional)</label>
-                        <input type="file" name="gambar" class="form-control">
-                    </div>
-                    <div class="mb-3">
-                        <label>Deskripsi</label>
-                        <textarea name="deskripsi" class="form-control" required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Simpan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 
 {{-- SCRIPT JAVASCRIPT --}}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{{-- Optional: Tambahkan SweetAlert2 untuk notifikasi cantik --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 $(document).ready(function() {
+
+    // --- PENTING: SETUP CSRF TOKEN UNTUK SEMUA AJAX ---
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
 
     const formatRupiah = (number) => {
         return new Intl.NumberFormat('id-ID', {
@@ -248,51 +264,107 @@ $(document).ready(function() {
         }).format(number);
     };
 
-    // 1. KLIK TOMBOL "+ Donasi" (MUNCULKAN MODAL INPUT DONASI)
+    // 1. SUBMIT FORM TAMBAH PROGRAM (FIX CSRF & FILE UPLOAD)
+    $('#formTambahProgram').submit(function(e){
+        e.preventDefault(); // Mencegah reload halaman standar
+        
+        let btn = $(this).find('button[type="submit"]');
+        btn.text('Menyimpan...').prop('disabled', true);
+
+        // Pakai FormData agar File Gambar terkirim
+        let formData = new FormData(this);
+
+        $.ajax({
+            url: "{{ route('admin.program-donasi.store') }}",
+            type: "POST",
+            data: formData,
+            contentType: false, // WAJIB untuk upload file
+            processData: false, // WAJIB untuk upload file
+            success: function(res){
+                // Tutup Modal
+                $('#modalTambahProgram').modal('hide');
+                // Tampilkan Pesan Sukses (Pake Alert Biasa atau SweetAlert)
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: 'Program donasi berhasil ditambahkan!',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    location.reload(); // Refresh halaman
+                });
+            },
+            error: function(xhr){
+                console.log(xhr.responseText);
+                let errorMsg = 'Gagal menyimpan data.';
+                
+                // Cek kalau error validasi Laravel
+                if(xhr.status === 422) {
+                    let errors = xhr.responseJSON.errors;
+                    errorMsg = Object.values(errors)[0][0]; // Ambil pesan error pertama
+                }
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: errorMsg
+                });
+                
+                btn.text('Simpan Program').prop('disabled', false);
+            }
+        });
+    });
+
+    // 2. KLIK TOMBOL "+ Donasi"
     $('.btn-input-donasi').on('click', function() {
         let id = $(this).data('id');
         let nama = $(this).data('nama');
 
-        // Isi hidden input dan label di modal
         $('#inputProgramId').val(id);
         $('#labelNamaProgram').text(nama);
-        
-        // Reset form input
         $('#formDonasiViaProgram')[0].reset();
-        $('input[name="tanggal_donasi"]').val(new Date().toISOString().split('T')[0]); // Set tanggal hari ini
-
-        // Tampilkan Modal
+        $('input[name="tanggal_donasi"]').val(new Date().toISOString().split('T')[0]);
         $('#modalInputDonasi').modal('show');
     });
 
-    // 2. SUBMIT FORM DONASI VIA AJAX (Supaya Masuk ke TransaksiDonasiController)
+    // 3. SUBMIT FORM DONASI VIA AJAX
     $('#formDonasiViaProgram').submit(function(e){
         e.preventDefault();
         
-        // Ubah text tombol biar kelihatan loading
         let btn = $(this).find('button[type="submit"]');
         btn.text('Menyimpan...').prop('disabled', true);
 
         $.ajax({
-            url: "{{ route('admin.transaksi-donasi.store') }}", // Route ke controller donasi
+            url: "{{ route('admin.transaksi-donasi.store') }}",
             type: "POST",
-            data: $(this).serialize(),
+            data: $(this).serialize(), // Kalau cuma teks, serialize aman
             success: function(res){
-                alert(res.message);
-                location.reload(); // Refresh halaman biar angka terkumpul update
+                $('#modalInputDonasi').modal('hide');
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Alhamdulillah',
+                    text: res.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    location.reload();
+                });
             },
-            error: function(err){
-                console.log(err);
-                alert('Gagal menyimpan donasi. Pastikan semua field terisi.');
+            error: function(xhr){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Gagal menyimpan donasi. Periksa inputan.'
+                });
                 btn.text('Simpan Donasi').prop('disabled', false);
             }
         });
     });
 
-    // 3. KLIK TOMBOL MATA (DETAIL)
+    // 4. KLIK TOMBOL MATA (DETAIL)
     $('.btn-detail-program').on('click', function() {
         let id = $(this).data('id');
-        let url = "{{ route('admin.program-donasi.index') }}/" + id; // Panggil method Show
+        let url = "{{ route('admin.program-donasi.index') }}/" + id;
 
         $('#modalTitleDetail').text('Memuat...');
         $('#detailTotalTerkumpul').text('...');

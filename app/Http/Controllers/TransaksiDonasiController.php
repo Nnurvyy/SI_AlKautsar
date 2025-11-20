@@ -25,11 +25,12 @@ class TransaksiDonasiController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'id_program_donasi' => 'required|exists:program_donasi,id_program_donasi', // Sesuaikan nama PK program
-            'nama_donatur' => 'required|string',
-            'nominal' => 'required',
-            'tanggal_donasi' => 'required|date',
-        ]);
+        // PERBAIKAN: ganti 'exists:program_donasi,id_program_donasi' menjadi 'exists:program_donasi,id'
+        'id_program_donasi' => 'required|exists:program_donasi,id', 
+        'nama_donatur' => 'required|string',
+        'nominal' => 'required',
+        'tanggal_donasi' => 'required|date',
+    ]);
 
         // Bersihkan format Rupiah (hapus titik/koma)
         $nominalBersih = str_replace(['.', ','], '', $request->nominal);
