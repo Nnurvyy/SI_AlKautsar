@@ -1,0 +1,129 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Donasi;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
+class DonasiController extends Controller
+{
+    public function index()
+    {
+        return view('donasi'); // View utama
+    }
+
+    // Data JSON untuk DataTables/Pagination
+    public function data(Request $request)
+    {
+        $search = $request->query('search', '');
+        $perPage = $request->query('perPage', 10);
+        $sortBy = $request->query('sortBy', 'created_at');
+        $sortDir = $request->query('sortDir', 'desc');
+
+        // Subquery untuk menghitung total terkumpul per donasi
+        $totalTerkumpulSubquery = DB::table('pemasukan_donasi')
+            ->select(DB::raw('COALESCE(SUM(nominal), 0)'))
+            ->whereColumn('id_donasi', 'donasi.id_donasi');
+
+        $query = Donasi::select('donasi.*')
+            ->selectSub($totalTerkumpulSubquery, 'total_terkumpul');
+
+        // Filter Search
+        if (!empty($search)) {
+            $query->where('nama_donasi', 'ILIKE', "%{$search}%");
+        }
+
+        // Sorting
+        if ($sortBy === 'total_terkumpul') {
+            $query->orderByRaw("($totalTerkumpulSubquery) $sortDir");
+        } else {
+            $query->orderBy($sortBy, $sortDir);
+        }
+
+        $data = $query->paginate($perPage);
+
+        return response()->json($data);
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'nama_donasi' => 'required|string|max:255',
+            'target_dana' => 'required|numeric|min:0',
+            'tanggal_mulai' => 'required|date',
+            'foto_donasi' => 'nullable|image|max:2048', // Validasi foto
+        ]);
+
+        $data = $request->all();
+        $data['id_donasi'] = (string) Str::uuid();
+
+        // Upload Foto (Logic Khotib)
+        if ($request->hasFile('foto_donasi')) {
+            $data['foto_donasi'] = $request->file('foto_donasi')->store('donasi', 'public');
+        }
+
+        Donasi::create($data);
+
+        return response()->json(['message' => 'Program donasi berhasil dibuat.']);
+    }
+
+    public function show($id)
+    {
+        // Load donasi beserta history pemasukan, diurutkan tanggal terbaru
+        $donasi = Donasi::with(['pemasukan' => function($q) {
+            $q->orderBy('tanggal', 'desc');
+        }])->findOrFail($id);
+
+        // Hitung total di sisi PHP untuk memastikan akurasi modal detail
+        $donasi->total_terkumpul = $donasi->pemasukan->sum('nominal');
+
+        // Append URL foto full
+        $donasi->foto_url = $donasi->foto_donasi ? Storage::url($donasi->foto_donasi) : null;
+
+        return response()->json($donasi);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $donasi = Donasi::findOrFail($id);
+        
+        $request->validate([
+            'nama_donasi' => 'required|string|max:255',
+            'target_dana' => 'required|numeric|min:0',
+            'tanggal_mulai' => 'required|date',
+            'foto_donasi' => 'nullable|image|max:2048',
+        ]);
+
+        $data = $request->except(['foto_donasi']);
+
+        // Update Foto Logic
+        if ($request->hasFile('foto_donasi')) {
+            if ($donasi->foto_donasi && Storage::disk('public')->exists($donasi->foto_donasi)) {
+                Storage::disk('public')->delete($donasi->foto_donasi);
+            }
+            $data['foto_donasi'] = $request->file('foto_donasi')->store('donasi', 'public');
+        }
+
+        $donasi->update($data);
+
+        return response()->json(['message' => 'Program donasi berhasil diperbarui.']);
+    }
+
+    public function destroy($id)
+    {
+        $donasi = Donasi::findOrFail($id);
+        
+        // Hapus foto fisik
+        if ($donasi->foto_donasi && Storage::disk('public')->exists($donasi->foto_donasi)) {
+            Storage::disk('public')->delete($donasi->foto_donasi);
+        }
+        
+        // Pemasukan donasi akan terhapus otomatis karena cascade di migration
+        $donasi->delete();
+
+        return response()->json(['message' => 'Program donasi dihapus.']);
+    }
+}

@@ -14,6 +14,8 @@ use App\Http\Controllers\LapKeuController;
 use App\Http\Controllers\QurbanController;
 use App\Http\Controllers\KajianController; // Pastikan ini di-use
 use App\Http\Controllers\PengaturanController;
+use App\Http\Controllers\DonasiController;
+use App\Http\Controllers\PemasukanDonasiController;
 
 
 
@@ -124,6 +126,14 @@ Route::middleware(['auth:pengurus'])->prefix('pengurus')->name('pengurus.')->gro
     // Rute Resource (CRUD Setoran/Pemasukan)
     Route::resource('pemasukan-qurban', PemasukanTabunganQurbanController::class)
         ->parameter('pemasukan-qurban', 'id');
+
+    // Donasi (Parent)
+    Route::resource('donasi', DonasiController::class);
+    Route::get('donasi-data', [DonasiController::class, 'data'])->name('donasi.data');
+
+    // Pemasukan Donasi (Child - Transaksi)
+    Route::resource('pemasukan-donasi', PemasukanDonasiController::class)
+        ->only(['store', 'destroy']);
 
 
     Route::get('/settings', [PengaturanController::class, 'edit'])->name('settings.edit');
