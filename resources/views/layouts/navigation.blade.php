@@ -1,38 +1,43 @@
 <nav id="sidebar" class="sidebar d-flex flex-column">
     <div class="sidebar-header">
         <h5>Sistem Informasi</h5>
-        <p>E-Masjid</p>
+        <p>Smart Masjid</p>
     </div>
 
+    <!-- ====================================================== -->
+    <!--       SEMUA 'admin.' DIGANTI JADI 'pengurus.'          -->
+    <!-- ====================================================== -->
+
     <ul class="nav nav-pills flex-column mb-auto">
-        {{-- Dashboard --}}
+        {{-- DASHBOARD --}}
         <li class="nav-item">
-            <a href="{{ route('admin.dashboard') }}" 
-               class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+            <a href="{{ route('pengurus.dashboard') }}"
+               class="nav-link {{ request()->routeIs('pengurus.dashboard') ? 'active' : '' }}"
+               aria-current="page">
                 <i class="bi bi-grid-fill"></i> Dashboard
             </a>
         </li>
 
-        {{-- Pemasukan --}}
+        {{-- PEMASUKAN --}}
         <li class="nav-item">
-            <a href="{{ route('admin.pemasukan.index') }}" 
-               class="nav-link {{ request()->routeIs('admin.pemasukan.*') ? 'active' : '' }}">
+            <a href="{{ route('pengurus.pemasukan.index') }}"
+               class="nav-link {{ request()->routeIs('pengurus.pemasukan.*') ? 'active' : '' }}">
                 <i class="bi bi-box-arrow-in-down"></i> Pemasukan
             </a>
         </li>
 
-        {{-- Pengeluaran --}}
+        {{-- PENGELUARAN --}}
         <li class="nav-item">
-            <a href="{{ route('admin.pengeluaran.index') }}" 
-               class="nav-link {{ request()->routeIs('admin.pengeluaran.*') ? 'active' : '' }}">
+            <a href="{{ route('pengurus.pengeluaran') }}"
+               class="nav-link {{ request()->routeIs('pengurus.pengeluaran') ? 'active' : '' }}">
                 <i class="bi bi-box-arrow-up"></i> Pengeluaran
             </a>
         </li>
 
-        {{-- Laporan Keuangan --}}
+        {{-- LAPORAN KEUANGAN --}}
         <li class="nav-item">
-            <a href="{{ route('admin.lapkeu.index') }}" 
-               class="nav-link {{ request()->routeIs('admin.lapkeu.*') ? 'active' : '' }}">
+            <a href="{{ route('pengurus.lapkeu.index') }}"
+               class="nav-link {{ request()->routeIs('pengurus.lapkeu.*') ? 'active' : '' }}">
                 <i class="bi bi-file-earmark-text"></i> Laporan Keuangan
             </a>
         </li>
@@ -51,42 +56,42 @@
             </a>
         </li>
 
-        {{-- Khotib Jumat --}}
+        {{-- KHOTIB JUMAT --}}
         <li class="nav-item">
-            <a href="{{ route('admin.khotib-jumat.index') }}" 
-               class="nav-link {{ request()->routeIs('admin.khotib-jumat.*') ? 'active' : '' }}">
+            <a href="{{ route('pengurus.khotib-jumat.index') }}"
+               class="nav-link {{ request()->routeIs('pengurus.khotib-jumat.*') ? 'active' : '' }}">
                 <i class="bi bi-person-fill"></i> Khotib Jumat
             </a>
         </li>
 
-        {{-- Kajian --}}
+        {{-- KAJIAN --}}
         <li class="nav-item">
-            <a href="{{ route('admin.kajian.index') }}" 
-               class="nav-link {{ request()->routeIs('admin.kajian.*') ? 'active' : '' }}">
+            <a href="{{ route('pengurus.kajian.index') }}"
+               class="nav-link {{ request()->routeIs('pengurus.kajian.*') ? 'active' : '' }}">
                 <i class="bi bi-person-fill"></i> Kajian
             </a>
         </li>
 
-        {{-- Stok & Inventori --}}
+        {{-- STOK & INVENTORI --}}
         <li class="nav-item">
-            <a href="{{ route('admin.inventaris.index') }}" 
-               class="nav-link {{ request()->routeIs('admin.inventaris.*') ? 'active' : '' }}">
+            <a href="{{ route('pengurus.inventaris.index') }}"
+               class="nav-link {{ request()->routeIs('pengurus.inventaris.index') ? 'active' : '' }}">
                 <i class="bi bi-collection"></i> Stok & Inventori
             </a>
         </li>
 
-        {{-- Infaq Jumat --}}
+        {{-- INFAQ JUMAT --}}
         <li class="nav-item">
-            <a href="{{ route('admin.infaq-jumat.index') }}" 
-               class="nav-link {{ request()->routeIs('admin.infaq-jumat.*') ? 'active' : '' }}">
+            <a href="{{ route('pengurus.infaq-jumat.index') }}"
+               class="nav-link {{ request()->routeIs('pengurus.infaq-jumat.index') ? 'active' : '' }}">
                 <i class="bi bi-cash-coin"></i> Infaq Jumat
             </a>
         </li>
 
-        {{-- Tabungan Qurban --}}
+        {{-- TABUNGAN HEWAN QURBAN --}}
         <li class="nav-item">
-            <a href="{{ route('admin.tabungan-qurban.index') }}" 
-               class="nav-link {{ request()->routeIs('admin.tabungan-qurban.*') ? 'active' : '' }}">
+            <a href="{{ route('pengurus.tabungan-qurban.index') }}"
+               class="nav-link {{ request()->routeIs('pengurus.tabungan-qurban.*') ? 'active' : '' }}">
                 <i class="bi bi-wallet"></i> Tabungan Hewan Qurban
             </a>
         </li>

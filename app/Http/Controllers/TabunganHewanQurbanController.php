@@ -1,15 +1,13 @@
 <?php
 
 namespace App\Http\Controllers;
-
-// Gunakan Request baru
-use App\Http\Requests\TabunganQurbanRequest;
 use App\Models\TabunganHewanQurban;
 use App\Models\PemasukanTabunganQurban;
-use App\Models\Pengguna;
+use App\Models\Jamaah;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -20,86 +18,146 @@ class TabunganHewanQurbanController extends Controller
      */
     public function index(Request $request)
     {
-        // Ambil pengguna untuk dropdown di modal
-        $penggunaList = Pengguna::where('role', 'publik')->orderBy('nama')->get();
+        $jamaahList = Jamaah::orderBy('name')->get();
 
         return view('tabungan-qurban', [
-            'penggunaList' => $penggunaList
+            'jamaahList' => $jamaahList
         ]);
     }
 
     /**
-     * Menyediakan data JSON untuk tabel (Pola KhotibJumatController)
+     * Menyediakan data JSON untuk tabel
      */
     public function data(Request $request)
     {
         $status = $request->query('status', 'semua');
         $perPage = $request->query('perPage', 10);
-        $sortBy = $request->query('sortBy', 'total_terkumpul'); // Sort by total tabungan
+        $sortBy = $request->query('sortBy', 'total_terkumpul');
         $sortDir = $request->query('sortDir', 'desc');
 
-        // Subquery untuk total terkumpul
+        // Subquery total terkumpul
         $totalTerkumpulSubquery = PemasukanTabunganQurban::select(DB::raw('COALESCE(SUM(nominal), 0)'))
             ->whereColumn('id_tabungan_hewan_qurban', 'tabungan_hewan_qurban.id_tabungan_hewan_qurban');
 
-        // Subquery untuk cek pembayaran bulan ini
-        $startOfMonth = Carbon::now()->startOfMonth();
-        $bayarBulanIniSubquery = PemasukanTabunganQurban::select(DB::raw(1))
-            ->whereColumn('id_tabungan_hewan_qurban', 'tabungan_hewan_qurban.id_tabungan_hewan_qurban')
-            ->where('tanggal', '>=', $startOfMonth)
-            ->limit(1);
-
-        $query = TabunganHewanQurban::with('pengguna')
+        $query = TabunganHewanQurban::with('jamaah')
             ->select('tabungan_hewan_qurban.*')
             ->selectSub($totalTerkumpulSubquery, 'total_terkumpul')
-            ->selectSub($bayarBulanIniSubquery, 'bayar_bulan_ini');
+            // Menghitung Angsuran Bulanan untuk tabungan 'cicilan' (TETAP)
+            ->selectRaw("
+                CASE
+                    WHEN saving_type = 'cicilan' AND duration_months IS NOT NULL AND duration_months > 0
+                    THEN ROUND(total_harga_hewan_qurban / duration_months)
+                    ELSE 0
+                END AS installment_amount
+            ");
 
-        // Terapkan Filter Status (Sesuai konfirmasi Anda)
+        // Catatan: Kolom 'current_status' yang menggunakan strftime dihapus dari query utama.
+
+        // --- LOGIKA FILTER BARU (Lebih Sederhana) ---
         $query->when($status == 'lunas', function ($q) {
-            // 1. Lunas
-            $q->whereRaw(
-                '(SELECT COALESCE(SUM(nominal), 0) FROM pemasukan_tabungan_qurban WHERE id_tabungan_hewan_qurban = tabungan_hewan_qurban.id_tabungan_hewan_qurban) >= total_harga_hewan_qurban'
-            );
-        })->when($status == 'menunggak', function ($q) {
-            // 2. Menunggak (Belum lunas DAN belum bayar bulan ini)
-            $startOfMonth = Carbon::now()->startOfMonth();
-            $q->whereRaw(
-                '(SELECT COALESCE(SUM(nominal), 0) FROM pemasukan_tabungan_qurban WHERE id_tabungan_hewan_qurban = tabungan_hewan_qurban.id_tabungan_hewan_qurban) < total_harga_hewan_qurban'
-            )->whereDoesntHave('pemasukanTabunganQurban', function($sq) use ($startOfMonth) {
-                $sq->where('tanggal', '>=', $startOfMonth);
-            });
-        })->when($status == 'bayar_bulan_ini', function ($q) {
-            // 3. Sudah Bayar Bulan Ini (Belum lunas TAPI sudah bayar bulan ini)
-            $startOfMonth = Carbon::now()->startOfMonth();
-            $q->whereRaw(
-                '(SELECT COALESCE(SUM(nominal), 0) FROM pemasukan_tabungan_qurban WHERE id_tabungan_hewan_qurban = tabungan_hewan_qurban.id_tabungan_hewan_qurban) < total_harga_hewan_qurban'
-            )->whereHas('pemasukanTabunganQurban', function($sq) use ($startOfMonth) {
-                $sq->where('tanggal', '>=', $startOfMonth);
-            });
+            $q->whereRaw('(SELECT COALESCE(SUM(nominal), 0) FROM pemasukan_tabungan_qurban WHERE id_tabungan_hewan_qurban = tabungan_hewan_qurban.id_tabungan_hewan_qurban) >= total_harga_hewan_qurban');
+        })->when($status != 'lunas' && $status != 'semua', function($q) use ($status) {
+            // Karena kita tidak bisa menghitung akumulasi target di query untuk semua DB,
+            // kita hanya akan filter berdasarkan tipe untuk 'menunggak' dan 'mencicil'.
+            // Logika tunggakan sesungguhnya akan dihitung setelah data ditarik.
+            if ($status == 'menunggak') {
+                $q->where('saving_type', 'cicilan')
+                    ->whereRaw('(SELECT COALESCE(SUM(nominal), 0) FROM pemasukan_tabungan_qurban WHERE id_tabungan_hewan_qurban = tabungan_hewan_qurban.id_tabungan_hewan_qurban) < total_harga_hewan_qurban');
+
+            } elseif ($status == 'mencicil') {
+                $q->whereRaw('(SELECT COALESCE(SUM(nominal), 0) FROM pemasukan_tabungan_qurban WHERE id_tabungan_hewan_qurban = tabungan_hewan_qurban.id_tabungan_hewan_qurban) < total_harga_hewan_qurban')
+                    ->where(function($q2) {
+                        $q2->where('saving_type', 'bebas')
+                            ->orWhere('saving_type', 'cicilan');
+                    });
+            }
         });
 
-        // Urutkan data
+
+        // Sorting
         $allowedSorts = ['total_terkumpul', 'created_at', 'nama_hewan', 'total_harga_hewan_qurban'];
         if (!in_array($sortBy, $allowedSorts)) $sortBy = 'total_terkumpul';
         $sortDir = $sortDir === 'asc' ? 'asc' : 'desc';
 
-        // Jika sorting berdasarkan 'total_terkumpul', kita harus pakai orderByRaw
         if ($sortBy == 'total_terkumpul') {
+            // Order by raw subquery result
             $data = $query->orderByRaw('total_terkumpul ' . $sortDir)->paginate($perPage);
         } else {
             $data = $query->orderBy($sortBy, $sortDir)->paginate($perPage);
         }
 
+        // --- PENGHITUNGAN STATUS DI SISI PHP SEBELUM DIKIRIM KE FRONTEND ---
+        // Ini memastikan logika tunggakan akumulasi berjalan di semua database
+        $data->getCollection()->transform(function ($item) {
+            $totalTerkumpul = (float)$item->total_terkumpul;
+            $totalHarga = (float)$item->total_harga_hewan_qurban;
+            $installmentAmount = (float)$item->installment_amount;
+
+            if ($totalTerkumpul >= $totalHarga) {
+                $item->current_status = 'lunas';
+                return $item;
+            }
+
+            if ($item->saving_type === 'bebas') {
+                $item->current_status = 'mencicil'; // Untuk "Bebas" dianggap mencicil/aktif
+                return $item;
+            }
+
+            // Logika Tunggakan Akumulasi (Hanya untuk tipe 'cicilan' yang belum lunas)
+            if ($item->saving_type === 'cicilan' && $installmentAmount > 0) {
+                $tanggalMulai = Carbon::parse($item->created_at);
+                $tanggalHariIni = Carbon::now();
+
+                // Hitung bulan berlalu (termasuk bulan ini)
+                $monthsPassed = $tanggalHariIni->diffInMonths($tanggalMulai) + 1;
+                $monthsPassed = min($monthsPassed, $item->duration_months);
+
+                $accumulatedTarget = $installmentAmount * $monthsPassed;
+
+                if ($totalTerkumpul < $accumulatedTarget) {
+                    $item->current_status = 'menunggak';
+                } else {
+                    $item->current_status = 'mencicil';
+                }
+            } else {
+                // Default jika tidak cicilan atau cicilan 0
+                $item->current_status = 'mencicil';
+            }
+
+            return $item;
+        });
+
         return response()->json($data);
     }
 
+    // ... (Metode store, show, update, destroy, cetakPdf TIDAK BERUBAH) ...
+
     /**
-     * Menyimpan data tabungan baru.
+     * Menyimpan data baru
      */
-    public function store(TabunganQurbanRequest $request)
+    public function store(Request $request)
     {
-        $validatedData = $request->validated();
-        $validatedData['total_tabungan'] = 0; // Tetapkan default
+        $validatedData = $request->validate([
+            'id_jamaah' => 'required|exists:jamaah,id',
+            'nama_hewan' => 'required|string',
+            'total_hewan' => 'required|integer|min:1',
+            'total_harga_hewan_qurban' => 'required|numeric|min:0',
+            // --- VALIDASI BARU ---
+            'saving_type' => 'required|in:bebas,cicilan',
+            'duration_months' => 'nullable|integer|min:1',
+            // --- AKHIR VALIDASI BARU ---
+        ]);
+
+        // Atur duration_months jika saving_type adalah bebas
+        if ($validatedData['saving_type'] === 'bebas') {
+            $validatedData['duration_months'] = null;
+        } elseif ($validatedData['saving_type'] === 'cicilan' && empty($validatedData['duration_months'])) {
+            // Pastikan duration_months ada jika tipe adalah cicilan
+            return response()->json(['message' => 'Durasi cicilan wajib diisi.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $validatedData['id_tabungan_hewan_qurban'] = (string) Str::uuid();
+        $validatedData['total_tabungan'] = 0; // Tetap 0, dihitung dari pemasukan
 
         $tabungan = TabunganHewanQurban::create($validatedData);
 
@@ -111,24 +169,48 @@ class TabunganHewanQurbanController extends Controller
     }
 
     /**
-     * Menampilkan data spesifik untuk modal (termasuk riwayat setoran).
+     * Menampilkan data spesifik (Show)
      */
     public function show(TabunganHewanQurban $tabungan_qurban)
     {
-        // Muat relasi untuk modal detail
-        $tabungan_qurban->load(['pengguna', 'pemasukanTabunganQurban' => function($query) {
+        $tabungan_qurban->load(['jamaah', 'pemasukanTabunganQurban' => function($query) {
             $query->orderBy('tanggal', 'desc');
         }]);
+
+        // Hitung cicilan bulanan di sini juga untuk modal detail
+        $installmentAmount = 0;
+        if ($tabungan_qurban->saving_type === 'cicilan' && $tabungan_qurban->duration_months > 0) {
+            $installmentAmount = round($tabungan_qurban->total_harga_hewan_qurban / $tabungan_qurban->duration_months);
+        }
+        $tabungan_qurban->installment_amount = $installmentAmount;
 
         return response()->json($tabungan_qurban);
     }
 
     /**
-     * Update data tabungan.
+     * Update data
      */
-    public function update(TabunganQurbanRequest $request, TabunganHewanQurban $tabungan_qurban)
+    public function update(Request $request, TabunganHewanQurban $tabungan_qurban)
     {
-        $validatedData = $request->validated();
+        $validatedData = $request->validate([
+            'id_jamaah' => 'required|exists:jamaah,id',
+            'nama_hewan' => 'required|string',
+            'total_hewan' => 'required|integer|min:1',
+            'total_harga_hewan_qurban' => 'required|numeric|min:0',
+            // --- VALIDASI BARU ---
+            'saving_type' => 'required|in:bebas,cicilan',
+            'duration_months' => 'nullable|integer|min:1',
+            // --- AKHIR VALIDASI BARU ---
+        ]);
+
+        // Atur duration_months jika saving_type adalah bebas
+        if ($validatedData['saving_type'] === 'bebas') {
+            $validatedData['duration_months'] = null;
+        } elseif ($validatedData['saving_type'] === 'cicilan' && empty($validatedData['duration_months'])) {
+            // Pastikan duration_months ada jika tipe adalah cicilan
+            return response()->json(['message' => 'Durasi cicilan wajib diisi.'], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         $tabungan_qurban->update($validatedData);
 
         return response()->json([
@@ -139,11 +221,10 @@ class TabunganHewanQurbanController extends Controller
     }
 
     /**
-     * Hapus data tabungan.
+     * Hapus data
      */
     public function destroy(TabunganHewanQurban $tabungan_qurban)
     {
-        // Hapus juga semua pemasukan terkait (jika tidak di-set cascade on delete di DB)
         $tabungan_qurban->pemasukanTabunganQurban()->delete();
         $tabungan_qurban->delete();
 
@@ -154,7 +235,7 @@ class TabunganHewanQurbanController extends Controller
     }
 
     /**
-     * Membuat dan mengunduh laporan PDF (Pola LapKeuController)
+     * Cetak PDF (Tidak ada perubahan signifikan)
      */
     public function cetakPdf(Request $request)
     {
@@ -165,7 +246,7 @@ class TabunganHewanQurbanController extends Controller
         $tanggal_mulai = $request->get('tanggal_mulai', date('Y-m-01'));
         $tanggal_akhir = $request->get('tanggal_akhir', date('Y-m-d'));
 
-        $query = PemasukanTabunganQurban::with(['tabunganHewanQurban.pengguna'])
+        $query = PemasukanTabunganQurban::with(['tabunganHewanQurban.jamaah'])
             ->orderBy('tanggal', 'asc');
 
         $periodeTeks = 'Semua Periode';
@@ -198,7 +279,6 @@ class TabunganHewanQurbanController extends Controller
             'tanggalCetak' => $tanggalCetak
         ];
 
-        // Memuat view dari 'resources/views/laporan_qurban_pdf.blade.php'
         $pdf = Pdf::loadView('laporan_qurban_pdf', $data);
         return $pdf->stream('laporan-tabungan-qurban-' . time() . '.pdf');
     }

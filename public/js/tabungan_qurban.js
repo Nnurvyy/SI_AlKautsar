@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tbody = document.querySelector('#tabelTabungan tbody');
     const paginationContainer = document.getElementById('paginationLinks');
     const paginationInfo = document.getElementById('paginationInfo');
-    const $penggunaList = document.getElementById('penggunaListTemplate'); // Template <option>
+    const $jamaahList = document.getElementById('jamaahListTemplate');
 
     // --- Elemen Filter & Sort ---
     const statusFilter = document.getElementById('statusFilter');
@@ -20,12 +20,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitButton = formTabungan.querySelector('button[type="submit"]');
     const originalButtonText = submitButton.innerHTML;
 
+    // --- Elemen Form Baru ---
+    const savingTypeInput = document.getElementById('saving_type');
+    const durationMonthsGroup = document.getElementById('duration_months_group');
+    const durationMonthsInput = document.getElementById('duration_months');
+    // --- Akhir Elemen Form Baru ---
+
     // --- Elemen Modal Detail Setoran ---
     const modalDetailEl = document.getElementById('modalDetailTabungan');
     const modalDetail = new bootstrap.Modal(modalDetailEl);
     const modalDetailTitle = document.getElementById('detailModalTitle');
     const detailTotalTabungan = document.getElementById('detailTotalTabungan');
     const detailSisaTarget = document.getElementById('detailSisaTarget');
+    const detailInstallmentAmount = document.getElementById('detailInstallmentAmount');
+    const detailSavingType = document.getElementById('detailSavingType'); // Element baru
     const tabelRiwayatSetoran = document.getElementById('tabelRiwayatSetoran');
 
     // --- Elemen Modal Tambah Setoran ---
@@ -36,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const originalSetoranButtonText = setoranSubmitButton.innerHTML;
     const inputIdTabunganSetoran = document.getElementById('tambah_setoran_id_tabungan');
 
-    // --- Elemen Filter PDF (Pola LapKeu) ---
+    // --- Elemen Filter PDF ---
     const pdfPeriodeFilter = document.getElementById('filter-periode');
     const pdfFilterBulanan = document.getElementById('filter-bulanan');
     const pdfFilterTahunan = document.getElementById('filter-tahunan');
@@ -49,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sortBy: 'total_terkumpul',
         sortDir: 'desc',
     };
-    let currentDetailTabunganId = null; // Untuk me-refresh modal detail
+    let currentDetailTabunganId = null;
 
     // --- Fungsi Helper ---
     function formatRupiah(angka) {
@@ -65,7 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
             : '-';
     }
 
-    // --- Fungsi Loading ---
     function setFormLoading(form, button, originalText, isLoading) {
         const cancelButton = form.querySelector('button[data-bs-dismiss="modal"]');
         if (isLoading) {
@@ -79,7 +86,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Logika Filter PDF (Pola LapKeu) ---
     function togglePdfFilterVisibility() {
         const selectedValue = pdfPeriodeFilter.value;
         pdfFilterBulanan.style.display = 'none';
@@ -91,16 +97,29 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (selectedValue === 'rentang_waktu') pdfFilterRentang.style.display = 'block';
     }
     pdfPeriodeFilter.addEventListener('change', togglePdfFilterVisibility);
-    togglePdfFilterVisibility(); // Inisialisasi
+    togglePdfFilterVisibility();
 
-    // --- Logika CRUD Utama (Pola Khotib) ---
+    // Logika Show/Hide Durasi Cicilan
+    function toggleDurationInput() {
+        if (savingTypeInput.value === 'cicilan') {
+            durationMonthsGroup.style.display = 'block';
+            durationMonthsInput.setAttribute('required', 'required');
+        } else {
+            durationMonthsGroup.style.display = 'none';
+            durationMonthsInput.removeAttribute('required');
+            durationMonthsInput.value = ''; // Kosongkan nilai jika tipe bebas
+        }
+    }
+    savingTypeInput.addEventListener('change', toggleDurationInput);
+
+    // --- Logika CRUD Utama ---
 
     // 1. Muat Data Tabel Utama
     async function loadTabungan() {
         let colCount = tbody.closest('table').querySelector('thead tr').cells.length;
         tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center"><div class="spinner-border text-primary"></div></td></tr>`;
 
-        const url = `/admin/tabungan-qurban-data?page=${state.currentPage}&status=${state.status}&sortBy=${state.sortBy}&sortDir=${state.sortDir}&perPage=10`;
+        const url = `/pengurus/tabungan-qurban-data?page=${state.currentPage}&status=${state.status}&sortBy=${state.sortBy}&sortDir=${state.sortDir}&perPage=10`;
 
         try {
             const res = await fetch(url);
@@ -110,6 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
             renderTable(response.data, response.from || 1);
             renderPagination(response);
         } catch (err) {
+            // Kolom total 9
+            const colCount = tbody.closest('table').querySelector('thead tr').cells.length;
             tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center text-danger">${err.message}</td></tr>`;
             paginationInfo.textContent = 'Gagal memuat data';
             paginationContainer.innerHTML = '';
@@ -132,23 +153,40 @@ document.addEventListener('DOMContentLoaded', () => {
             const sisaTarget = totalHarga - totalTerkumpul;
 
             let statusHtml;
-            if (sisaTarget <= 0) {
-                statusHtml = '<span class="badge bg-success">Lunas</span>';
-            } else if (item.bayar_bulan_ini) {
-                statusHtml = `<span class="badge bg-primary">Mencicil</span>`;
-            } else {
-                statusHtml = `<span class="badge bg-danger">Menunggak</span>`;
+
+            // --- PERUBAHAN DI SINI: Status hanya menggunakan warna teks ---
+            if (item.current_status === 'lunas') {
+                statusHtml = '<span class="text-success fw-bold">Lunas</span>';
+            } else if (item.current_status === 'menunggak') {
+                // Teks dipersingkat menjadi "Menunggak" saja
+                statusHtml = `<span class="text-danger fw-bold">Menunggak</span>`;
+            } else if (item.saving_type === 'bebas') {
+                statusHtml = `<span class="text-muted">Bebas</span>`; // Cukup teks muted
+            } else { // Mencicil
+                statusHtml = `<span class="text-primary fw-bold">Mencicil</span>`;
             }
+            // --- AKHIR PERUBAHAN STATUS ---
+
+            const namaJamaah = item.jamaah ? item.jamaah.name : 'N/A';
+            const installmentAmount = parseFloat(item.installment_amount || 0);
+
+            // --- PERUBAHAN DI SINI: Tipe Menabung hanya menggunakan teks ---
+            const savingTypeText = item.saving_type === 'cicilan' ?
+                `<span class="text-info" title="${item.duration_months} Bulan">${item.duration_months} Bln</span>` :
+                '<span class="text-muted">Bebas</span>';
+            // --- AKHIR PERUBAHAN TIPE ---
 
             const row = `
             <tr>
                 <td class="text-center">${startingNumber + i}</td>
                 <td>
-                    <div>${item.pengguna ? item.pengguna.nama : 'N/A'}</div>
+                    <div>${namaJamaah}</div>
                     <small class="text-muted">${Str.ucfirst(item.nama_hewan)} (${item.total_hewan} ekor)</small>
                 </td>
                 <td class="text-end">${formatRupiah(totalHarga)}</td>
-                <td class="text-end">${formatRupiah(totalTerkumpul)}</td>
+                <td class="text-center">${savingTypeText}</td> <!-- Kolom Tipe Menabung -->
+                <td class="text-end">${installmentAmount > 0 ? formatRupiah(installmentAmount) : '-'}</td>
+                <td class="text-end" id="sortTotalTerkumpul">${formatRupiah(totalTerkumpul)}</td>
                 <td class="text-end ${sisaTarget > 0 ? 'text-danger' : 'text-success'}">
                     ${sisaTarget <= 0 ? '-' : formatRupiah(sisaTarget)}
                 </td>
@@ -183,12 +221,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let linksHtml = '<ul class="pagination justify-content-center mb-0">';
         links.forEach(link => {
-            // --- PERUBAHAN DI SINI ---
-            // Kita ganti logika replace() dengan includes() agar sama seperti khotib.js
             let label = link.label;
             if (label.includes('Previous')) label = '<';
             else if (label.includes('Next')) label = '>';
-            // --- AKHIR PERUBAHAN ---
 
             const disabled = !link.url ? 'disabled' : '';
             const active = link.active ? 'active' : '';
@@ -232,21 +267,31 @@ document.addEventListener('DOMContentLoaded', () => {
         formTabungan.reset();
         document.getElementById('id_tabungan_hewan_qurban').value = '';
         modalTabunganTitle.textContent = 'Tambah Tabungan Qurban Baru';
-        // Isi dropdown pengguna dari template
-        document.getElementById('id_pengguna').innerHTML = $penggunaList.innerHTML;
+        document.getElementById('id_jamaah').innerHTML = $jamaahList.innerHTML;
+
+        // Reset/set default untuk input baru
+        savingTypeInput.value = 'cicilan';
+        toggleDurationInput();
+
         modalTabungan.show();
     });
 
-    // 6. Simpan/Update Tabungan (Form Utama)
+    // 6. Simpan/Update Tabungan (Logic POST/PUT di Controller sudah diupdate)
     formTabungan.addEventListener('submit', async e => {
         e.preventDefault();
         setFormLoading(formTabungan, submitButton, originalButtonText, true);
 
         const id = document.getElementById('id_tabungan_hewan_qurban').value;
         const formData = new FormData(formTabungan);
-        let url = '/admin/tabungan-qurban';
+
+        // Hapus duration_months dari form data jika tipe bebas (Controller juga handle, tapi ini bersih)
+        if (savingTypeInput.value === 'bebas') {
+            formData.delete('duration_months');
+        }
+
+        let url = '/pengurus/tabungan-qurban';
         if (id) {
-            url = `/admin/tabungan-qurban/${id}`;
+            url = `/pengurus/tabungan-qurban/${id}`;
             formData.append('_method', 'PUT');
         }
 
@@ -261,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.ok) {
                 Swal.fire('Berhasil!', data.message, 'success');
                 modalTabungan.hide();
-                loadTabungan(); // Muat ulang data
+                loadTabungan();
             } else {
                 if (res.status === 422 && data.errors) {
                     let errorMessages = Object.values(data.errors).map(err => err[0]).join('<br>');
@@ -276,17 +321,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 7. Reset Modal Tabungan saat ditutup
+    // 7. Reset Modal
     modalTabunganEl.addEventListener('hidden.bs.modal', function () {
         formTabungan.reset();
         document.getElementById('id_tabungan_hewan_qurban').value = '';
         setFormLoading(formTabungan, submitButton, originalButtonText, false);
     });
 
-    // 8. Edit Tabungan (Global function)
+    // 8. Edit Tabungan
     window.editTabungan = async function(id) {
         try {
-            const res = await fetch(`/admin/tabungan-qurban/${id}`);
+            const res = await fetch(`/pengurus/tabungan-qurban/${id}`);
             if (!res.ok) throw new Error('Data tidak ditemukan');
             const data = await res.json();
 
@@ -294,13 +339,18 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('id_tabungan_hewan_qurban').value = data.id_tabungan_hewan_qurban;
             modalTabunganTitle.textContent = 'Update Tabungan Qurban';
 
-            // Isi dropdown pengguna dan pilih yang sesuai
-            document.getElementById('id_pengguna').innerHTML = $penggunaList.innerHTML;
-            document.getElementById('id_pengguna').value = data.id_pengguna;
+            document.getElementById('id_jamaah').innerHTML = $jamaahList.innerHTML;
+            document.getElementById('id_jamaah').value = data.id_jamaah;
 
             document.getElementById('nama_hewan').value = data.nama_hewan;
             document.getElementById('total_hewan').value = data.total_hewan;
             document.getElementById('total_harga_hewan_qurban').value = data.total_harga_hewan_qurban;
+
+            // --- UPDATE INPUT BARU ---
+            savingTypeInput.value = data.saving_type;
+            durationMonthsInput.value = data.duration_months || '';
+            toggleDurationInput();
+            // --- AKHIR UPDATE INPUT BARU ---
 
             modalTabungan.show();
         } catch (err) {
@@ -308,7 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 9. Hapus Tabungan (Global function)
+    // 9. Hapus Tabungan (Logika tetap sama)
     window.hapusTabungan = async function(id) {
         const confirm = await Swal.fire({
             title: 'Yakin ingin menghapus?',
@@ -323,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!confirm.isConfirmed) return;
 
         try {
-            const res = await fetch(`/admin/tabungan-qurban/${id}`, {
+            const res = await fetch(`/pengurus/tabungan-qurban/${id}`, {
                 method: 'DELETE',
                 headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' }
             });
@@ -340,31 +390,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Logika Modal Detail (Pola Lama) ---
-
-    // 10. Tampilkan Detail (Global function)
+    // 10. Tampilkan Detail
     window.showDetail = async function(id) {
-        currentDetailTabunganId = id; // Simpan ID untuk refresh
+        currentDetailTabunganId = id;
         try {
-            const res = await fetch(`/admin/tabungan-qurban/${id}`);
+            const res = await fetch(`/pengurus/tabungan-qurban/${id}`);
             if (!res.ok) throw new Error('Data tidak ditemukan');
             const data = await res.json();
 
-            modalDetailTitle.textContent = `Detail: ${Str.ucfirst(data.nama_hewan)} (${data.pengguna.nama})`;
+            const namaJamaah = data.jamaah ? data.jamaah.name : 'N/A';
+            modalDetailTitle.textContent = `Detail: ${Str.ucfirst(data.nama_hewan)} (${namaJamaah})`;
 
-            // Hitung stats
             const totalTerkumpul = data.pemasukan_tabungan_qurban.reduce((acc, p) => acc + parseFloat(p.nominal), 0);
             const sisaTarget = parseFloat(data.total_harga_hewan_qurban) - totalTerkumpul;
+
+            // --- UPDATE DETAIL BARU ---
+            detailSavingType.textContent = data.saving_type === 'cicilan' ?
+                `Cicilan Waktu (${data.duration_months} Bulan)` : 'Tabungan Bebas';
+            detailInstallmentAmount.textContent = data.installment_amount > 0 ? formatRupiah(data.installment_amount) : '-';
+            // --- AKHIR UPDATE DETAIL BARU ---
 
             detailTotalTabungan.textContent = formatRupiah(totalTerkumpul);
             detailSisaTarget.textContent = formatRupiah(sisaTarget);
             detailSisaTarget.classList.toggle('text-success', sisaTarget <= 0);
             detailSisaTarget.classList.toggle('text-danger', sisaTarget > 0);
 
-            // Isi ID tabungan di form setoran
             inputIdTabunganSetoran.value = id;
-
-            // Render tabel riwayat
             renderRiwayatSetoran(data.pemasukan_tabungan_qurban);
 
             modalDetail.show();
@@ -373,7 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 11. Render Riwayat Setoran
+    // 11. Render Riwayat (Logika tetap sama)
     function renderRiwayatSetoran(pemasukanList) {
         tabelRiwayatSetoran.innerHTML = '';
         if (!pemasukanList || pemasukanList.length === 0) {
@@ -398,18 +449,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 12. Refresh Modal Detail (setelah tambah/hapus setoran)
+    // 12. Refresh Modal Detail (Logika tetap sama)
     async function refreshDetailModal() {
         if (!currentDetailTabunganId) return;
         try {
-            const res = await fetch(`/admin/tabungan-qurban/${currentDetailTabunganId}`);
+            const res = await fetch(`/pengurus/tabungan-qurban/${currentDetailTabunganId}`);
             if (!res.ok) {
                 modalDetail.hide();
                 return;
             }
             const data = await res.json();
 
-            // Hitung stats
             const totalTerkumpul = data.pemasukan_tabungan_qurban.reduce((acc, p) => acc + parseFloat(p.nominal), 0);
             const sisaTarget = parseFloat(data.total_harga_hewan_qurban) - totalTerkumpul;
 
@@ -418,7 +468,8 @@ document.addEventListener('DOMContentLoaded', () => {
             detailSisaTarget.classList.toggle('text-success', sisaTarget <= 0);
             detailSisaTarget.classList.toggle('text-danger', sisaTarget > 0);
 
-            // Render tabel riwayat
+            detailInstallmentAmount.textContent = data.installment_amount > 0 ? formatRupiah(data.installment_amount) : '-';
+
             renderRiwayatSetoran(data.pemasukan_tabungan_qurban);
 
         } catch (err) {
@@ -426,8 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-
-    // 13. Simpan Setoran Baru
+    // 13. Simpan Setoran Baru (Logika tetap sama)
     formSetoran.addEventListener('submit', async e => {
         e.preventDefault();
         setFormLoading(formSetoran, setoranSubmitButton, originalSetoranButtonText, true);
@@ -435,7 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData(formSetoran);
 
         try {
-            const res = await fetch('/admin/pemasukan-qurban', {
+            const res = await fetch('/pengurus/pemasukan-qurban', {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
                 body: formData
@@ -446,8 +496,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 Swal.fire('Berhasil!', data.message, 'success');
                 modalSetoran.hide();
                 formSetoran.reset();
-                refreshDetailModal(); // Refresh modal detail
-                loadTabungan();     // Refresh tabel utama
+                refreshDetailModal();
+                loadTabungan();
             } else {
                 if (res.status === 422 && data.errors) {
                     let errorMessages = Object.values(data.errors).map(err => err[0]).join('<br>');
@@ -462,7 +512,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 14. Hapus Setoran (Global function)
+    // 14. Hapus Setoran (Logika tetap sama)
     window.hapusSetoran = async function(idSetoran) {
         const confirm = await Swal.fire({
             title: 'Yakin ingin menghapus setoran?',
@@ -477,7 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!confirm.isConfirmed) return;
 
         try {
-            const res = await fetch(`/admin/pemasukan-qurban/${idSetoran}`, {
+            const res = await fetch(`/pengurus/pemasukan-qurban/${idSetoran}`, {
                 method: 'DELETE',
                 headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' }
             });
@@ -485,8 +535,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             if (res.ok) {
                 Swal.fire('Terhapus!', data.message, 'success');
-                refreshDetailModal(); // Refresh modal detail
-                loadTabungan();     // Refresh tabel utama
+                refreshDetailModal();
+                loadTabungan();
             } else {
                 throw new Error(data.message || 'Terjadi kesalahan');
             }
@@ -495,12 +545,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 15. Utility String (jika tidak ada di global)
-    // Sederhana, hanya untuk 'ucfirst' di judul modal detail
     const Str = {
         ucfirst: (s) => (s && s.length) ? s.charAt(0).toUpperCase() + s.slice(1) : ''
     };
 
     // --- Inisialisasi ---
-    loadTabungan(); // Muat data tabel utama saat halaman dibuka
+    loadTabungan();
 });

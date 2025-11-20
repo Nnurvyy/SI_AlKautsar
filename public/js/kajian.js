@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const id = document.getElementById('id_kajian').value;
             const formData = new FormData(form);
             // Ganti URL
-            const url = id ? `/admin/kajian/${id}` : '/admin/kajian';
+            const url = id ? `/pengurus/kajian/${id}` : '/pengurus/kajian';
             if (id) formData.append('_method', 'PUT');
 
             try {
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center"><div class="spinner-border text-primary"></div></td></tr>`;
 
         // Ganti URL
-        const url = `/admin/kajian-data?page=${state.currentPage}&status=${state.status}&search=${state.search}&perPage=${state.perPage}&sortBy=${state.sortBy}&sortDir=${state.sortDir}`;
+        const url = `/pengurus/kajian-data?page=${state.currentPage}&status=${state.status}&search=${state.search}&perPage=${state.perPage}&sortBy=${state.sortBy}&sortDir=${state.sortDir}`;
 
         try {
             const res = await fetch(url);
@@ -261,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.editKajian = async function(id_kajian) { // Ganti
         try {
             // Ganti URL
-            const res = await fetch(`/admin/kajian/${id_kajian}`);
+            const res = await fetch(`/pengurus/kajian/${id_kajian}`);
             if (!res.ok) throw new Error('Data tidak ditemukan');
             const data = await res.json();
 
@@ -312,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('_method', 'DELETE');
 
             // Ganti URL
-            const res = await fetch(`/admin/kajian/${id_kajian}`, {
+            const res = await fetch(`/pengurus/kajian/${id_kajian}`, {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
                 body: formData

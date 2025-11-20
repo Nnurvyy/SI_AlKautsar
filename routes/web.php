@@ -12,6 +12,9 @@ use App\Http\Controllers\InfaqJumatController;
 use App\Http\Controllers\BarangInventarisController;
 use App\Http\Controllers\LapKeuController;
 use App\Http\Controllers\QurbanController;
+use App\Http\Controllers\PengaturanController;
+
+
 use App\Http\Controllers\KajianController; 
 use App\Http\Controllers\ProgramDonasiController;
 use App\Http\Controllers\DonasiController;
@@ -26,7 +29,6 @@ use App\Http\Controllers\TransaksiDonasiController; // <--- WAJIB ADA: Import Co
 */
 
 Route::get('/', [PublicController::class, 'landingPage'])->name('public.landing');
-
 Route::get('/jadwal-khotib', [PublicController::class, 'jadwalKhotib'])->name('public.jadwal-khotib');
 Route::get('/jadwal-kajian', [PublicController::class, 'jadwalKajian'])->name('public.jadwal-kajian');
 Route::get('/artikel', [PublicController::class, 'artikel'])->name('public.artikel');
@@ -46,25 +48,46 @@ Route::get('/api/jadwal-adzan', [PublicController::class, 'jadwalAdzanApi'])->na
 | Rute Autentikasi
 |--------------------------------------------------------------------------
 */
+// Halaman Welcome
 Route::get('/welcome', [AuthController::class, 'showWelcomeForm'])->name('auth.welcome');
+
+// Halaman Sign In (Form Login)
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'loginProcess']);
+// Proses Login (Email/Pass)
+Route::post('/login', [AuthController::class, 'loginProcess']); // Sudah di-update di AuthController
+
+// Halaman Sign Up (Form Registrasi)
 Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register', [AuthController::class, 'registerProcess']);
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+// Proses Registrasi
+Route::post('/register', [AuthController::class, 'registerProcess']); // Sudah di-update di AuthController
+
+// Rute Logout
+// Middleware 'auth' dihapus, controller akan menangani logout (jamaah atau pengurus)
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// RUTE BARU: GOOGLE AUTH
+Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google.redirect');
+Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
 
 /*
 |--------------------------------------------------------------------------
-| Rute ADMIN (Berbasis Desktop)
+| Rute PENGURUS (Dashboard Admin)
 |--------------------------------------------------------------------------
+|
+| Dilindungi oleh middleware 'auth:pengurus'.
+| Prefix 'pengurus' dan nama 'pengurus.'
+|
 */
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+// GANTI: middleware(['auth', 'role:admin']) -> middleware('auth:pengurus')
+// GANTI: prefix('admin') -> prefix('pengurus')
+// GANTI: name('admin.') -> name('pengurus.')
+Route::middleware(['auth:pengurus'])->prefix('pengurus')->name('pengurus.')->group(function () {
 
-    // Dashboard
+    // Dashboard (URL: /pengurus/dashboard)
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 
-    // Pemasukan
+    // Pemasukan (URL: /pengurus/pemasukan)
     Route::resource('pemasukan', PemasukanController::class);
     Route::resource('kategori-pemasukan', PemasukanKategoriController::class);
 
@@ -95,6 +118,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('kajian', KajianController::class);
     Route::get('kajian-data', [KajianController::class, 'data'])->name('kajian.data');
 
+
+    // ... (Tambahkan rute pengurus lainnya di sini) ...
     // Program Donasi (Master Data)
     Route::resource('program-donasi', ProgramDonasiController::class);
     Route::get('program-donasi-data', [ProgramDonasiController::class, 'data'])->name('program-donasi.data');
@@ -113,14 +138,32 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('pemasukan-qurban', PemasukanTabunganQurbanController::class)
         ->parameter('pemasukan-qurban', 'id');
 
+
+    Route::get('/settings', [PengaturanController::class, 'edit'])->name('settings.edit');
+    Route::post('/settings', [PengaturanController::class, 'update'])->name('settings.update');
+
 });
 
 
 /*
 |--------------------------------------------------------------------------
-| Rute PUBLIK (Sudah Login)
+| Rute JAMAAH (Publik yang Sudah Login)
 |--------------------------------------------------------------------------
+|
+| Dilindungi oleh middleware 'auth:jamaah'.
+| GANTI: middleware(['auth', 'role:publik']) -> middleware('auth:jamaah')
+| GANTI: name('public.') -> name('jamaah.')
+|
 */
-Route::middleware(['auth', 'role:publik'])->name('public.')->group(function () {
+Route::middleware(['auth:jamaah'])->name('jamaah.')->group(function () {
+
+    // URL: /qurban-saya (Name: jamaah.qurban)
     Route::get('/qurban-saya', [QurbanController::class, 'index'])->name('qurban');
+
+    // ... (Tambahkan rute 'jamaah' terotentikasi lainnya di sini) ...
+
 });
+
+Route::get('/jadwal-adzan', [PublicController::class, 'jadwalAdzan'])->name('public.jadwal-adzan');
+Route::get('/api/jadwal-adzan', [PublicController::class, 'jadwalAdzanApi'])->name('public.jadwal-adzan.api');
+

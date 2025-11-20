@@ -13,6 +13,17 @@
         color: #333;
         margin-bottom: 0.5rem;
     }
+
+    /* =================================================
+      PERUBAHAN 1: Menambahkan style untuk subtitle
+      =================================================
+    */
+    .donasi-title-sub {
+        font-size: 1rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+    }
+
     /* Card Header Info User */
     .user-summary-card {
         background: linear-gradient(45deg, #0d6efd, #0b5ed7);
@@ -185,13 +196,21 @@
         font-size: 0.9rem;
         vertical-align: middle;
     }
-    .table-qurban .nominal {
-        font-weight: 600;
-        color: #198754; /* Hijau */
-    }
-
-</style>
-@endpush
+        .table-qurban .nominal { 
+            font-weight: 600; 
+            color: #198754; /* Hijau */ 
+        }
+    
+        @media (min-width: 992px) {
+            .qurban-desktop-grid {
+                display: grid;
+                grid-template-columns: 1fr 400px;
+                gap: 2rem;
+                align-items: start;
+            }
+        }
+                                                                            
+    </style>@endpush
 
 @section('content')
 
@@ -255,128 +274,158 @@
 {{-- DATA DUMMY BERAKHIR DI SINI --}}
 
 
-<div class="p-3">
-
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2 class="donasi-title-heading">Tabungan Qurban Saya</h2>
-        </div>
-    </div>
-
-    {{-- 1. KARTU INFO USER (Total terkumpul dari data olahan) --}}
-    <div class="card user-summary-card p-3 mb-4">
-        <span class="user-name mb-2">{{ $namaUser }}</span>
-        <span class="total-label">Total Aset Qurban Anda</span>
-        <span class="total-amount">Rp {{ number_format($totalTerkumpul, 0, ',', '.') }}</span>
-    </div>
-
-    <h6 class="fw-bold mb-3">Ringkasan Tabungan Anda</h6>
-    
-    {{-- 2. KARTU DETAIL (SEKARANG HANYA 1) --}}
-    <div class="qurban-card-detail">
-        {{-- HEADER KARTU: IKON, JENIS HEWAN, STATUS --}}
-        <div class="qurban-card-header">
-            
-            {{-- (BARU) Menampilkan ikon berdasarkan jumlah --}}
-            <div class="hewan-icon-wrapper">
-                @if($jumlahKambing > 0)
-                    <i class="bi bi-sheep hewan-icon icon-kambing"></i>
-                @endif
-                @if($jumlahSapi > 0)
-                    <i class="bi bi-cow hewan-icon icon-sapi"></i>
-                @endif
-            </div>
-            
-            <div style="flex: 1;">
-                {{-- (BARU) Menampilkan ringkasan string --}}
-                <h5 class="hewan-title">{{ $ringkasanHewanString }}</h5>
-                <small class="text-muted">Total Target: Rp {{ number_format($totalTarget, 0, ',', '.') }}</small>
-            </div>
-            
-            <div class="text-end">
-                {{-- (BARU) Status berdasarkan total kekurangan --}}
-                <span class="status-badge {{ $totalKekurangan > 0 ? 'status-menabung' : 'status-lunas' }}">
-                    {{ $totalKekurangan > 0 ? 'Menabung' : 'Lunas' }}
-                </span>
-            </div>
-        </div>
-
-        {{-- BODY KARTU: PROGRESS, STATS, KEKURANGAN --}}
-        <div class="qurban-card-body">
-            
-            <div class="stats-row">
-                <span class="label">Terkumpul</span>
-                <span class="amount">Rp {{ number_format($totalTerkumpul, 0, ',', '.') }}</span>
-            </div>
-
-            <div class="progress mb-2" role="progressbar" aria-valuenow="{{ $persentase }}" aria-valuemin="0" aria-valuemax="100">
-                <div class="progress-bar" style="width: {{ $persentase }}%"></div>
-            </div>
-
-            <div class="stats-row">
-                <span class="label fst-italic">{{ number_format($persentase, 1) }}% tercapai</span>
-                <span class="label">Target</span>
-            </div>
-
-            {{-- (BARU) BOX TENOR & SISA BULAN --}}
-            <div class="tenor-box">
-                <div class="tenor-item">
-                    <span class="label">Tenor</span>
-                    <span class="value">
-                        <i class="bi bi-calendar-check me-1"></i>{{ $tenorBulan }} Bulan
-                    </span>
-                </div>
-                <div class="tenor-item">
-                    <span class="label">Sisa Waktu</span>
-                    <span class="value">
-                        <i class="bi bi-hourglass-split me-1"></i>{{ $sisaBulan }} Bulan
-                    </span>
-                </div>
-            </div>
-
-            {{-- Box kekurangan (berdasarkan total) --}}
-            @if($totalKekurangan > 0)
-            <div class="kekurangan-box">
-                <span class="kekurangan-label">Total Kekurangan</span>
-                <div class="kekurangan-amount">
-                    Rp {{ number_format($totalKekurangan, 0, ',', '.') }}
-                </div>
-            </div>
-            @endif
-
-            {{-- (BARU) TABEL RIWAYAT (HANYA 1) --}}
-            <h6 class="fw-bold mt-4 mb-2">Semua Riwayat Setoran</h6>
-            <div class="table-responsive-qurban">
-                <table class="table table-striped table-qurban">
-                    <thead>
-                        <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">Tanggal</th>
-                            <th scope="col" class="text-end">Nominal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{-- (BARU) Loop ke data gabungan --}}
-                        @forelse($semuaRiwayatSetoran as $setoran)
-                        <tr>
-                            <td>{{ $loop->iteration }}</td>
-                            <td>{{ \Carbon\Carbon::parse($setoran->tanggal)->format('d M Y') }}</td>
-                            <td class="text-end nominal">
-                                + Rp {{ number_format($setoran->nominal, 0, ',', '.') }}
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="3" class="text-center text-muted p-3">
-                                Belum ada riwayat setoran.
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-        </div>
+{{-- 
+  =================================================
+  PERUBAHAN 2: Mengganti <div class="p-3"> 
+  menjadi <div class="container"> untuk Judul
+  =================================================
+--}}
+<div class="container pt-4 pb-3"> 
+    <div class="row"> 
+        <div class="col-12"> 
+            <h2 class="donasi-title-heading">Tabungan Qurban Saya</h2> 
+            {{-- 
+              =================================================
+              PERUBAHAN 1: Menambahkan subtitle
+              =================================================
+            --}}
+            <p class="donasi-title-sub">Wujudkan niat qurban Anda bersama kami.</p>
+        </div> 
     </div>
 </div>
+
+{{-- 
+  =================================================
+  PERUBAHAN 2: Menambahkan <div class="container"> 
+  untuk membungkus konten utama
+  =================================================
+--}}
+<div class="container">
+    <div class="qurban-desktop-grid">
+        <div class="qurban-main-content">
+                                                                
+            {{-- 1. KARTU INFO USER (Total terkumpul dari data olahan) --}} 
+            <div class="card user-summary-card p-3 mb-4"> 
+                <span class="user-name mb-2">{{ $namaUser }}</span>
+                <span class="total-label">Total Aset Qurban Anda</span>
+                <span class="total-amount">Rp {{ number_format($totalTerkumpul, 0, ',', '.') }}</span>
+            </div>
+
+            <h6 class="fw-bold mb-3">Ringkasan Tabungan Anda</h6>
+    
+            {{-- 2. KARTU DETAIL (SEKARANG HANYA 1) --}}
+            <div class="qurban-card-detail">
+                {{-- HEADER KARTU: IKON, JENIS HEWAN, STATUS --}}
+                <div class="qurban-card-header">
+                    
+                    {{-- (BARU) Menampilkan ikon berdasarkan jumlah --}}
+                    <div class="hewan-icon-wrapper">
+                        @if($jumlahKambing > 0)
+                            <i class="bi bi-sheep hewan-icon icon-kambing"></i>
+                        @endif
+                        @if($jumlahSapi > 0)
+                            <i class="bi bi-cow hewan-icon icon-sapi"></i>
+                        @endif
+                    </div>
+                    
+                    <div style="flex: 1;">
+                        {{-- (BARU) Menampilkan ringkasan string --}}
+                        <h5 class="hewan-title">{{ $ringkasanHewanString }}</h5>
+                        <small class="text-muted">Total Target: Rp {{ number_format($totalTarget, 0, ',', '.') }}</small>
+                    </div>
+                    
+                    <div class="text-end">
+                        {{-- (BARU) Status berdasarkan total kekurangan --}}
+                        <span class="status-badge {{ $totalKekurangan > 0 ? 'status-menabung' : 'status-lunas' }}">
+                            {{ $totalKekurangan > 0 ? 'Menabung' : 'Lunas' }}
+                        </span>
+                    </div>
+                </div>
+
+                {{-- BODY KARTU: PROGRESS, STATS, KEKURANGAN --}}
+                <div class="qurban-card-body">
+                    
+                    <div class="stats-row">
+                        <span class="label">Terkumpul</span>
+                        <span class="amount">Rp {{ number_format($totalTerkumpul, 0, ',', '.') }}</span>
+                    </div>
+
+                    <div class="progress mb-2" role="progressbar" aria-valuenow="{{ $persentase }}" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar" style="width: {{ $persentase }}%"></div>
+                    </div>
+
+                    <div class="stats-row">
+                        <span class="label fst-italic">{{ number_format($persentase, 1) }}% tercapai</span>
+                        <span class="label">Target</span>
+                    </div>
+
+                    {{-- (BARU) BOX TENOR & SISA BULAN --}}
+                    <div class="tenor-box">
+                        <div class="tenor-item">
+                            <span class="label">Tenor</span>
+                            <span class="value">
+                                <i class="bi bi-calendar-check me-1"></i>{{ $tenorBulan }} Bulan
+                            </span>
+                        </div>
+                        <div class="tenor-item">
+                            <span class="label">Sisa Waktu</span>
+                            <span class="value">
+                                <i class="bi bi-hourglass-split me-1"></i>{{ $sisaBulan }} Bulan
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- Box kekurangan (berdasarkan total) --}}
+                    @if($totalKekurangan > 0)
+                    <div class="kekurangan-box">
+                        <span class="kekurangan-label">Total Kekurangan</span>
+                        <div class="kekurangan-amount">
+                            Rp {{ number_format($totalKekurangan, 0, ',', '.') }}
+                        </div>
+                    </div>
+                            @endif
+                    
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="qurban-sidebar">
+                    <div class="card" style="border-radius: 12px; overflow: hidden;">
+                        <div class="card-header fw-bold">
+                            Semua Riwayat Setoran
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive-qurban" style="max-height: 550px;">
+                                <table class="table table-striped table-qurban mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">#</th>
+                                            <th scope="col">Tanggal</th>
+                                            <th scope="col" class="text-end">Nominal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($semuaRiwayatSetoran as $setoran)
+                                        <tr>
+                                            <td>{{ $loop->iteration }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($setoran->tanggal)->format('d M Y') }}</td>
+                                            <td class="text-end nominal">
+                                                + Rp {{ number_format($setoran->nominal, 0, ',', '.') }}
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="3" class="text-center text-muted p-3">
+                                                Belum ada riwayat setoran.
+                                            </td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+</div> {{-- Penutup <div class="container"> --}}
 @endsection

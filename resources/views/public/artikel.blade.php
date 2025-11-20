@@ -85,13 +85,26 @@
         text-decoration: none;
         transition: background-color 0.2s ease;
     }
-    .btn-artikel:hover {
-        background-color: #0b5ed7; /* Biru lebih gelap saat hover */
-        color: #ffffff;
-    }
-
-</style>
-@endpush
+        .btn-artikel:hover {                                                                 
+            background-color: #0b5ed7; /* Biru lebih gelap saat hover */                     
+            color: #ffffff;                                                                  
+        }
+    
+        @media (min-width: 768px) {
+            .artikel-list-wrapper {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+        }
+    
+        @media (min-width: 992px) {
+            .artikel-list-wrapper {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+                                                                                             
+    </style>@endpush
 
 @section('content')
 

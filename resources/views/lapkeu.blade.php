@@ -14,7 +14,7 @@
         </div>
         <div class="card-body">
             
-            <form action="{{ route('admin.lapkeu.export.pdf') }}" method="GET" target="_blank">
+            <form action="{{ route('pengurus.lapkeu.export.pdf') }}" method="GET" target="_blank">
                 
                 <div class="row g-3 align-items-end mb-3">
                     

@@ -154,7 +154,7 @@
         /* Batasi 2 baris */
         display: -webkit-box;
         -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;  
+        -webkit-box-orient: vertical; 	
         overflow: hidden;
     }
     /* Style untuk Badge di card list */
@@ -181,17 +181,30 @@
         color: white;
         text-decoration: none;
     }
-    .program-list-card .btn-detail-small:hover {
-        background-color: #0b5ed7;
-        border-color: #0b5ed7;
-    }
-
-</style>
-@endpush
+        .program-list-card .btn-detail-small:hover { 
+            background-color: #0b5ed7; 
+            border-color: #0b5ed7; 
+        }
+    
+        @media (min-width: 768px) {
+            .program-list-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+        }
+    
+        @media (min-width: 992px) {
+            .program-list-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+                                                                            
+    </style>@endpush
 
 @section('content')
 
-{{-- 1. JUDUL HALAMAN --}}
+{{-- 1. JUDUL HALAMAN (Sudah di dalam container) --}}
 <div class="container pt-4 pb-3">
     <h2 class="program-title-heading">
         Program & Workshop
@@ -201,8 +214,13 @@
     </p>
 </div>
 
-{{-- 2. SWIPER --}}
-<div class="py-0">
+{{-- 
+    =================================================
+    PERUBAHAN: Mengganti <div class="py-0"> 
+    menjadi <div class="container">
+    =================================================
+--}}
+<div class="container">
     <div class="swiper-container-wrapper">
         <div class="swiper program-swiper">
             <div class="swiper-wrapper">
@@ -257,14 +275,14 @@
 </div>
 
 
-{{-- 3. DAFTAR CARD PROGRAM (BARU DITAMBAHKAN) --}}
-<div class="container mt-3">
+{{-- 3. DAFTAR CARD PROGRAM (Sudah di dalam container) --}} 
+<div class="container mt-3"> 
     
-    {{-- Nanti Anda bisa loop @forelse($semuaProgram as $program) di sini --}}
-
-    {{-- CARD 1 --}}
-    <div class="card program-list-card">
-        <div class="row g-0">
+    <div class="program-list-grid">
+    {{-- Nanti Anda bisa loop @forelse($semuaProgram as $program) di sini --}} 
+    
+    {{-- CARD 1 --}} 
+    <div class="card program-list-card"> <div class="row g-0">
             <div class="col-4">
                 <img src="https://via.placeholder.com/800x600/27ae60/ffffff?text=Workshop+1" class="card-img" alt="Workshop 1">
             </div>
@@ -364,25 +382,40 @@
     <div class="alert alert-info text-center">
         Belum ada program atau workshop yang tersedia saat ini.
     </div>
-    @endforelse --}}
-
-</div>
-@endsection
+        @endforelse --}} 
+        </div> 
+        
+    </div>@endsection
 
 @push('scripts')
 {{-- Script tidak perlu diubah --}}
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        new Swiper('.program-swiper', {
-            slidesPerView: 1,
-            spaceBetween: 0,
-            loop: true, 
-            navigation: {
-                nextEl: '.program-button-next',
-                prevEl: '.program-button-prev',
-            },
-        });
-    });
+            new Swiper('.program-swiper', { 
+                slidesPerView: 1, 
+                spaceBetween: 15, 
+                loop: true, 
+                navigation: { 
+                    nextEl: '.program-button-next', 
+                    prevEl: '.program-button-prev', 
+                },
+                breakpoints: {
+                    768: {
+                        slidesPerView: 2,
+                        spaceBetween: 20
+                    },
+                    992: {
+                        slidesPerView: 2.5,
+                        centeredSlides: true,
+                        spaceBetween: 30
+                    },
+                    1200: {
+                        slidesPerView: 3,
+                        centeredSlides: true,
+                        spaceBetween: 30
+                    }
+                }
+            }); 	});
 </script>
 @endpush
