@@ -47,7 +47,7 @@
             <div class="table-responsive">
                 <table class="table table-hover align-middle" id="tabelKhotib">
                     <thead class="table-light">
-                        <tr> 
+                        <tr>
                             <th scope="col" style="width: 5%;" class="text-center">No</th>
                             <th scope="col" style="width: 10%;" class="text-center">Foto</th>
                             <th scope="col">Nama Khotib</th>
@@ -117,7 +117,7 @@
           <div class="mb-3">
             <label for="tema_khutbah" class="form-label">Tema Khutbah <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="tema_khutbah" name="tema_khutbah">
-          </div>
+          </div>    
           <div class="mb-3">
             <label for="tanggal" class="form-label">Tanggal <span class="text-danger">*</span></label>
             <input type="date" class="form-control" id="tanggal" name="tanggal">

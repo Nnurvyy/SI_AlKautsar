@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Keuangan;
 use App\Models\KategoriKeuangan;
 use Illuminate\Http\Request;
+use App\Models\Pemasukan;
+use App\Models\KategoriPemasukan;
+use App\Models\Donasi; 
+use Illuminate\Support\Facades\Log;
 
 class PemasukanController extends Controller
 {

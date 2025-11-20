@@ -5,7 +5,7 @@
     </div>
 
     <!-- ====================================================== -->
-    <!--       SEMUA 'admin.' DIGANTI JADI 'pengurus.'          -->
+    <!--       SEMUA 'pengurus.' DIGANTI JADI 'pengurus.'          -->
     <!-- ====================================================== -->
 
     <ul class="nav nav-pills flex-column mb-auto">
@@ -42,9 +42,9 @@
             </a>
         </li>
 
-        {{-- GRAFIK (Belum ada rute di web.php, biarkan #) --}}
+
         <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="{{ route('pengurus.grafik.index') }}" class="nav-link {{ request()->routeIs('pengurus.grafik.*') ? 'active' : '' }}">
                 <i class="bi bi-graph-up"></i> Grafik
             </a>
         </li>
@@ -88,17 +88,16 @@
                 <i class="bi bi-wallet"></i> Tabungan Hewan Qurban
             </a>
         </li>
-
-        {{-- PROGRAM & DONASI (Belum ada rute di web.php) --}}
-        <li class="nav-item">
-            <a href="#" class="nav-link">
-                <i class="bi bi-graph-up"></i> Program
-            </a>
-        </li>
         <li class="nav-item">
             <a href="{{ route('pengurus.donasi.index') }}"
                class="nav-link {{ request()->routeIs('pengurus.donasi.*') ? 'active' : '' }}">
                 <i class="bi bi-graph-up"></i> Donasi
+            <a href="{{ route('pengurus.artikel.index') }}" class="nav-link {{ request()->routeIs('pengurus.artikel.*') ? 'active' : '' }}">
+                <i class="bi bi-newspaper"></i> Artikel
+            </a>
+        </li><li class="nav-item">
+            <a href="{{ route('pengurus.program.index') }}" class="nav-link {{ request()->routeIs('pengurus.program.*') ? 'active' : '' }}">
+                <i class="bi bi-calendar-event"></i> Program
             </a>
         </li>
     </ul>
@@ -107,8 +106,7 @@
         <form action="{{ route('logout') }}" method="POST">
             @csrf
             <button type="submit" class="logout-btn">
-                <i class="bi bi-box-arrow-left me-2"></i>
-                Keluar
+                <i class="bi bi-box-arrow-left me-2"></i> Keluar
             </button>
         </form>
     </div>

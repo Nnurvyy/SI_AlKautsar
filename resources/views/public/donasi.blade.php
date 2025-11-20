@@ -241,7 +241,10 @@
                                                                         
 </style>@endpush
 
-@section('content')
+                    <!-- Gambar -->
+                    <img src="{{ $program->gambar_url }}" 
+                         class="card-img-top rounded-top-4"
+                         style="height: 220px; object-fit: cover;">
 
 {{-- Ini sudah di dalam container, jadi ada jarak --}}
 <div class="container pt-4 pb-3">
@@ -264,51 +267,21 @@
         <div class="swiper donasi-swiper">
             <div class="swiper-wrapper">
 
-                {{-- Nanti Anda bisa loop @forelse($programDonasi as $donasi) di sini --}}
+                        <p class="text-muted small">
+                            {{ Str::limit($program->deskripsi, 80) }}
+                        </p>
 
-                <div class="swiper-slide">
-                    <div class="donation-slide">
-                        <img src="{{ asset('images/donasi/pembangunan-masjid.jpg') }}" alt="Pembangunan Masjid"
-                            class="donation-slide-img">
-                        <div class="donation-slide-overlay"></div>
-                        <div class="donation-slide-content">
-                            <h5>PEMBANGUNAN MASJID</h5>
-                            <p>Bantu perluasan dan renovasi masjid untuk kenyamanan ibadah jamaah.</p>
-                            <a href="#" class="btn">
-                                <i class="bi bi-wallet2 me-2"></i>Donasi Sekarang
-                            </a>
+                        <!-- Progress Bar -->
+                        <div class="progress mb-2" style="height: 10px;">
+                            <div class="progress-bar" 
+                                 role="progressbar" 
+                                 style="width: {{ $program->persentase }}%;"></div>
                         </div>
-                    </div>
-                </div>
 
-                <div class="swiper-slide">
-                    <div class="donation-slide">
-                        <img src="{{ asset('images/donasi/yatim.jpeg') }}" alt="Yatim & Dhuafa"
-                            class="donation-slide-img">
-                        <div class="donation-slide-overlay"></div>
-                        <div class="donation-slide-content">
-                            <h5>YATIM & DHUAFA</h5>
-                            <p>Salurkan sedekah Anda untuk program santunan anak yatim dan dhuafa di sekitar masjid.</p>
-                            <a href="#" class="btn">
-                                <i class="bi bi-wallet2 me-2"></i>Donasi Sekarang
-                            </a>
+                        <div class="d-flex justify-content-between small text-muted mb-3">
+                            <span>Terkumpul: Rp {{ number_format($program->dana_terkumpul) }}</span>
+                            <span>{{ $program->persentase }}%</span>
                         </div>
-                    </div>
-                </div>
-                
-                <div class="swiper-slide">
-                    <div class="donation-slide">
-                        <img src="https://via.placeholder.com/800x600/4682B4/ffffff?text=Operasional+Masjid" class="donation-slide-img" alt="Operasional Masjid">
-                        <div class="donation-slide-overlay"></div>
-                        <div class="donation-slide-content">
-                            <h5>OPERASIONAL MASJID</h5>
-                            <p>Dukung kegiatan dakwah dan biaya operasional masjid agar tetap makmur.</p>
-                            <a href="#" class="btn">
-                                <i class="bi bi-wallet2 me-2"></i>Donasi Sekarang
-                            </a>
-                        </div>
-                    </div>
-                </div>
 
             </div>
             </div>
@@ -369,24 +342,6 @@
         </div>
     </div>
 
-    <div class="card donation-list-card">
-        <div class="row g-0">
-            <div class="col-4">
-                <img src="https://via.placeholder.com/800x600/4682B4/ffffff?text=Operasional+Masjid" class="card-img" alt="Operasional Masjid">
-            </div>
-            <div class="col-8">
-                <div class="card-body">
-                    <h5 class="card-title">OPERASIONAL MASJID</h5>
-                    <div>
-                        <div class="progress-label">Terkumpul</div>
-                        <div class="progress-amount">Rp 5.000.000</div>
-                        <div class="progress" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
-                            <div class="progress-bar" style="width: 25%"></div>
-                        </div>
-                        <div class="progress-footer">
-                            <div class="days-left"><span>Sisa:</span> 45 hari</div>
-                            <a href="#" class="btn btn-donasi-small">Donasi</a>
-                        </div>
                     </div>
                 </div>
             </div>

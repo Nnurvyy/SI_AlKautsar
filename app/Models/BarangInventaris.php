@@ -20,7 +20,7 @@ class BarangInventaris extends Model
     protected $keyType = 'string';
 
     // Nama Primary Key (WAJIB)
-    protected $primaryKey = 'id_barang'; 
+    protected $primaryKey = 'id_barang';
     // Catatan: Model akan secara otomatis mengisi UUID saat create/store berkat HasUuids
 
     /**

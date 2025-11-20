@@ -12,6 +12,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
+    <!-- ================================== -->
+    <!-- == TAMBAHAN CSS UNTUK DATATABLES == -->
+    <link href="https://cdn.datatables.net/2.0.10/css/dataTables.bootstrap5.css" rel="stylesheet">
+    <!-- ================================== -->
+
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     @stack('styles')
 
@@ -38,7 +43,7 @@
                     <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <div class="user-avatar me-2">A</div>
                         <div>
-                            <div class="fw-bold">{{ Auth::user()->name }}</div>
+                            <div class="fw-bold">{{ Auth::user()->nama }}</div> <!-- Ganti jadi 'nama' -->
                             <div class="small text-muted">{{ Auth::user()->email }}</div>
                         </div>
                     </a>
@@ -71,7 +76,14 @@
         </div>
     </div>
 
+    <!-- ================================== -->
+    <!-- == TAMBAHAN JS UNTUK JQUERY & DATATABLES == -->
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/2.0.10/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.0.10/js/dataTables.bootstrap5.js"></script>
+    <!-- ================================== -->
+
 
     <script>
         // Ambil elemen-elemen
@@ -86,13 +98,10 @@
 
             sidebar.classList.toggle('toggled');
 
-            // Di desktop, kita geser konten.
-            // Di mobile, kita TIDAK geser konten (karena overlay).
             if (!isMobile) {
                 mainContent.classList.toggle('toggled');
             }
 
-            // Tampilkan/sembunyikan backdrop HANYA di mobile
             if (isMobile) {
                 backdrop.classList.toggle('show');
             }
@@ -114,7 +123,6 @@
         navLinks.forEach(function(link) {
             link.addEventListener('click', function() {
                 const isMobile = window.innerWidth < 992;
-                // Hanya tutup jika sidebar sedang terbuka dan di mobile
                 if (sidebar.classList.contains('toggled') && isMobile) {
                     toggleSidebar();
                 }
@@ -133,7 +141,7 @@
         }
     </script>
 
-    @stack('scripts')
+    @stack('scripts') <!-- Ini akan memuat program-donasi.js -->
 
 </body>
 </html>

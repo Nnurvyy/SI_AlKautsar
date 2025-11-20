@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Keuangan;
 use App\Models\KategoriKeuangan;
 use Illuminate\Http\Request;
+use App\Models\Pengeluaran;
+use App\Models\KategoriPengeluaran;
 
 class PengeluaranController extends Controller
 {
