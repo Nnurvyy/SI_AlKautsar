@@ -129,12 +129,13 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middl
             ->parameter('pemasukan-qurban', 'id');
 
         // Artikel
-        Route::get('artikel-data', [ArtikelController::class, 'data'])->name('artikel.data');
+        Route::get('artikel-data', [ArtikelController::class, 'artikelData'])->name('artikel.data');
+        Route::get('artikel-data/{id}', [ArtikelController::class, 'artikelData'])->name('artikel.detail');
         Route::resource('artikel', ArtikelController::class)->names([
-            'store' => 'artikel.store', // Timpa nama store
-            // Timpa semua nama lain yang dibutuhkan jika diperlukan
+            'store' => 'artikel.store', 
             'index' => 'artikel.index', 
             'update' => 'artikel.update',
+            'destroy' => 'artikel.destroy', // Tambahkan ini juga
             // ...
         ]);
         

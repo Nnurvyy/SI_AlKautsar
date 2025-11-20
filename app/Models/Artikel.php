@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str; // Diperlukan untuk Str::uuid()
-use Carbon\Carbon; // Dipertahankan (walau tidak dipakai langsung, berguna untuk casts)
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class Artikel extends Model
 {
@@ -41,6 +41,8 @@ class Artikel extends Model
 
     /**
      * Kolom-kolom yang dapat diisi secara massal (mass assignable).
+     * Telah diperbarui: 'foto_artikel' diganti menjadi 'foto_url' (sesuai kolom database).
+     * 'last_update_artikel' dihapus, biarkan timestamps Laravel yang menangani.
      *
      * @var array<int, string>
      */
@@ -48,11 +50,11 @@ class Artikel extends Model
         'judul_artikel',
         'isi_artikel',
         'penulis_artikel',
-        'foto_artikel',
+        'foto_artikel', // ← ganti balik ke nama kolom migration
         'tanggal_terbit_artikel',
-        'last_update_artikel',
         'status_artikel',
     ];
+
 
     /**
      * Kolom-kolom yang harus diubah ke tipe data tertentu (Casting).
@@ -60,18 +62,16 @@ class Artikel extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'tanggal_terbit_artikel' => 'date',
+        'tanggal_terbit_artikel' => 'date:d-m-y',
         'last_update_artikel' => 'date',
     ];
+    
+    // Nonaktifkan default timestamps (created_at dan updated_at) jika tabel Anda tidak memilikinya
+    // public $timestamps = false; 
+    // CATATAN: Jika Anda menggunakan last_update_artikel, nonaktifkan $timestamps dan 
+    // pastikan kolom tersebut diisi di controller, atau gunakan updated_at.
 
-    /**
-     * Accessor yang akan ditambahkan ke array output model.
-     * Hanya menyertakan 'foto_url'.
-     *
-     * @var array
-     */
-    protected $appends = ['foto_url'];
-
+    
     // --- Booting Method untuk UUID ---
 
     /**
@@ -93,12 +93,13 @@ class Artikel extends Model
      * Accessor untuk 'foto_url'
      * Mendapatkan URL lengkap untuk foto artikel.
      */
-    public function getFotoUrlAttribute()
+    public function getFotoArtikelAttribute($value)
     {
-        // Sesuaikan 'images/default_artikel.png' jika nama file default berbeda
-        return $this->foto_artikel
-            ? asset('storage/' . $this->foto_artikel)
-            : asset('images/default_artikel.png');
+        return $value ? asset('storage/' . $value) 
+                    : asset('images/default_artikel.png');
     }
+
+    
+
 
 }

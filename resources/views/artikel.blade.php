@@ -70,65 +70,58 @@
     </div>
 </div>
 
-<!-- Modal Form -->
-<div class="modal fade" id="modalKhotib" tabindex="-1">
-  <div class="modal-dialog">
+<!-- Modal Detail Artikel -->
+<div class="modal fade" id="modalDetailArtikel" tabindex="-1" aria-labelledby="detailArtikelLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
     <div class="modal-content">
-      <form id="formKhotib" enctype="multipart/form-data">
-        
-        <input type="hidden" id="id_khutbah" name="id_khutbah">
 
-        <div class="modal-header">
-          <h5 class="modal-title">Tambah Khutbah Jumat</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
+      <div class="modal-header py-2">
+        <h5 class="modal-title fw-bold">Detail Artikel: <span id="detailJudulArtikel"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
 
-        <div class="modal-body">
-          
-          <div class="mb-3">
-            <label for="foto_khotib" class="form-label">Foto</label>
-            <input type="file" class="d-none" id="foto_khotib" name="foto_khotib" accept="image/*">
-            <div class="position-relative">
-                <label for="foto_khotib" id="foto_khotib_label" class="form-control d-block text-truncate" style="cursor: pointer;">
-                    <span class="text-muted">Choose file...</span>
-                </label>
-                <button type="button" class="btn position-absolute d-none" id="clearFile" title="Hapus foto" 
-                        style="top: 50%; right: 0.3rem; transform: translateY(-50%); z-index: 5; padding: 0 0.5rem; font-size: 1.2rem; color: #6c757d; line-height: 1; background: transparent; border: 0;">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
-            <div id="previewContainer" class="position-relative d-none mt-2">
-                <img id="previewFoto"
-                    class="rounded mt-2 mx-auto d-block"
-                    style="width: 200px; height: 200px; object-fit: cover;">
-            </div>
-          </div>
-          <div class="mb-3">
-            <label for="nama_khotib" class="form-label">Nama Khotib <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="nama_khotib" name="nama_khotib">
-          </div>
-          <div class="mb-3">
-            <label for="nama_imam" class="form-label">Nama Imam <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="nama_imam" name="nama_imam">
-          </div>
-          <div class="mb-3">
-            <label for="tema_khutbah" class="form-label">Tema Khutbah <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="tema_khutbah" name="tema_khutbah">
-          </div>
-          <div class="mb-3">
-            <label for="tanggal" class="form-label">Tanggal <span class="text-danger">*</span></label>
-            <input type="date" class="form-control" id="tanggal" name="tanggal">
-          </div>
-        </div>
+      <div class="modal-body">
+        <div class="row">
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-success">Simpan</button>
+          <!-- Foto -->
+          <div class="col-md-4 text-center mb-3">
+              <h6>Foto Artikel</h6>
+              <img id="detailFotoArtikel" src="#" class="img-fluid rounded shadow-sm"
+                   style="max-height: 250px; object-fit: cover;">
+          </div>
+
+          <!-- Tabel Data -->
+          <div class="col-md-8">
+              <table class="table table-sm table-striped table-bordered">
+                  <tbody>
+                      <tr><th>Judul</th><td id="d_judul"></td></tr>
+                      <tr><th>Penulis</th><td id="d_penulis"></td></tr>
+                      <tr><th>Status</th><td id="d_status_artikel"></td></tr>
+                      <tr><th>Tanggal Terbit</th><td id="d_tanggal_terbit"></td></tr>
+                  </tbody>
+              </table>
+          </div>
+
+          <!-- Isi Artikel -->
+          <div class="col-12 mt-3">
+              <h6 class="fw-bold">Isi Artikel:</h6>
+              <div id="d_isi" class="p-3 border rounded bg-light"></div>
+          </div>
+
         </div>
-      </form>
+      </div>
+
+      <div class="modal-footer py-2">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+      </div>
+
     </div>
   </div>
 </div>
+
+
+
+
 
 <style>
 
