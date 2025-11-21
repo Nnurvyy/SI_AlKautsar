@@ -3,47 +3,62 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use App\Models\InfaqJumat; // Pastikan Model sudah di-import
+use App\Models\Keuangan;
+use App\Models\KategoriKeuangan;
 use Illuminate\Validation\ValidationException;
 
 class InfaqJumatController extends Controller
 {
-    // Fungsi untuk menampilkan halaman utama infaq (view blade)
-    public function index()
+    private function getKategoriInfaq()
     {
-        // Ganti dengan nama view Blade Anda yang sebenarnya
-        return view('infaq-jumat'); 
+        return KategoriKeuangan::firstOrCreate(
+            ['nama_kategori_keuangan' => 'Infaq Jumat'],
+            ['tipe' => 'pemasukan'] // Opsional
+        );
     }
 
-    // Dipanggil oleh: GET /infaq-jumat-data (untuk tabel, search, sort, pagination)
+    public function index()
+    {
+        return view('infaq-jumat');
+    }
+
+    // ========== DATA TABLE ==========
     public function data(Request $request)
     {
-        $search = $request->get('search');
-        $sortBy = $request->get('sortBy', 'tanggal_infaq'); 
-        $sortDir = $request->get('sortDir', 'desc');       
-        $perPage = $request->get('perPage', 10);
-        
-        $query = InfaqJumat::query();
+        $search = $request->search;
+        $sortBy = $request->sortBy ?? 'tanggal';
+        $sortDir = $request->sortDir ?? 'desc';
+        $perPage = $request->perPage ?? 10;
 
-        // Logika Pencarian (Search)
+        $kategori = $this->getKategoriInfaq();
+
+        $query = Keuangan::where('id_kategori_keuangan', $kategori->id_kategori_keuangan);
+
+        // SEARCH
         if ($search) {
-            // Mencari berdasarkan tanggal infaq
-            $query->where('tanggal_infaq', 'LIKE', "%{$search}%")
-                  // Mencari berdasarkan nominal infaq
-                  ->orWhere('nominal_infaq', 'LIKE', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->where('tanggal', 'LIKE', "%$search%")
+                  ->orWhere('nominal', 'LIKE', "%$search%");
+            });
         }
 
-        // Logika Pengurutan (Sort)
         $query->orderBy($sortBy, $sortDir);
 
-        // Lakukan Pagination dan kembalikan data dalam format JSON
         $data = $query->paginate($perPage);
+
+        // Mapping kolom ke format JSON lama
+        $data->getCollection()->transform(function ($item) {
+            return [
+                'id_infaq_jumat' => $item->id_keuangan,
+                'tanggal_infaq'  => $item->tanggal,
+                'nominal_infaq'  => $item->nominal,
+            ];
+        });
 
         return response()->json($data);
     }
 
-    // Dipanggil oleh: POST /infaq-jumat (CREATE)
+    // ========== STORE ==========
     public function store(Request $request)
     {
         try {
@@ -52,39 +67,37 @@ class InfaqJumatController extends Controller
                 'nominal_infaq' => 'required|integer|min:0',
             ]);
 
-            InfaqJumat::create($validated);
-            
+            $kategori = $this->getKategoriInfaq();
+
+            Keuangan::create([
+                'tanggal' => $validated['tanggal_infaq'],
+                'nominal' => $validated['nominal_infaq'],
+                'tipe' => 'pemasukan',
+                'id_kategori_keuangan' => $kategori->id_kategori_keuangan,
+                'deskripsi' => 'Infaq Jumat'
+            ]);
+
             return response()->json(['message' => 'Data infaq berhasil ditambahkan!'], 201);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'message' => 'Validasi gagal',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-             return response()->json(['message' => 'Terjadi kesalahan server saat menyimpan.'], 500);
+        } 
+        catch (ValidationException $e) {
+            return response()->json(['message' => 'Validasi gagal', 'errors' => $e->errors()], 422);
         }
     }
 
-    // Dipanggil oleh: GET /infaq-jumat/{id} (READ untuk Edit)
-        public function show($id_infaq) 
+    // ========== SHOW ==========
+    public function show($id)
     {
-        // Menggunakan findOrFail untuk mengambil data berdasarkan Primary Key
-        $infaq = InfaqJumat::findOrFail($id_infaq);
-        
-        // PERBAIKAN: Mengambil nilai Primary Key yang benar (id_infaq_jumat) 
-        // dan melakukan pengecekan null sebelum format tanggal.
-        $idKey = $infaq->getKeyName();
-        $tanggalInfaq = $infaq->tanggal_infaq ? $infaq->tanggal_infaq->format('Y-m-d') : null;
+        $keu = Keuangan::findOrFail($id);
 
         return response()->json([
-            'id_infaq' => $infaq->{$idKey},
-            'tanggal_infaq' => $tanggalInfaq, // Tanggal diformat ke string YYYY-MM-DD
-            'nominal_infaq' => $infaq->nominal_infaq,
+            'id_infaq' => $keu->id_keuangan,
+            'tanggal_infaq' => $keu->tanggal,
+            'nominal_infaq' => $keu->nominal,
         ]);
     }
 
-    // Dipanggil oleh: PUT/PATCH /infaq-jumat/{id} (UPDATE)
-    public function update(Request $request, $id_infaq) // Menggunakan $id_infaq
+    // ========== UPDATE ==========
+    public function update(Request $request, $id)
     {
         try {
             $validated = $request->validate([
@@ -92,30 +105,26 @@ class InfaqJumatController extends Controller
                 'nominal_infaq' => 'required|integer|min:0',
             ]);
 
-            // Menggunakan $id_infaq untuk mencari data
-            $infaq = InfaqJumat::findOrFail($id_infaq);
-            $infaq->update($validated);
-            
+            $keu = Keuangan::findOrFail($id);
+
+            $keu->update([
+                'tanggal' => $validated['tanggal_infaq'],
+                'nominal' => $validated['nominal_infaq']
+            ]);
+
             return response()->json(['message' => 'Data infaq berhasil diubah!']);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'message' => 'Validasi gagal',
-                'errors' => $e->errors()
-            ], 422);
-        } catch (\Exception $e) {
-             return response()->json(['message' => 'Terjadi kesalahan server saat memperbarui.'], 500);
+        } 
+        catch (ValidationException $e) {
+            return response()->json(['message' => 'Validasi gagal', 'errors' => $e->errors()], 422);
         }
     }
 
-    // Dipanggil oleh: DELETE /infaq-jumat/{id} (DELETE)
-    public function destroy($id_infaq) // Menggunakan $id_infaq
+    // ========== DELETE ==========
+    public function destroy($id)
     {
-        try {
-            // Menggunakan $id_infaq untuk menghapus data
-            InfaqJumat::destroy($id_infaq);
-            return response()->json(['message' => 'Data infaq berhasil dihapus!']);
-        } catch (\Exception $e) {
-            return response()->json(['message' => 'Data tidak ditemukan atau terjadi kesalahan saat menghapus.'], 500);
-        }
+        $keu = Keuangan::findOrFail($id);
+        $keu->delete();
+
+        return response()->json(['message' => 'Data infaq berhasil dihapus!']);
     }
 }

@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPage: 1,
         search: '',
         perPage: 10,
-        sortBy: 'tanggal_infaq', // Asumsi kolom untuk sorting di DB
+        sortBy: 'tanggal', // Asumsi kolom untuk sorting di DB
         sortDir: 'desc',        
         searchTimeout: null     // Untuk debouncing search
     };
