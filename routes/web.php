@@ -38,7 +38,9 @@ Route::get('/jadwal-adzan', [PublicController::class, 'jadwalAdzan'])->name('pub
 Route::get('/artikel', [PublicController::class, 'artikel'])->name('public.artikel');
 Route::get('/artikel/detail/{id}', [PublicController::class, 'getArtikelDetail'])->name('public.artikel.detail');
 Route::get('/donasi', [PublicController::class, 'donasi'])->name('public.donasi');
+Route::get('/donasi/detail/{id}', [PublicController::class, 'getDonasiDetail'])->name('public.donasi.detail');
 Route::get('/program', [PublicController::class, 'program'])->name('public.program');
+Route::get('/program/detail/{id}', [PublicController::class, 'getProgramDetail'])->name('public.program.detail');
 
 Route::get('/khutbah-jumat', [PublicController::class, 'jadwalKhotib'])->name('public.jadwal-khotib');
 Route::get('/jadwal-kajian', [PublicController::class, 'jadwalKajian'])->name('public.jadwal-kajian');

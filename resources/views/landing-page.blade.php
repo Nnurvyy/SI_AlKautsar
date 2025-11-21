@@ -319,24 +319,6 @@
 
 @section('content')
 
-    <nav class="hero-top-nav">
-        <div class="container d-flex justify-content-between align-items-center px-4">
-            
-            <a class="navbar-brand" href="{{ url('/') }}">
-                Smart Masjid
-            </a>
-            
-            @guest
-                <a href="{{ route('login') }}" class="profile-icon">
-                    <i class="bi bi-box-arrow-in-right"></i>
-                </a>
-            @else
-                <a href="{{ route('public.landing') }}" class="profile-icon">
-                    <i class="bi bi-person-circle"></i> 
-                </a>
-            @endguest
-        </div>
-    </nav>
 
 
     <section class="hero-section" id="hero-section">

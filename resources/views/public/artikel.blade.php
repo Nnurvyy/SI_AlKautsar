@@ -125,21 +125,33 @@
     }
 
     /* STYLE MODAL DETAIL */
-    #modalDetailContent img {
-        max-width: 100%;
-        height: auto;
-        border-radius: 8px;
-        margin-bottom: 1rem;
+    #modalArtikelImg {
+        width: 100%;
+        aspect-ratio: 16 / 9;  /* <-- INI KUNCINYA: Paksa rasio landscape */
+        object-fit: cover;     /* Agar gambar terpotong rapi (tidak gepeng) */
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        background-color: #f8f9fa; /* Placeholder warna loading */
     }
+
+    /* Style untuk gambar-gambar lain di dalam isi artikel (Body) */
+    #modalArtikelBody img {
+        max-width: 100%;
+        height: auto; /* Biarkan rasio asli untuk gambar di dalam teks */
+        border-radius: 8px;
+        margin: 1rem 0;
+    }
+
     .modal-detail-date {
         color: #6c757d;
         font-size: 0.9rem;
-        margin-bottom: 1rem;
-        display: block;
+        margin-bottom: 0; /* Reset margin bottom */
     }
+    
     .modal-detail-author {
         font-weight: 600;
         color: #0d6efd;
+        font-size: 0.9rem;
     }
                                                                          
 </style>

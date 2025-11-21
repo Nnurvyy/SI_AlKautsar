@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class Donasi extends Model
 {
@@ -33,6 +34,19 @@ class Donasi extends Model
                 $model->{$model->getKeyName()} = (string) Str::uuid();
             }
         });
+    }
+
+    public function getSisaHariAttribute()
+    {
+        if (!$this->tanggal_selesai) return null; // Unlimited
+
+        $now = Carbon::now()->startOfDay();
+        $end = Carbon::parse($this->tanggal_selesai)->startOfDay();
+
+        // Jika sudah lewat, return 0
+        if ($now->gt($end)) return 0;
+
+        return $now->diffInDays($end, false); // false agar bisa negatif (opsional, tp kita sudah handle di atas)
     }
 
     // Relasi ke pemasukan donasi

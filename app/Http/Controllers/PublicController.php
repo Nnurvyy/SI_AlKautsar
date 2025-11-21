@@ -114,6 +114,23 @@ class PublicController extends Controller
         return view('public.program', compact('sliderPrograms', 'semuaProgram'));
     }
 
+    public function getProgramDetail($id)
+    {
+        $program = Program::findOrFail($id);
+        
+        // Format tanggal
+        $program->tanggal_formatted = $program->tanggal_program->translatedFormat('l, d F Y');
+        $program->waktu_formatted = $program->tanggal_program->format('H:i') . ' WIB';
+        
+        // Foto URL (sudah ada accessor di model, tapi kita pastikan di sini juga aman)
+        $program->foto_url_lengkap = $program->foto_url; 
+
+        // Status dengan format huruf kapital
+        $program->status_label = ucwords($program->status_program);
+
+        return response()->json($program);
+    }
+
     public function donasi()
     {
         // Ambil data donasi yang masih aktif (tanggal selesai >= hari ini ATAU null/selamanya)
@@ -148,6 +165,35 @@ class PublicController extends Controller
         });
 
         return view('public.donasi', compact('programDonasi'));
+    }
+
+    public function getDonasiDetail(Request $request, $id)
+    {
+        $donasi = Donasi::withSum('pemasukan', 'nominal')->findOrFail($id);
+        
+        // Ambil pesan donatur (Pagination 4 per page)
+        // Kita gunakan manual pagination atau simplePaginate karena ini AJAX partial
+        $donatur = $donasi->pemasukan()
+                        ->whereNotNull('pesan')
+                        ->where('pesan', '!=', '')
+                        ->orderBy('created_at', 'desc')
+                        ->paginate(4);
+
+        $sisaHari = $donasi->sisa_hari; // Pakai accessor yg dibuat tadi
+        
+        // Format data untuk JSON
+        return response()->json([
+            'id_donasi' => $donasi->id_donasi,
+            'nama_donasi' => $donasi->nama_donasi,
+            'deskripsi' => $donasi->deskripsi,
+            'foto_url' => $donasi->foto_donasi ? asset('storage/' . $donasi->foto_donasi) : asset('images/donasi/default.jpg'),
+            'target_dana' => $donasi->target_dana,
+            'terkumpul' => $donasi->pemasukan_sum_nominal ?? 0,
+            'persentase' => ($donasi->target_dana > 0) ? min(100, round(($donasi->pemasukan_sum_nominal / $donasi->target_dana) * 100)) : 0,
+            'sisa_hari' => $sisaHari,
+            'tanggal_selesai_fmt' => $donasi->tanggal_selesai ? Carbon::parse($donasi->tanggal_selesai)->translatedFormat('d F Y') : 'Tanpa Batas Waktu',
+            'donatur' => $donatur
+        ]);
     }
 
     public function tabunganQurbanSaya()
