@@ -23,15 +23,9 @@
                             <option value="12_months" selected>12 Bulan Terakhir</option>
                             <option value="current_year">Tahun Berjalan (YTD)</option>
                             <option value="5_years">5 Tahun Terakhir</option>
-                            <option value="custom">Rentang Kustom (Tanggal)</option>
                         </select>
                     </div>
                     
-                    {{-- Area ini akan digunakan untuk menampilkan Date Picker (jika 'custom' dipilih) --}}
-                    <div id="customDateRange" style="display: none;" class="d-flex">
-                        <input type="date" class="form-control me-2" id="startDate" style="width: 150px;" placeholder="Mulai">
-                        <input type="date" class="form-control" id="endDate" style="width: 150px;" placeholder="Selesai">
-                    </div>
                 </div>
             </div>
 
