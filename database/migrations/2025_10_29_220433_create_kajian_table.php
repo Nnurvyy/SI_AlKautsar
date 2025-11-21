@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('kajian', function (Blueprint $table) {
             $table->uuid('id_kajian')->primary();
+            $table->enum('tipe', ['rutin', 'event']);
             $table->string('nama_penceramah', 100);
             $table->string('tema_kajian', 255);
             $table->date('tanggal_kajian');

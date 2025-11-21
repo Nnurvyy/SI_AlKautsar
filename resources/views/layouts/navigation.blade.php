@@ -91,7 +91,7 @@
         <li class="nav-item">
             <a href="{{ route('pengurus.donasi.index') }}"
                class="nav-link {{ request()->routeIs('pengurus.donasi.*') ? 'active' : '' }}">
-                <i class="bi bi-graph-up"></i> Donasi
+                <i class="bi bi-heart-fill"></i> Donasi
             <a href="{{ route('pengurus.artikel.index') }}" class="nav-link {{ request()->routeIs('pengurus.artikel.*') ? 'active' : '' }}">
                 <i class="bi bi-newspaper"></i> Artikel
             </a>

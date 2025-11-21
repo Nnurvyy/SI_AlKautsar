@@ -1,12 +1,11 @@
 @extends('layouts.public')
 
-@section('title', 'Artikel')
+@section('title', 'Artikel & Berita')
 
 @push('styles')
-{{-- Hapus <link> Swiper karena tidak dipakai --}}
 <style>
     /* ================================================= */
-    /* == STYLE JUDUL (DARI HALAMAN KAJIAN) == */
+    /* == STYLE JUDUL == */
     /* ================================================= */
     .donasi-title-heading {
         font-family: 'Poppins', sans-serif; 
@@ -17,160 +16,278 @@
     }
 
     /* ================================================= */
-    /* == STYLE ARTIKEL CARD (BARU) == */
+    /* == STYLE ARTIKEL CARD == */
     /* ================================================= */
     .artikel-card {
         width: 100%;
         border: none;
         border-radius: 12px; 
-        
-        /* 1. Background (Diganti jadi abu-abu lebih gelap) */
-        /* background: linear-gradient(to bottom right, #ffffff, #f0f0f0); */
-        background-color: #d1d6db; /* <-- PERUBAHAN BG CARD */
-        
-        /* 2. Shadow */
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); 
-        margin-bottom: 1.5rem; /* Jarak antar card */
+        background-color: #fff; /* Ubah ke putih agar bersih, atau #d1d6db sesuai request */
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); 
+        margin-bottom: 1.5rem;
         overflow: hidden; 
-
-        /* 3. Animasi Hover */
         transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%; /* Agar tinggi kartu seragam */
+        display: flex;
+        flex-direction: column;
     }
     .artikel-card:hover {
-        /* Efek terangkat */
         transform: translateY(-5px); 
-        /* Shadow lebih jelas */
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12); 
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1); 
     }
 
-    /* 4. Gambar (Sekarang di dalam card-body) */
+    .artikel-card-body {
+        padding: 1.2rem;
+        display: flex;
+        flex-direction: column;
+        flex: 1; /* Mengisi sisa ruang */
+    }
+
+    /* FOTO DI DALAM BODY */
     .artikel-card-img {
         width: 100%;
-        aspect-ratio: 14 / 9;
+        aspect-ratio: 16 / 9; /* Rasio standar */
         object-fit: cover; 
-        /* Gambar akan otomatis 'lebih kecil' karena ada padding dari .artikel-card-body */
-    }
-    
-    .artikel-card-body {
-        padding: 1rem; /* Padding dikurangi sedikit */
+        border-radius: 8px;
+        margin-bottom: 1rem;
     }
 
     .artikel-card-title {
-        font-size: 1.25rem;
+        font-size: 1.15rem;
         font-weight: 700;
         color: #212529;
-        margin-bottom: 0.25rem;
-    }
-    .artikel-card-sinopsis {
-        font-size: 1.0rem;
-        color: #495057;
         margin-bottom: 0.5rem;
-    }
-    .artikel-card-date {
-        font-size: 0.9rem;
-        color: #6c757d;
-        margin-bottom: 1rem; /* Jarak ke tombol */
+        line-height: 1.4;
+        
+        /* Batasi judul max 2 baris */
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;  
+        overflow: hidden;
     }
 
-    /* 5. Tombol "Lihat Detail" */
+    .artikel-card-sinopsis {
+        font-size: 0.95rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+        flex-grow: 1; /* Mendorong tanggal/tombol ke bawah */
+    }
+
+    .artikel-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto; /* Tempel di bawah */
+        border-top: 1px solid #f0f0f0;
+        padding-top: 1rem;
+    }
+
+    .artikel-card-date {
+        font-size: 0.85rem;
+        color: #999;
+        margin-bottom: 0;
+    }
+
     .btn-artikel {
-        display: inline-block;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         color: #ffffff;
-        background-color: #0d6efd; /* Warna biru primer */
+        background-color: #0d6efd;
         border: none;
-        border-radius: 50px; /* Bentuk pil */
-        padding: 0.4rem 1.2rem;
+        border-radius: 50px;
+        padding: 0.4rem 1rem;
         text-decoration: none;
         transition: background-color 0.2s ease;
+        cursor: pointer;
     }
-        .btn-artikel:hover {                                                                 
-            background-color: #0b5ed7; /* Biru lebih gelap saat hover */                     
-            color: #ffffff;                                                                  
-        }
+    .btn-artikel:hover {                                                
+        background-color: #0b5ed7;                 
+        color: #ffffff;                                                              
+    }
     
-        @media (min-width: 768px) {
-            .artikel-list-wrapper {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1.5rem;
-            }
+    /* GRID SYSTEM */
+    .artikel-list-wrapper {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+        .artikel-list-wrapper {
+            grid-template-columns: repeat(2, 1fr);
         }
+    }
     
-        @media (min-width: 992px) {
-            .artikel-list-wrapper {
-                grid-template-columns: repeat(3, 1fr);
-            }
+    @media (min-width: 992px) {
+        .artikel-list-wrapper {
+            grid-template-columns: repeat(3, 1fr);
         }
-                                                                                             
-    </style>@endpush
+    }
+
+    /* STYLE MODAL DETAIL */
+    #modalDetailContent img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    .modal-detail-date {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+        display: block;
+    }
+    .modal-detail-author {
+        font-weight: 600;
+        color: #0d6efd;
+    }
+                                                                         
+</style>
+@endpush
 
 @section('content')
 
-<div class="py-4">
+<div class="py-5 bg-light">
     <div class="container">
         
         {{-- Judul Halaman --}}
         <div class="row mb-4">
-            <div class="col-12">
-                <h2 class="donasi-title-heading">Artikel-Artikel</h2>
+            <div class="col-12 text-center text-lg-start">
+                <h2 class="donasi-title-heading">Artikel & Berita</h2>
+                <p class="text-muted">Wawasan dan informasi terbaru seputar kegiatan dan keislaman.</p>
             </div>
         </div>
 
-        <div class="artikel-list-wrapper">
+        {{-- LIST ARTIKEL --}}
+        @if($artikel->isEmpty())
+            <div class="alert alert-info text-center py-5">
+                <i class="bi bi-journal-text fs-1 mb-3 d-block"></i>
+                <h5>Belum ada artikel yang diterbitkan.</h5>
+            </div>
+        @else
+            <div class="artikel-list-wrapper">
+                
+                @foreach($artikel as $item)
+                <div class="card artikel-card">
+                    <div class="card-body artikel-card-body">
+                        {{-- Foto --}}
+                        <img src="{{ $item->foto_artikel }}" class="artikel-card-img" alt="{{ $item->judul_artikel }}">
+                        
+                        {{-- Judul --}}
+                        <h5 class="artikel-card-title">{{ $item->judul_artikel }}</h5>
+                        
+                        {{-- Sinopsis (Isi yang sudah dipotong di Controller) --}}
+                        <p class="artikel-card-sinopsis">
+                            {{ $item->sinopsis }}...
+                        </p>
+                        
+                        {{-- Info Bawah --}}
+                        <div class="artikel-info">
+                            <span class="artikel-card-date">
+                                <i class="bi bi-calendar3 me-1"></i> 
+                                {{ \Carbon\Carbon::parse($item->tanggal_terbit_artikel)->translatedFormat('d M Y') }}
+                            </span>
+                            
+                            {{-- Tombol Trigger Modal --}}
+                            <button type="button" class="btn-artikel" onclick="showDetailArtikel('{{ $item->id_artikel }}')">
+                                Baca Selengkapnya
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+
+            </div>
+
+            {{-- Pagination --}}
+            <div class="mt-5 d-flex justify-content-center">
+                {{ $artikel->links() }}
+            </div>
+        @endif
+
+    </div>
+</div>
+
+{{-- MODAL DETAIL ARTIKEL --}}
+<div class="modal fade" id="modalArtikelPublic" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable"> <div class="modal-content border-0 shadow">
             
-            {{-- DUMMY ARTIKEL 1 --}}
-            <div class="card artikel-card">
-                {{-- <img src="{{ asset('images/artikel/artikel1.jpg') }}" class="card-img-top artikel-card-img" alt="Artikel 1"> --}} {{-- <-- FOTO DIPINDAH DARI SINI --}}
-                <div class="card-body artikel-card-body">
-                    <img src="{{ asset('images/artikel/artikel1.jpg') }}" class="card-img-top artikel-card-img mb-3" alt="Artikel 1"> {{-- <-- PERUBAHAN LOKASI FOTO + mb-3 --}}
-                    <h5 class="artikel-card-title">Judul Artikel Menarik Pertama</h5>
-                    <p class="artikel-card-sinopsis">Ini adalah sinopsis singkat untuk artikel pertama...</p>
-                    <p class="artikel-card-date">07 November 2025</p>
-                    <a href="#" class="btn-artikel">Lihat Detail</a>
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold" id="modalArtikelTitle">Loading...</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body p-4">
+                {{-- Loading Spinner --}}
+                <div id="modalLoading" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+
+                {{-- Konten Artikel --}}
+                <div id="modalContent" class="d-none">
+                    {{-- Foto Detail --}}
+                    <img id="modalArtikelImg" src="" class="w-100 rounded mb-3 shadow-sm" alt="Detail Foto">
+                    
+                    {{-- Meta Info --}}
+                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                        <span class="modal-detail-date" id="modalArtikelDate"></span>
+                        <span class="modal-detail-author" id="modalArtikelAuthor"></span>
+                    </div>
+
+                    {{-- Isi Full --}}
+                    <div id="modalArtikelBody" class="typography">
+                        </div>
                 </div>
             </div>
-
-            {{-- DUMMY ARTIKEL 2 --}}
-            <div class="card artikel-card">
-                <div class="card-body artikel-card-body">
-                    <img src="{{ asset('images/artikel/artikel2.jpg') }}" class="card-img-top artikel-card-img mb-3" alt="Artikel 2"> {{-- <-- PERUBAHAN LOKASI FOTO + mb-3 --}}
-                    <h5 class="artikel-card-title">Judul Artikel Populer Kedua</h5>
-                    <p class="artikel-card-sinopsis">Ini adalah sinopsis singkat untuk artikel kedua...</p>
-                    <p class="artikel-card-date">06 November 2025</p>
-                    <a href="#" class="btn-artikel">Lihat Detail</a>
-                </div>
+            
+            <div class="modal-footer border-top-0 pt-0">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
             </div>
-
-            {{-- DUMMY ARTIKEL 3 --}}
-            <div class="card artikel-card">
-                <div class="card-body artikel-card-body">
-                    <img src="{{ asset('images/artikel/artikel3.jpg') }}" class="card-img-top artikel-card-img mb-3" alt="Artikel 3"> {{-- <-- PERUBAHAN LOKASI FOTO + mb-3 --}}
-                    <h5 class="artikel-card-title">Tips Bermanfaat di Artikel Ketiga</h5>
-                    <p class="artikel-card-sinopsis">Ini adalah sinopsis singkat untuk artikel ketiga...</p>
-                    <p class="artikel-card-date">05 November 2025</p>
-                    <a href="#" class="btn-artikel">Lihat Detail</a>
-                </div>
-            </div>
-
-            {{-- @forelse($artikel as $item)
-            <div class="card artikel-card">
-                <div class="card-body artikel-card-body">
-                    <img src="{{ $item->foto_url ?? asset('images/default-artikel.jpg') }}" class="card-img-top artikel-card-img mb-3" alt="{{ $item->judul }}">
-                    <h5 class="artikel-card-title">{{ $item->judul }}</h5>
-                    <p class="artikel-card-sinopsis">{{ $item->sinopsis }}</p>
-                    <p class="artikel-card-date">{{ \Carbon\Carbon::parse($item->created_at)->format('d M Y') }}</p>
-                    <a href="{{ route('artikel.show', $item->slug) }}" class="btn-artikel">Lihat Detail</a>
-                </div>
-            </div>
-            @empty
-            <div class="alert alert-info text-center">
-                Belum ada artikel yang dipublikasikan.
-            </div>
-            @endforelse --}}
-
         </div>
     </div>
 </div>
+
 @endsection
+
+@push('scripts')
+<script>
+    // Fungsi untuk memanggil detail artikel via AJAX
+    function showDetailArtikel(id) {
+        // 1. Buka Modal
+        const modalElement = document.getElementById('modalArtikelPublic');
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+
+        // 2. Reset Tampilan (Tampilkan Loading, Sembunyikan Konten)
+        document.getElementById('modalLoading').classList.remove('d-none');
+        document.getElementById('modalContent').classList.add('d-none');
+        document.getElementById('modalArtikelTitle').innerText = 'Memuat...';
+
+        // 3. Fetch Data dari Controller
+        fetch(`/artikel/detail/${id}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Gagal memuat data');
+                return response.json();
+            })
+            .then(data => {
+                // 4. Isi Data ke Modal
+                document.getElementById('modalArtikelTitle').innerText = data.judul_artikel;
+                document.getElementById('modalArtikelImg').src = data.foto_url_lengkap; // Menggunakan properti yg ditambahkan controller
+                document.getElementById('modalArtikelDate').innerHTML = '<i class="bi bi-calendar-event me-2"></i>' + data.formatted_date;
+                document.getElementById('modalArtikelAuthor').innerHTML = '<i class="bi bi-person-circle me-2"></i>' + data.penulis_artikel;
+                document.getElementById('modalArtikelBody').innerHTML = data.isi_artikel;
+
+                // 5. Tampilkan Konten
+                document.getElementById('modalLoading').classList.add('d-none');
+                document.getElementById('modalContent').classList.remove('d-none');
+            })
+            .catch(error => {
+                console.error(error);
+                document.getElementById('modalArtikelTitle').innerText = 'Terjadi Kesalahan';
+                document.getElementById('modalLoading').classList.add('d-none');
+            });
+    }
+</script>
+@endpush

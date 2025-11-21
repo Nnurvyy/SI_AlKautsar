@@ -5,381 +5,150 @@
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 <style>
-    /* Style untuk Swiper (KODE ASLI ANDA) */
-    .swiper-container-wrapper {
-        position: relative;
-        padding: 0;
-        /* Media query yang saya tambahkan sebelumnya sudah dihapus */
-    }
-    .swiper {
-        overflow: hidden;
-        padding-bottom: 1.5rem;
-    }
-    .swiper-slide {
-        width: 100%;
-        height: auto;
-    }
-    .swiper-button-next,
-    .swiper-button-prev {
-        position: absolute;
-        top: 40%;
-        transform: translateY(-50%);
-        z-index: 10;
-        width: auto;
-        height: auto;
-        background-color: transparent;
-        border-radius: 0;
-        box-shadow: none;
-        color: white;
-        transition: color 0.2s ease;
-    }
-    .swiper-button-prev:hover,
-    .swiper-button-next:hover {
-        color: #f0f0f0;
-    }
-    .swiper-button-next::after,
-    .swiper-button-prev::after {
-        font-size: 32px;
-        font-weight: 700;
-        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-    }
-    .swiper-button-prev {
-        left: 20px;
-    }
-    .swiper-button-next {
-        right: 20px;
-    }
-    .swiper-button-disabled {
-        opacity: 0;
-        pointer-events: none;
-    }
+    /* --- Style CSS tetap sama seperti sebelumnya --- */
+    .swiper-container-wrapper { position: relative; padding: 0; }
+    .swiper { overflow: hidden; padding-bottom: 1.5rem; }
+    .swiper-slide { width: 100%; height: auto; }
+    .swiper-button-next, .swiper-button-prev { position: absolute; top: 40%; transform: translateY(-50%); z-index: 10; color: white; }
+    .swiper-button-prev { left: 20px; } .swiper-button-next { right: 20px; }
+    
+    /* Style Card */
+    .donation-list-card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); margin-bottom: 1rem; overflow: hidden; transition: transform 0.3s ease; }
+    .donation-list-card:hover { transform: translateY(-5px); }
+    .donation-list-card .card-img { object-fit: cover; height: 100%; min-height: 180px; border-radius: 12px 0 0 12px !important; }
+    .donation-list-card .card-body { padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; }
+    .donation-list-card .card-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .donation-list-card .progress { height: 6px; border-radius: 6px; margin-top: 0.5rem; }
+    .donation-list-card .progress-bar { background-color: #1abc9c; }
+    .btn-donasi-small { background-color: #1abc9c; color: white; border-radius: 50px; padding: 0.4rem 1rem; font-size: 0.85rem; font-weight: 600; text-decoration: none; }
+    .btn-donasi-small:hover { background-color: #16a085; color: white; }
 
-    /* Style untuk Slide Donasi (KODE ASLI ANDA) */
-    .donation-slide {
-        position: relative;
-        height: 320px;
-        width: 100%;
-        border-radius: 16px;
-        overflow: hidden;
-        color: white;
-    }
-    .donation-slide-img {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        z-index: 0;
-    }
-    .donation-slide-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.3));
-        z-index: 1;
-    }
-    .donation-slide-content {
-        position: relative;
-        z-index: 2;
-        height: 100%;
-        padding: 1rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-    }
-    .donation-slide-content h5 {
-        font-weight: 700;
-        font-size: 1.5rem;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-        margin-bottom: 0.75rem;
-    }
-    .donation-slide-content p {
-        font-size: 0.9rem;
-        margin-bottom: 1.5rem;
-        line-height: 1.5;
-        max-width: 90%;
-    }
-    .donation-slide-content .btn {
-        background-color: #1abc9c;
-        border-color: #1abc9c;
-        color: white;
-        font-weight: 600;
-        padding: 0.6rem 1.5rem;
-        border-radius: 50px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    }
-    .donation-slide-content .btn:hover {
-        background-color: #16a085;
-        border-color: #16a085;
-        color: white;
-    }
+    /* Slider Card Style */
+    .donation-slide { position: relative; height: 350px; width: 100%; border-radius: 16px; overflow: hidden; }
+    .donation-slide-img { width: 100%; height: 100%; object-fit: cover; }
+    .donation-slide-overlay { position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 20px; display: flex; flex-direction: column; justify-content: flex-end; color: white; }
 
-    /* ================================== */
-    /* Card Grid Bawah */
-    /* ================================== */
-    .donation-list-card {
-        border: none;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-        margin-bottom: 1rem;
-        overflow: hidden;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .donation-list-card:hover {
-        transform: translateY(-5px); 
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12); 
-    }
-    .donation-list-card .card-img {
-        object-fit: cover;
-        height: 100%;
-        min-height: 140px;
-        border-radius: 12px 0 0 12px !important;
-    }
-    .donation-list-card .card-body {
-        padding: 0.75rem 1rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
-    .donation-list-card .card-title {
-        font-size: 0.95rem;
-        font-weight: 700;
-        line-height: 1.3;
-        margin-bottom: 0.5rem;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical; 	
-        overflow: hidden;
-    }
-    .donation-list-card .progress-label {
-        font-size: 0.75rem;
-        color: #6c757d;
-        margin-bottom: 0.25rem;
-    }
-    .donation-list-card .progress-amount {
-        font-size: 0.9rem;
-        font-weight: 700;
-        color: #1abc9c;
-        margin-bottom: 0.5rem;
-    }
-    .donation-list-card .progress {
-        height: 6px;
-        border-radius: 6px;
-    }
-    .donation-list-card .progress-bar {
-        background-color: #1abc9c;
-    }
-    .donation-list-card .progress-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 0.75rem;
-    }
-    .donation-list-card .days-left {
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: #e74c3c;
-    }
-    .donation-list-card .days-left span {
-        color: #6c757d;
-        font-weight: 500;
-    }
-    .donation-list-card .btn-donasi-small {
-        font-size: 0.8rem;
-        font-weight: 600;
-        padding: 0.3rem 0.8rem;
-        border-radius: 50px;
-        background-color: #1abc9c;
-        border-color: #1abc9c;
-        color: white;
-    }
-    .donation-list-card .btn-donasi-small:hover {
-        background-color: #16a085;
-        border-color: #16a085;
-    }
+    .donasi-title-heading { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.8rem; color: #333; }
+    .donasi-title-sub { font-size: 1rem; color: #6c757d; }
 
-    /* Judul Halaman */
-    .donasi-title-heading {
-        font-family: 'Poppins', sans-serif;
-        font-weight: 700;
-        font-size: 1.8rem;
-        color: #333;
-        margin-bottom: 0.5rem;
-    }
-    .donasi-title-heading .bi {
-        color: #1abc9c;
-        font-size: 1.5rem;
-        vertical-align: -2px;
-    }
-    .donasi-title-sub { 
-        font-size: 1rem; 
-        color: #6c757d;
-        margin-bottom: 1rem; 
-    }
+    @media (min-width: 768px) { .donation-list-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; } }
+    @media (min-width: 992px) { .donation-list-grid { grid-template-columns: repeat(2, 1fr); } }
+</style>
+@endpush
 
-    /* === Perubahan Grid Sesuai Permintaan Anda Sebelumnya === */
-    @media (min-width: 768px) {
-        .donation-list-grid {
-            display: grid;
-            /* 1 kolom di Tablet */
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }
-    }
+@section('content')
 
-    @media (min-width: 992px) {
-        .donation-list-grid {
-            /* 2 kolom di Desktop */
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-                                                                        
-</style>@endpush
-
-                    <!-- Gambar -->
-                    <img src="{{ $program->gambar_url }}" 
-                         class="card-img-top rounded-top-4"
-                         style="height: 220px; object-fit: cover;">
-
-{{-- Ini sudah di dalam container, jadi ada jarak --}}
+{{-- 1. Header --}}
 <div class="container pt-4 pb-3">
-    <h2 class="donasi-title-heading">
-        Mari Berdonasi
-    </h2>
-    <p class="donasi-title-sub">
-        Setiap donasi Anda membawa harapan baru.
-    </p>
+    <h2 class="donasi-title-heading">Mari Berdonasi</h2>
+    <p class="donasi-title-sub">Setiap donasi Anda membawa harapan baru.</p>
 </div>
 
-{{-- 
-    =================================================
-    PERUBAHAN 2: TAMBAHKAN <div class="container"> 
-    DI SEKELILING swiper-container-wrapper
-    =================================================
---}}
-<div class="container">
-    <div class="swiper-container-wrapper">
-        <div class="swiper donasi-swiper">
-            <div class="swiper-wrapper">
-
-                        <p class="text-muted small">
-                            {{ Str::limit($program->deskripsi, 80) }}
-                        </p>
-
-                        <!-- Progress Bar -->
-                        <div class="progress mb-2" style="height: 10px;">
-                            <div class="progress-bar" 
-                                 role="progressbar" 
-                                 style="width: {{ $program->persentase }}%;"></div>
+{{-- 2. Slider (Featured / Semua Program) --}}
+<div class="container mb-5">
+    @if($programDonasi->isEmpty())
+        <div class="alert alert-info text-center">Belum ada program donasi yang aktif saat ini.</div>
+    @else
+        <div class="swiper-container-wrapper">
+            <div class="swiper donasi-swiper">
+                <div class="swiper-wrapper">
+                    @foreach($programDonasi as $program)
+                    <div class="swiper-slide">
+                        <div class="donation-slide">
+                            <img src="{{ $program->gambar_url }}" class="donation-slide-img" alt="{{ $program->nama_donasi }}">
+                            <div class="donation-slide-overlay">
+                                <h5 class="fw-bold">{{ $program->nama_donasi }}</h5>
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span>Terkumpul: Rp {{ number_format($program->dana_terkumpul, 0, ',', '.') }}</span>
+                                    <span>{{ $program->persentase_asli }}%</span>
+                                </div>
+                                <div class="progress mb-3" style="height: 5px; background: rgba(255,255,255,0.3);">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ $program->persentase }}%"></div>
+                                </div>
+                                {{-- Link ke detail atau modal (opsional) --}}
+                                <a href="#" class="btn btn-light btn-sm w-100 rounded-pill fw-bold text-success">Donasi Sekarang</a>
+                            </div>
                         </div>
-
-                        <div class="d-flex justify-content-between small text-muted mb-3">
-                            <span>Terkumpul: Rp {{ number_format($program->dana_terkumpul) }}</span>
-                            <span>{{ $program->persentase }}%</span>
-                        </div>
-
+                    </div>
+                    @endforeach
+                </div>
             </div>
-            </div>
-        <div class="swiper-button-prev donasi-button-prev"></div>
-        <div class="swiper-button-next donasi-button-next"></div>
-    </div>
-</div> {{-- Penutup <div class="container"> --}}
+            @if($programDonasi->count() > 1)
+                <div class="swiper-button-prev donasi-button-prev"></div>
+                <div class="swiper-button-next donasi-button-next"></div>
+            @endif
+        </div>
+    @endif
+</div>
 
-
-{{-- Ini juga sudah di dalam container, jadi ada jarak --}}
+{{-- 3. List Grid (Daftar Program) --}}
 <div class="container mt-3"> 
-    
+    <h4 class="fw-bold mb-4 text-dark">Daftar Donasi</h4>
     <div class="donation-list-grid">
-        <div class="card donation-list-card"> 		<div class="row g-0">
-            <div class="col-4">
-                <img src="{{ asset('images/donasi/pembangunan-masjid.jpg') }}" class="card-img" alt="Pembangunan Masjid">
-            </div>
-            <div class="col-8">
-                <div class="card-body">
-                    <h5 class="card-title">PEMBANGUNAN MASJID</h5>
-                    <div>
-                        <div class="progress-label">Terkumpul</div>
-                        <div class="progress-amount">Rp 75.432.123</div>
-                        <div class="progress" role="progressbar" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
-                            <div class="progress-bar" style="width: 50%"></div>
-                        </div>
-                        <div class="progress-footer">
-                            <div class="days-left"><span>Sisa:</span> 90 hari</div>
-                            <a href="#" class="btn btn-donasi-small">Donasi</a>
-                        </div>
-                    </div>
+        @foreach($programDonasi as $program)
+        <div class="card donation-list-card">
+            <div class="row g-0 h-100">
+                <div class="col-4">
+                    <img src="{{ $program->gambar_url }}" class="card-img" alt="{{ $program->nama_donasi }}">
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card donation-list-card">
-        <div class="row g-0">
-            <div class="col-4">
-                <img src="{{ asset('images/donasi/yatim.jpeg') }}" class="card-img" alt="Yatim & Dhuafa">
-            </div>
-            <div class="col-8">
-                <div class="card-body">
-                    <h5 class="card-title">YATIM, FAKIR MISKIN & DHUAFA</h5>
-                    <div>
-                        <div class="progress-label">Terkumpul</div>
-                        <div class="progress-amount">Rp 25.123.456</div>
-                        <div class="progress" role="progressbar" aria-valuenow="62" aria-valuemin="0" aria-valuemax="100">
-                            <div class="progress-bar" style="width: 62%"></div>
+                <div class="col-8">
+                    <div class="card-body h-100">
+                        <div>
+                            <h5 class="card-title text-dark">{{ $program->nama_donasi }}</h5>
+                            <p class="small text-muted mb-2" style="line-height: 1.2;">
+                                {{ Str::limit($program->deskripsi, 60) }}
+                            </p>
                         </div>
-                        <div class="progress-footer">
-                            <div class="days-left"><span>Sisa:</span> 30 hari</div>
-                            <a href="#" class="btn btn-donasi-small">Donasi</a>
+                        
+                        <div>
+                            <div class="d-flex justify-content-between align-items-end mb-1">
+                                <span class="small text-muted">Terkumpul</span>
+                                <span class="fw-bold text-success small">Rp {{ number_format($program->dana_terkumpul, 0, ',', '.') }}</span>
+                            </div>
+                            <div class="progress mb-3">
+                                <div class="progress-bar" role="progressbar" style="width: {{ $program->persentase }}%"></div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="small text-danger fw-semibold">
+                                    @if($program->tanggal_selesai)
+                                        <i class="bi bi-clock"></i> Sisa {{ \Carbon\Carbon::parse($program->tanggal_selesai)->diffInDays(\Carbon\Carbon::now()) }} hari
+                                    @else
+                                        <i class="bi bi-infinity"></i> Unlimited
+                                    @endif
+                                </span>
+                                <a href="#" class="btn-donasi-small">Donasi</a>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        @endforeach
     </div>
+</div>
 
-                    </div>
-                </div>
-            </div>
-                </div> 
-                </div>
-                </div> 
-                                                                    
-        </div> 
-            @endsection
+@endsection
+
 @push('scripts')
-{{-- Tidak ada perubahan di Javascript --}}
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        if (document.querySelector('.donasi-swiper')) {
             new Swiper('.donasi-swiper', { 
                 slidesPerView: 1, 
                 spaceBetween: 15, 
-                loop: true, 
+                loop: {{ $programDonasi->count() > 1 ? 'true' : 'false' }}, 
                 navigation: { 
                     nextEl: '.donasi-button-next', 
                     prevEl: '.donasi-button-prev', 
                 },
                 breakpoints: {
-                    768: {
-                        slidesPerView: 2,
-                        spaceBetween: 20
-                    },
-                    992: {
-                        slidesPerView: 2.5,
-                        centeredSlides: true,
-                        spaceBetween: 30
-                    },
-                    1200: {
-                        slidesPerView: 3,
-                        centeredSlides: true,
-                        spaceBetween: 30
-                    }
+                    768: { slidesPerView: 2, spaceBetween: 20 },
+                    992: { slidesPerView: 3, spaceBetween: 25 }
                 }
-            }); 	});
+            }); 
+        }
+    });
 </script>
 @endpush

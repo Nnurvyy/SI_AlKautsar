@@ -1,34 +1,20 @@
-// GANTI VERSI SETIAP KALI ADA PERUBAHAN DI FILE BLADE/CSS/JS
-const CACHE_NAME = 'laravel-pwa-v2'; 
+// --- GANTI VERSI SETIAP KALI ADA PERUBAHAN KODE ---
+const CACHE_NAME = 'laravel-pwa-v3'; 
 
 const urlsToCache = [
-  // --- 1. HALAMAN UTAMA (ROUTE LARAVEL) ---
-  // Masukkan semua route yang ada di menu navigasi kamu
-  '/',
-  '/jadwal-kajian',
-  '/jadwal-adzan',
-  '/donasi',
-  '/artikel',
-  '/program',
-  '/tabungan-qurban-saya',
-  '/jadwal-khotib',
-
-  // --- 2. FILE PWA WAJIB ---
+  // --- HANYA FILE ASET STATIS (JANGAN MASUKKAN ROUTE HALAMAN HTML DI SINI) ---
   '/manifest.json',
   '/favicon.ico',
-  // Pastikan file ini benar-benar ada di public/images/icons/
   '/images/icons/icon-192.png', 
   '/images/icons/icon-512.png',
 
-  // --- 3. GAMBAR STATIS (DARI FOLDER PUBLIC/IMAGES/ICONS) ---
-  // Berdasarkan struktur folder yang kamu kirim:
+  // Gambar Statis
   '/images/bg-login.jpeg',
   '/images/bgpattern1.jpeg',
   '/images/masjid.jpeg',
   '/images/pembangunan-masjid.jpg',
   
-  // Masukkan juga ikon navigasi (home.png, dll) jika ada di folder icons
-  // (Pastikan nama filenya sesuai huruf besar/kecilnya)
+  // Ikon Navigasi
   '/images/icons/home.png',
   '/images/icons/kajian.png',
   '/images/icons/adzan.png',
@@ -39,8 +25,7 @@ const urlsToCache = [
   '/images/icons/qurban.png',
   '/images/icons/khutbah-jumat.png',
 
-  // --- 4. LIBRARY EKSTERNAL (CDN) ---
-  // Agar tampilan tidak hancur (rusak) saat offline/loading
+  // Library Eksternal (CDN) - Agar tampilan tetap bagus saat offline
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css',
   'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js',
@@ -49,66 +34,83 @@ const urlsToCache = [
   'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js',
   'https://cdn.jsdelivr.net/npm/sweetalert2@11',
   
-  // --- 5. CSS/JS LOKAL (JIKA ADA) ---
-  // Cek folder public/js dan public/css kamu. 
-  // Jika ada file 'style.css' atau 'settings.js', masukkan di sini:
-  // '/css/style.css',
+  // JS/CSS Lokal
   '/js/settings.js' 
 ];
 
-// --- EVENT INSTALL (Menyimpan file ke cache) ---
-// --- EVENT INSTALL (VERSI DETEKTIF / DEBUGGING) ---
+// --- 1. EVENT INSTALL: Cache Aset Statis Saja ---
 self.addEventListener('install', event => {
+  self.skipWaiting(); // Paksa SW baru langsung aktif
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
-      console.log('Mulai mengecek file satu per satu...');
-      
-      // Kita loop semua file untuk melihat mana yang error
+      console.log('[SW] Caching static assets...');
       for (const url of urlsToCache) {
         try {
           const response = await fetch(url);
-          if (!response.ok) {
-            throw new Error(`Status: ${response.status}`);
+          if (response.ok) {
+            await cache.put(url, response);
+          } else {
+            console.warn(`[SW] Gagal cache (Status ${response.status}): ${url}`);
           }
-          await cache.put(url, response);
-          console.log(`✅ Berhasil: ${url}`);
         } catch (error) {
-          // INI DIA PELAKUNYA!
-          console.error(`❌ GAGAL DOWNLOAD: ${url}`, error);
+          console.error(`[SW] Gagal download: ${url}`, error);
         }
       }
     })
   );
 });
 
-// --- EVENT FETCH (Mengambil dari cache biar cepat/offline) ---
+// --- 2. EVENT FETCH: Strategi Cerdas ---
 self.addEventListener('fetch', event => {
+  // A. JIKA REQUEST ADALAH HALAMAN HTML (Navigasi antar page)
+  // Strategi "Network First": Coba internet dulu biar dapat data terbaru (database), 
+  // kalau gagal/offline baru ambil versi terakhir yang tersimpan di cache.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          // Sukses ambil dari internet -> Simpan kopi terbarunya ke cache untuk nanti
+          return caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, networkResponse.clone());
+            return networkResponse;
+          });
+        })
+        .catch(() => {
+          // Gagal (Offline) -> Ambil versi terakhir dari cache
+          console.log('[SW] Offline mode: Serving cached page');
+          return caches.match(event.request);
+        })
+    );
+    return;
+  }
+
+  // B. JIKA REQUEST ADALAH ASET STATIS (Gambar, CSS, JS, Font)
+  // Strategi "Cache First": Cek cache dulu biar cepat loadingnya, kalau gak ada baru internet.
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // 1. Jika ada di cache, ambil dari cache (INSTAN)
-        if (response) {
-          return response;
-        }
-        // 2. Jika tidak, ambil dari internet
-        return fetch(event.request);
-      })
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse; // Ada di cache, langsung pakai
+      }
+      // Gak ada di cache, ambil dari internet
+      return fetch(event.request);
+    })
   );
 });
 
-// --- EVENT ACTIVATE (Membersihkan cache lama) ---
+// --- 3. EVENT ACTIVATE: Bersihkan Cache Lama ---
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.filter(cacheName => {
-          // Hapus cache lama yang namanya beda dengan versi sekarang
+          // Hapus cache yang namanya beda dengan versi sekarang (v3)
           return cacheName.startsWith('laravel-pwa-') && cacheName !== CACHE_NAME;
         }).map(cacheName => {
-          console.log('Menghapus cache lama:', cacheName);
+          console.log('[SW] Menghapus cache lama:', cacheName);
           return caches.delete(cacheName);
         })
       );
     })
   );
+  self.clients.claim(); // SW langsung mengontrol halaman tanpa perlu reload
 });

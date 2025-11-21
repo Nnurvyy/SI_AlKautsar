@@ -5,67 +5,149 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Models\KhotibJumat;  
+use App\Models\Kajian;  
+use App\Models\Donasi;
+use App\Models\Program;
+use App\Models\Artikel;
 use Carbon\Carbon;          
 use Illuminate\Support\Facades\Log;
 use App\Models\MasjidProfil;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 class PublicController extends Controller
 {
 
     public function jadwalKhotib()
     {
-        $jadwalKhotib = KhotibJumat::where('tanggal', '>=', Carbon::today())
-            ->orderBy('tanggal', 'asc')
-            ->get();
+        $today = Carbon::today();
 
-        if ($jadwalKhotib->isEmpty()) {
-            $jadwalKhotib = collect([
-                (object)[
-                    'foto_url' => asset('images/events/abdul-somad.jpg'),
-                    'nama_khotib' => 'Ustadz Abdul Somad',
-                    'nama_imam' => 'Ustadz Fulan',
-                    'tema_khutbah' => 'Pentingnya Ukhuwah',
-                    'tanggal' => '2025-11-14'
-                ],
-            ]);
+        // 1. Ambil SATU data terdekat untuk Highlight (Jumat Ini)
+        $khotibJumatIni = KhotibJumat::where('tanggal', '>=', $today)
+                            ->orderBy('tanggal', 'asc')
+                            ->first();
+
+        // 2. Ambil sisa data untuk List (Jadwal Selanjutnya)
+        // Logika: Ambil yang >= hari ini, TAPI kecualikan ID milik $khotibJumatIni
+        $querySelanjutnya = KhotibJumat::where('tanggal', '>=', $today)
+                            ->orderBy('tanggal', 'asc');
+
+        // Jika ada data Jumat Ini, pastikan ID tersebut tidak muncul lagi di list bawah/samping
+        if ($khotibJumatIni) {
+            $querySelanjutnya->where('id_khutbah', '!=', $khotibJumatIni->id_khutbah);
         }
 
-        return view('public.jadwal-khotib', ['jadwalKhotib' => $jadwalKhotib]);
+        // Paginate 3 item per halaman sesuai request
+        $khotibSelanjutnya = $querySelanjutnya->paginate(3);
+
+        return view('public.jadwal-khotib', compact('khotibJumatIni', 'khotibSelanjutnya'));
     }
 
     public function jadwalKajian()
     {
-        $kajianEvent = collect([]); 
-        $kajianRutin = collect([]); 
+        // Ambil kajian yang tanggalnya >= hari ini
+        $today = Carbon::today();
+
+        // 1. Ambil Kajian Event (Mendatang)
+        // TETAP: Menggunakan get() (Tanpa Pagination) untuk keperluan Slider
+        $kajianEvent = Kajian::where('tipe', 'event')
+            ->where('tanggal_kajian', '>=', $today)
+            ->orderBy('tanggal_kajian', 'asc')
+            ->get();
+
+        // 2. Ambil Kajian Rutin (Mendatang)
+        // UBAH: Menggunakan paginate(3) sesuai permintaan
+        $kajianRutin = Kajian::where('tipe', 'rutin')
+            ->where('tanggal_kajian', '>=', $today)
+            ->orderBy('tanggal_kajian', 'asc')
+            ->paginate(3); // <--- Diubah jadi 3 item per halaman
+
         return view('public.jadwal-kajian', compact('kajianEvent', 'kajianRutin'));
     }
     
     public function artikel()
     {
-        $artikel = collect([]); 
+        // Ambil artikel yang statusnya 'published' (atau ambil semua jika belum pakai status)
+        // Urutkan dari yang terbaru
+        $artikel = Artikel::where('status_artikel', 'published')
+                    ->orderBy('tanggal_terbit_artikel', 'desc')
+                    ->paginate(9); // 9 artikel per halaman
+
+        // Kita perlu memproses sinopsis (potongan teks pendek) dari isi_artikel
+        // agar tampilan card rapi
+        $artikel->getCollection()->transform(function ($item) {
+            // Hapus tag HTML dan ambil 100 karakter pertama
+            $item->sinopsis = Str::limit(strip_tags($item->isi_artikel), 120);
+            return $item;
+        });
+
         return view('public.artikel', compact('artikel'));
     }
 
-    /**
-     * HALAMAN DONASI (FIXED)
-     * Mengirim variabel $programs ke view
-     */
-    public function donasi()
+    public function getArtikelDetail($id)
     {
-        try {
-            $programs = ProgramDonasi::orderBy('tanggal_selesai', 'asc')->get();
-        } catch (\Exception $e) {
-            $programs = collect([]);
-        }
+        $artikel = Artikel::findOrFail($id);
+        
+        // Format tanggal biar cantik di JS
+        $artikel->formatted_date = \Carbon\Carbon::parse($artikel->tanggal_terbit_artikel)->translatedFormat('d F Y');
+        
+        // Pastikan URL foto dikirim (menggunakan accessor dari Model)
+        $artikel->foto_url_lengkap = $artikel->foto_artikel; 
 
-        return view('public.donasi', compact('programs'));
+        return response()->json($artikel);
     }
 
     public function program()
     {
-        $program = collect([]); 
-        return view('public.program', compact('program'));
+        // 1. Data untuk Slider: Ambil 5 program yang AKAN DATANG (terdekat)
+        // Diurutkan ascending (yang paling dekat tanggalnya muncul duluan)
+        $sliderPrograms = Program::where('tanggal_program', '>=', Carbon::now())
+                            ->orderBy('tanggal_program', 'asc')
+                            ->take(5)
+                            ->get();
+
+        // 2. Data untuk List Bawah: Ambil SEMUA program
+        // Diurutkan descending (yang paling baru inputnya/tanggalnya di atas)
+        // Menggunakan pagination 9 item per halaman
+        $semuaProgram = Program::orderBy('tanggal_program', 'desc')->paginate(9);
+
+        return view('public.program', compact('sliderPrograms', 'semuaProgram'));
+    }
+
+    public function donasi()
+    {
+        // Ambil data donasi yang masih aktif (tanggal selesai >= hari ini ATAU null/selamanya)
+        $programDonasi = Donasi::withSum('pemasukan', 'nominal') // Hitung total pemasukan otomatis
+            ->where(function($query) {
+                $query->whereDate('tanggal_selesai', '>=', Carbon::today())
+                      ->orWhereNull('tanggal_selesai');
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Mempersiapkan data tambahan untuk View (Persentase & Gambar)
+        // Agar di blade tinggal panggil properti ini
+        $programDonasi->transform(function($item) {
+            $target = $item->target_dana;
+            $terkumpul = $item->pemasukan_sum_nominal ?? 0;
+            
+            // Hitung Persentase (maksimal 100%)
+            $persentase = ($target > 0) ? round(($terkumpul / $target) * 100) : 0;
+            
+            // Tambahkan properti custom ke objek
+            $item->dana_terkumpul = $terkumpul;
+            $item->persentase = min($persentase, 100); // Cap di 100% untuk progress bar visual
+            $item->persentase_asli = $persentase; // Untuk teks (bisa lebih dari 100%)
+            
+            // URL Gambar (Gunakan foto dari DB atau default)
+            $item->gambar_url = $item->foto_donasi 
+                ? asset('storage/' . $item->foto_donasi) 
+                : asset('images/donasi/default.jpg'); // Pastikan ada gambar default ini
+
+            return $item;
+        });
+
+        return view('public.donasi', compact('programDonasi'));
     }
 
     public function tabunganQurbanSaya()

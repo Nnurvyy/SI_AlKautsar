@@ -21,6 +21,7 @@ class KajianController extends Controller
     public function data(Request $request)
     {
         $status = $request->query('status', 'aktif');
+        $tipe = $request->query('tipe', '');
         $search = $request->query('search', '');
         $perPage = $request->query('perPage', 10);
         // 3. Ganti kolom default

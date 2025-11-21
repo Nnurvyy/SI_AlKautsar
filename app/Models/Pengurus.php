@@ -29,7 +29,8 @@ class Pengurus extends Authenticatable // extends Authenticatable
         'name',
         'email',
         'password',
-        'google_id', // Tambahkan ini
+        'google_id',
+        'avatar',
     ];
 
     /**
@@ -53,5 +54,14 @@ class Pengurus extends Authenticatable // extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function getAvatarUrlAttribute()
+    {
+        if ($this->avatar) {
+            return asset('storage/' . $this->avatar);
+        }
+        // Default avatar (Inisial nama atau gambar placeholder)
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=0d6efd&color=fff';
     }
 }

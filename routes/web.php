@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PemasukanController;
 use App\Http\Controllers\PengeluaranController;
@@ -19,11 +20,11 @@ use App\Http\Controllers\PemasukanDonasiController;
 use App\Http\Controllers\KategoriKeuanganController;
 use App\Http\Controllers\ArtikelController;
 use App\Http\Controllers\ProgramController;
+use App\Http\Controllers\ProfileController;
 
 
 use App\Http\Controllers\KajianController; 
 use App\Http\Controllers\ProgramDonasiController;
-use App\Http\Controllers\PemasukanKategoriController; 
 
 
 /*
@@ -33,18 +34,24 @@ use App\Http\Controllers\PemasukanKategoriController;
 */
 
 Route::get('/', [PublicController::class, 'landingPage'])->name('public.landing');
-Route::get('/jadwal-khotib', [PublicController::class, 'jadwalKhotib'])->name('public.jadwal-khotib');
-Route::get('/jadwal-kajian', [PublicController::class, 'jadwalKajian'])->name('public.jadwal-kajian');
-Route::get('/artikel', [PublicController::class, 'artikel'])->name('public.artikel');
-Route::get('/donasi', [PublicController::class, 'donasi'])->name('public.donasi');
-Route::get('/donasi/{id}', [DonasiController::class, 'detail'])->name('donasi.detail');
-Route::post('/donasi/store', [DonasiController::class, 'store'])->name('donasi.store');
-Route::get('/donasi-sukses', [DonasiController::class, 'sukses'])->name('donasi.sukses');
-Route::get('/program', [PublicController::class, 'program'])->name('public.program');
-Route::get('/jadwal-shalat-api', [PublicController::class, 'jadwalShalatApi'])->name('public.jadwal-shalat-api');
-Route::get('/tabungan-qurban-saya', [PublicController::class, 'tabunganQurbanSaya'])->name('public.tabungan-qurban-saya');
 Route::get('/jadwal-adzan', [PublicController::class, 'jadwalAdzan'])->name('public.jadwal-adzan');
+Route::get('/artikel', [PublicController::class, 'artikel'])->name('public.artikel');
+Route::get('/artikel/detail/{id}', [PublicController::class, 'getArtikelDetail'])->name('public.artikel.detail');
+Route::get('/donasi', [PublicController::class, 'donasi'])->name('public.donasi');
+Route::get('/program', [PublicController::class, 'program'])->name('public.program');
+
+Route::get('/khutbah-jumat', [PublicController::class, 'jadwalKhotib'])->name('public.jadwal-khotib');
+Route::get('/jadwal-kajian', [PublicController::class, 'jadwalKajian'])->name('public.jadwal-kajian');
 Route::get('/api/jadwal-adzan', [PublicController::class, 'jadwalAdzanApi'])->name('public.jadwal-adzan.api');
+
+Route::get('/tabungan-qurban-saya', function() {
+    if (Auth::guard('jamaah')->check()) {
+        // Jika sudah login, forward ke controller logic
+        return app(App\Http\Controllers\QurbanController::class)->index();
+    }
+    // Jika belum login, tetap load view tapi view-nya akan menampilkan modal (karena kita handle di blade)
+    return view('public.tabungan-qurban-saya'); 
+})->name('public.tabungan-qurban-saya');
 
 
 /*
@@ -90,6 +97,9 @@ Route::middleware(['auth:pengurus'])->prefix('pengurus')->name('pengurus.')->gro
 
     // Dashboard (URL: /pengurus/dashboard)
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
+
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     Route::get('kategori-keuangan/data', [KategoriKeuanganController::class, 'data']);
     Route::resource('kategori-keuangan', KategoriKeuanganController::class);
@@ -190,13 +200,12 @@ Route::middleware(['auth:pengurus'])->prefix('pengurus')->name('pengurus.')->gro
 */
 Route::middleware(['auth:jamaah'])->name('jamaah.')->group(function () {
 
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
     // URL: /qurban-saya (Name: jamaah.qurban)
     Route::get('/qurban-saya', [QurbanController::class, 'index'])->name('qurban');
-
-    // ... (Tambahkan rute 'jamaah' terotentikasi lainnya di sini) ...
-
 });
 
-Route::get('/jadwal-adzan', [PublicController::class, 'jadwalAdzan'])->name('public.jadwal-adzan');
-Route::get('/api/jadwal-adzan', [PublicController::class, 'jadwalAdzanApi'])->name('public.jadwal-adzan.api');
+
 

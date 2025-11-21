@@ -25,6 +25,7 @@ class Kajian extends Model
      * Sesuaikan kolom-kolom yang bisa diisi
      */
     protected $fillable = [
+        'tipe',
         'nama_penceramah',
         'tema_kajian',
         'tanggal_kajian',

@@ -6,17 +6,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#FFFFFF">
-    <title>Dashboard - E-Masjid</title>
+    <title>Dashboard - Smart Masjid</title>
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
-    <!-- ================================== -->
-    <!-- == TAMBAHAN CSS UNTUK DATATABLES == -->
     <link href="https://cdn.datatables.net/2.0.10/css/dataTables.bootstrap5.css" rel="stylesheet">
-    <!-- ================================== -->
-
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     @stack('styles')
 
@@ -41,14 +37,24 @@
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <div class="user-avatar me-2">A</div>
+                        
+                        {{-- PERBAIKAN: Tampilkan Foto Profil Pengurus --}}
+                        @if(Auth::user()->avatar)
+                            <img src="{{ Auth::user()->avatar_url }}" alt="Avatar" class="rounded-circle me-2 object-fit-cover" style="width: 40px; height: 40px;">
+                        @else
+                            {{-- Jika tidak ada foto, gunakan inisial dengan styling user-avatar (sesuai CSS admin lama) --}}
+                            <div class="user-avatar me-2 bg-primary text-white d-flex align-items-center justify-content-center rounded-circle" style="width: 40px; height: 40px; font-weight: bold;">
+                                {{ substr(Auth::user()->name, 0, 1) }}
+                            </div>
+                        @endif
+
                         <div>
-                            <div class="fw-bold">{{ Auth::user()->nama }}</div> <!-- Ganti jadi 'nama' -->
+                            <div class="fw-bold">{{ Auth::user()->name }}</div> 
                             <div class="small text-muted">{{ Auth::user()->email }}</div>
                         </div>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#">Profile</a></li>
+                        <li><a class="dropdown-item" href="{{ route('pengurus.profile.edit') }}">Profile</a></li>
                         <li><a class="dropdown-item" href="{{ route('pengurus.settings.edit') }}">Settings</a></li>
                         <li><a class="dropdown-item" href="{{ route('public.landing') }}">Landing Page</a></li>
                         <li><hr class="dropdown-divider"></li>
@@ -76,15 +82,10 @@
         </div>
     </div>
 
-    <!-- ================================== -->
-    <!-- == TAMBAHAN JS UNTUK JQUERY & DATATABLES == -->
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/2.0.10/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/2.0.10/js/dataTables.bootstrap5.js"></script>
-    <!-- ================================== -->
-
-
     <script>
         // Ambil elemen-elemen
         const sidebar = document.getElementById('sidebar');
@@ -141,7 +142,5 @@
         }
     </script>
 
-    @stack('scripts') <!-- Ini akan memuat program-donasi.js -->
-
-</body>
+    @stack('scripts') </body>
 </html>
