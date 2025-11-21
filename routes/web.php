@@ -179,7 +179,14 @@ Route::middleware(['auth:pengurus'])->prefix('pengurus')->name('pengurus.')->gro
     Route::resource('program', ProgramController::class);
     Route::get('program-data', [ProgramController::class, 'data'])->name('program.data');
 
-    Route::get('/grafik', [GrafikController::class, 'index'])->name('grafik.index');
+    // Halaman grafik
+    Route::get('grafik', [GrafikController::class, 'index'])
+        ->name('grafik.index');
+
+    // API grafik dipindah ke prefix /api atau /pengurus/api
+    Route::get('grafik/data', [GrafikController::class, 'dataUntukGrafik'])
+        ->name('grafik.data');
+
 
 
     Route::get('/settings', [PengaturanController::class, 'edit'])->name('settings.edit');
