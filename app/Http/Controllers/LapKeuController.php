@@ -40,20 +40,29 @@ class LapKeuController extends Controller
         // 1. Ambil Query dasar dengan filter yang sama
         $query = $this->getFilteredQuery($request);
 
-        // 2. Ambil semua data (tanpa pagination untuk PDF)
+        // 2. Ambil semua data
         $transaksi = $query->orderBy('tanggal', 'asc')->get();
 
-        // 3. Hitung Total
-        $totalPemasukan = $transaksi->where('tipe', 'pemasukan')->sum('nominal');
-        $totalPengeluaran = $transaksi->where('tipe', 'pengeluaran')->sum('nominal');
+        // 3. Hitung Total & Pisahkan Data (PENTING: Ini perbaikannya)
+        // Kita memfilter collection di level PHP agar tidak query DB 2 kali
+        $pemasukanData = $transaksi->where('tipe', 'pemasukan');
+        $pengeluaranData = $transaksi->where('tipe', 'pengeluaran');
+
+        $totalPemasukan = $pemasukanData->sum('nominal');
+        $totalPengeluaran = $pengeluaranData->sum('nominal');
         $saldo = $totalPemasukan - $totalPengeluaran;
 
-        // 4. Siapkan teks Periode untuk judul PDF
+        // 4. Ambil input filter tipe transaksi untuk logika tampilan di View
+        $tipe = $request->input('tipe_transaksi', 'semua');
+
+        // 5. Siapkan teks Periode
         $periodeTeks = $this->getPeriodeText($request);
 
-        // 5. Siapkan data array
+        // 6. Siapkan data array
         $data = [
-            'transaksi' => $transaksi, // Dikirim sebagai satu variabel transaksi
+            'tipe' => $tipe, // Variabel ini yang sebelumnya menyebabkan error
+            'pemasukanData' => $pemasukanData, // Kirim data yang sudah dipisah
+            'pengeluaranData' => $pengeluaranData, // Kirim data yang sudah dipisah
             'totalPemasukan' => $totalPemasukan,
             'totalPengeluaran' => $totalPengeluaran,
             'saldo' => $saldo,
@@ -61,7 +70,7 @@ class LapKeuController extends Controller
             'tanggalCetak' => now()->locale('id')->translatedFormat('d F Y')
         ];
         
-        $pdf = Pdf::loadView('lapkeu_pdf', $data); // Pastikan view PDF juga disesuaikan nanti
+        $pdf = Pdf::loadView('lapkeu_pdf', $data);
         return $pdf->download('laporan-keuangan-' . time() . '.pdf');
     }
 

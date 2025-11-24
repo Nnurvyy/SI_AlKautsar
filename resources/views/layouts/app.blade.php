@@ -32,9 +32,6 @@
             </div>
 
             <ul class="navbar-nav ms-auto d-flex flex-row">
-                <li class="nav-item me-3">
-                    <a class="nav-link nav-bell-link" href="#"><i class="bi bi-bell fs-5"></i></a>
-                </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         

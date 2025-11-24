@@ -25,7 +25,7 @@
     </div>
 
     <div class="d-flex justify-content-between align-items-center p-3 bg-white rounded shadow-sm mb-4">
-        <h5 class="fw-bold mb-0">Data Infaq Jumat</h5>
+        <h5 class="fw-bold mb-0">Data Infaq</h5>
     </div>
 
     {{-- Wrapper Tabel --}}
@@ -64,7 +64,7 @@
         <input type="hidden" id="id_infaq" name="id_infaq">
 
         <div class="modal-header">
-          <h5 class="modal-title" id="modalInfaqLabel">Tambah Infaq Jumat</h5>
+          <h5 class="modal-title" id="modalInfaqLabel">Tambah Infaq</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 

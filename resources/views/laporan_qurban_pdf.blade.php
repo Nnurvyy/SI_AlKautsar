@@ -24,7 +24,7 @@
 
 <div class="header">
     <h1>Laporan Pemasukan Tabungan Qurban</h1>
-    <p>E-Masjid (Al-Kautsar 561)</p>
+    <p>Smart Masjid ({{ $settings->nama_masjid }})</p>
     <p>Dicetak pada: {{ $tanggalCetak }}</p>
 </div>
 

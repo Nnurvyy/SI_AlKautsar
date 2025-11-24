@@ -30,16 +30,22 @@
 
         body {
             font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #2F3E3C; 
-            background-size: cover;
-            background-position: center center;
+            
+            /* --- BACKGROUND BARU (CSS Murni) --- */
+            background-color: #ffffff; /* Warna dasar Putih */
+            
+            /* Efek gradasi hijau lembut (seperti bercak cahaya hijau) */
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(152, 60%, 85%, 1) 0px, transparent 50%), 
+                radial-gradient(at 100% 100%, hsla(140, 60%, 90%, 1) 0px, transparent 50%);
             background-attachment: fixed;
-            color: #ffffff;
+            background-size: cover;
+            /* ----------------------------------- */
+
+            color: #2F3E3C; /* Ubah warna teks jadi gelap (Hijau tua) */
             display: flex;
             align-items: center; 
             justify-content: center;
-            /* == GANTI URL BACKGROUND DI SINI == */
-            background-image: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5)), url("{{ asset('images/bg-login.jpeg') }}");
         }
 
         /* ============================================== */
@@ -50,13 +56,14 @@
             top: 1.5rem;
             left: 1.5rem;
             font-size: 1.8rem; 
-            color: #B0C4C0; 
+            color: #198754; /* Hijau Masjid */
             text-decoration: none;
-            transition: color 0.2s;
+            transition: transform 0.2s;
             z-index: 10;
         }
         .back-link:hover {
-            color: #ffffff; 
+            color: #0f5132; 
+            transform: translateX(-5px);
         }
 
         /* ============================================== */
@@ -89,36 +96,41 @@
         /* == ELEMEN UMUM == */
         /* ============================================== */
         .logo {
-            font-size: 7rem; 
-            color: #ffffff;
+            font-size: 5rem; /* Sedikit diperkecil agar proporsional */
+            color: #198754; /* Logo jadi Hijau */
             margin-bottom: 1rem;
+            text-shadow: 0 4px 10px rgba(25, 135, 84, 0.2);
         }
 
         h1 {
             font-size: 2.25rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
+            color: #212529; /* Judul Hitam */
         }
 
         .subtitle {
             font-size: 1rem;
-            color: #B0C4C0; 
+            color: #6c757d; /* Abu-abu untuk subtitle */
             margin-bottom: 3rem;
         }
 
         a.link {
-            color: #ffffff;
+            color: #198754;
             font-weight: 600;
+            text-decoration: none;
+        }
+        a.link:hover {
             text-decoration: underline;
         }
 
         .auth-footer p, .auth-footer a {
             font-size: 0.9rem;
-            color: #B0C4C0;
+            color: #6c757d;
         }
         .auth-footer a {
             font-weight: 600;
-            color: #ffffff; 
+            color: #198754; 
             text-decoration: none;
         }
 
@@ -131,39 +143,33 @@
             position: relative;
         }
 
-        /* DIUBAH: !important pada background dihapus */
         .form-control {
             width: 100%;
             background: transparent; 
             border: none;
-            border-bottom: 1px solid #B0C4C0;
-            color: #ffffff;
+            /* Border bawah hijau tipis */
+            border-bottom: 1px solid #ced4da; 
+            color: #212529; /* Teks input gelap */
             font-size: 1rem;
             padding: 0.75rem 0.25rem;
-            transition: border-color 0.2s;
+            transition: all 0.3s;
         }
         .form-control::placeholder {
-            color: #B0C4C0;
+            color: #adb5bd; /* Placeholder abu muda */
         }
         .form-control:focus {
             outline: none;
-            border-bottom-color: #ffffff;
+            border-bottom-color: #198754; /* Saat diklik jadi Hijau */
         }
 
-        /* * DIUBAH: Perbaikan untuk style autofill browser (agar transparan) */
+        /* Fix Autofill Browser agar background tidak jadi kuning/putih blok */
         .form-control:-webkit-autofill,
         .form-control:-webkit-autofill:hover, 
         .form-control:-webkit-autofill:focus, 
         .form-control:-webkit-autofill:active  {
-            /* 1. Paksa warna teks dan kursor jadi putih */
-            -webkit-text-fill-color: #ffffff !important; 
-            caret-color: #ffffff !important;
-            
-            /* 2. Gunakan 'transition hack' untuk menunda background-color */
-            /* Ini akan "menipu" browser agar tidak menampilkan background-nya */
+            -webkit-text-fill-color: #212529 !important; /* Warna teks gelap */
+            caret-color: #212529 !important;
             transition: background-color 5000s ease-in-out 0s;
-            
-            /* 3. Hapus box-shadow hack yang lama */
             -webkit-box-shadow: none;
             box-shadow: none;
         }
@@ -175,10 +181,11 @@
         }
         .form-options a {
             font-size: 0.875rem;
-            color: #B0C4C0;
+            color: #6c757d;
             text-decoration: none;
         }
         .form-options a:hover {
+            color: #198754;
             text-decoration: underline;
         }
 
@@ -188,9 +195,12 @@
             right: 0.25rem;
             transform: translateY(-50%);
             cursor: pointer;
-            color: #B0C4C0;
+            color: #adb5bd;
             width: 20px; 
             height: 20px;
+        }
+        .password-toggle-icon:hover {
+            color: #198754;
         }
         
         /* ============================================== */
@@ -202,30 +212,35 @@
             padding: 0.8rem 1rem;
             font-size: 1rem;
             font-weight: 600;
-            border-radius: 8px;
+            border-radius: 12px; /* Lebih rounded */
             border: none;
             cursor: pointer;
             text-align: center;
             text-decoration: none;
-            transition: background-color 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
             margin-bottom: 1rem; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .btn:active {
+            transform: scale(0.98);
         }
 
         .btn-primary {
-            background-color: #B0C4C0; 
-            color: #2F3E3C; 
+            background-color: #198754; /* Hijau Bold */
+            color: #ffffff; 
         }
         .btn-primary:hover {
-            background-color: #ffffff;
+            background-color: #146c43;
+            box-shadow: 0 6px 12px rgba(25, 135, 84, 0.2);
         }
 
         .btn-secondary {
-            background-color: transparent;
-            color: #ffffff;
-            border: 1px solid #ffffff;
+            background-color: #ffffff;
+            color: #198754;
+            border: 1px solid #198754;
         }
         .btn-secondary:hover {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: #f8f9fa;
         }
 
         .btn-social {
@@ -234,6 +249,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 1px solid #e9ecef;
+        }
+        .btn-social:hover {
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
         }
         .btn-social i {
             font-size: 1.25rem;
@@ -244,7 +264,7 @@
             display: flex;
             align-items: center;
             text-align: center;
-            color: #B0C4C0;
+            color: #adb5bd;
             font-size: 0.875rem;
             margin: 1.5rem 0;
         }
@@ -252,7 +272,7 @@
         .divider::after {
             content: '';
             flex: 1;
-            border-bottom: 1px solid #B0C4C0;
+            border-bottom: 1px solid #e9ecef;
         }
         .divider:not(:empty)::before {
             margin-right: .5em;
@@ -262,7 +282,7 @@
         }
         
         .error-message {
-            color: #ff8a8a; 
+            color: #dc3545; 
             font-size: 0.875rem;
             text-align: left;
             margin-top: 0.5rem;

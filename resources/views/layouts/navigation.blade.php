@@ -1,7 +1,7 @@
 <nav id="sidebar" class="sidebar d-flex flex-column">
     <div class="sidebar-header">
-        <h5>Sistem Informasi</h5>
-        <p>Smart Masjid</p>
+        <h5>Smart Masjid</h5>
+        <p>{{ $settings->nama_masjid }}</p>
     </div>
 
     <!-- ====================================================== -->
@@ -77,7 +77,7 @@
         <li class="nav-item">
             <a href="{{ route('pengurus.infaq-jumat.index') }}"
                class="nav-link {{ request()->routeIs('pengurus.infaq-jumat.index') ? 'active' : '' }}">
-                <i class="bi bi-cash-coin"></i> Infaq Jumat
+                <i class="bi bi-cash-coin"></i> Infaq 
             </a>
         </li>
 
