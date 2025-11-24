@@ -12,7 +12,7 @@
         #modalTabungan .modal-body, #modalDetailTabungan .modal-body { overflow-y: auto; max-height: 70vh; }
         #modalTambahSetoran { z-index: 1060; }
         #modalDetailTabungan { z-index: 1050; }
-        #modalTabungan { z-index: 1050; }
+        #modalTabungan { z-index: 1070; }
         .card-stat { background-color: #f8f9fa; border-radius: .5rem; padding: 1rem; text-align: center; }
         .card-stat h5 { font-size: 0.9rem; color: #6c757d; margin-bottom: .5rem; }
         .card-stat .amount { font-size: 1.5rem; font-weight: 700; }

@@ -8,38 +8,17 @@
     .donasi-title-heading { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.8rem; color: #333; }
     .donasi-title-sub { font-size: 1rem; color: #6c757d; }
 
-    /* --- Card List Style (FIX RATIO GAMBAR) --- */
+    /* --- Card List Style --- */
     .donation-list-card { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); margin-bottom: 1.5rem; overflow: hidden; transition: transform 0.3s ease; height: 100%; }
     .donation-list-card:hover { transform: translateY(-5px); }
     
-    .donation-list-card .col-4 {
-        /* Kunci agar gambar punya rasio tetap di mobile */
-        display: flex; 
-        align-items: stretch;
-    }
-    .donation-list-card .card-img { 
-        object-fit: cover; 
-        width: 100%; 
-        height: 100%; 
-        /* Rasio 4:5 (Vertical agak panjang) */
-        aspect-ratio: 4/5; 
-        border-radius: 12px 0 0 12px !important; 
-    }
+    .donation-list-card .col-4 { display: flex; align-items: stretch; }
+    .donation-list-card .card-img { object-fit: cover; width: 100%; height: 100%; aspect-ratio: 4/5; border-radius: 12px 0 0 12px !important; }
 
     .donation-list-card .card-body { padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
     .donation-list-card .card-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.3; }
     
-    .btn-detail-donasi { 
-        background-color: #fff; 
-        border: 1px solid #1abc9c; 
-        color: #1abc9c; 
-        border-radius: 50px; 
-        padding: 0.3rem 0.8rem; 
-        font-size: 0.75rem; 
-        font-weight: 600; 
-        text-decoration: none; 
-        transition: all 0.2s;
-    }
+    .btn-detail-donasi { background-color: #fff; border: 1px solid #1abc9c; color: #1abc9c; border-radius: 50px; padding: 0.3rem 0.8rem; font-size: 0.75rem; font-weight: 600; text-decoration: none; transition: all 0.2s; }
     .btn-detail-donasi:hover { background-color: #1abc9c; color: white; }
 
     /* Slider Style */
@@ -65,12 +44,15 @@
 
 @section('content')
 
+{{-- Meta CSRF Token untuk AJAX --}}
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
 <div class="container pt-4 pb-3">
     <h2 class="donasi-title-heading">Mari Berdonasi</h2>
     <p class="donasi-title-sub">Setiap donasi Anda membawa harapan baru.</p>
 </div>
 
-{{-- SLIDER (Tidak Berubah Signifikan, hanya link tombol) --}}
+{{-- SLIDER --}}
 <div class="container mb-5">
     @if(!$programDonasi->isEmpty())
         <div class="swiper-container-wrapper">
@@ -115,7 +97,6 @@
                         <div>
                             <h5 class="card-title text-dark">{{ $program->nama_donasi }}</h5>
                             
-                            {{-- LOGIKA SISA HARI YANG BENAR --}}
                             <div class="mb-2">
                                 @if($program->tanggal_selesai)
                                     @php 
@@ -157,7 +138,7 @@
 
 {{-- MODAL DETAIL DONASI --}}
 <div class="modal fade" id="modalDonasiDetail" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable"> {{-- Scrollable agar konten panjang bisa discroll --}}
+    <div class="modal-dialog modal-dialog-scrollable"> 
         <div class="modal-content rounded-4 border-0 shadow">
             <div class="modal-header border-0 pb-0">
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -192,45 +173,78 @@
 
                     <p class="text-muted small mb-4" id="mDeskripsi">Deskripsi program...</p>
 
-                    {{-- Metode Donasi --}}
-                    <h6 class="fw-bold border-bottom pb-2 mb-3">Metode Donasi</h6>
-                    
-                    {{-- Opsi 1: Transfer Bank --}}
-                    <div class="payment-option" onclick="copyToClipboard('1234567890', 'Rekening BSI')">
-                        <img src="{{ asset('images/icons/bsi.png') }}" class="payment-icon" onerror="this.src='https://via.placeholder.com/40'">
-                        <div class="flex-grow-1">
-                            <div class="fw-bold small">Bank Syariah Indonesia (BSI)</div>
-                            <div class="small text-muted">1234 5678 90 a.n Masjid Al-Kautsar</div>
-                        </div>
-                        <i class="bi bi-files text-primary"></i>
-                    </div>
+                    {{-- (BARU) FORM DONASI ONLINE MIDTRANS --}}
+                    <div class="card border-success border-opacity-25 bg-success bg-opacity-10 mb-4">
+                        <div class="card-body p-3">
+                            <h6 class="fw-bold text-success mb-3"><i class="bi bi-lightning-charge-fill"></i> Donasi Instan (QRIS/E-Wallet)</h6>
+                            
+                            <form id="formDonasiOnline">
+                                <input type="hidden" id="pay_id_donasi" name="id_donasi">
+                                
+                                <div class="mb-2">
+                                    <label class="small fw-bold text-muted">Nominal Donasi</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">Rp</span>
+                                        <input type="number" class="form-control" id="pay_nominal" name="nominal" placeholder="Min. 1.000" required min="1000">
+                                    </div>
+                                </div>
+                                
+                                <div class="row g-2 mb-2">
+                                    <div class="col-6">
+                                        <input type="text" class="form-control form-control-sm" id="pay_nama" name="nama" placeholder="Nama Anda (Hamba Allah)" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="email" class="form-control form-control-sm" id="pay_email" name="email" placeholder="Email (Untuk Bukti)" required>
+                                    </div>
+                                </div>
 
-                    {{-- Opsi 2: QRIS --}}
-                    <div class="payment-option" data-bs-toggle="collapse" data-bs-target="#collapseQris">
-                        <img src="{{ asset('images/icons/qris.png') }}" class="payment-icon" onerror="this.src='https://via.placeholder.com/40'">
-                        <div class="flex-grow-1">
-                            <div class="fw-bold small">QRIS (Scan)</div>
-                            <div class="small text-muted">Gopay, OVO, Dana, ShopeePay</div>
-                        </div>
-                        <i class="bi bi-chevron-down text-muted"></i>
-                    </div>
-                    <div class="collapse mb-3" id="collapseQris">
-                        <div class="card card-body text-center">
-                            {{-- Ganti dengan QRIS Asli --}}
-                            <img src="https://via.placeholder.com/200x200?text=QRIS+CODE" class="img-fluid" style="max-width: 200px; margin: 0 auto;">
-                            <small class="text-muted mt-2">Scan kode di atas untuk berdonasi</small>
-                        </div>
-                    </div>
+                                <div class="mb-2">
+                                    <textarea class="form-control form-control-sm" id="pay_pesan" name="pesan" rows="1" placeholder="Doa / Pesan (Opsional)"></textarea>
+                                </div>
 
-                    {{-- Opsi 3: Konfirmasi WA --}}
-                    <a href="https://wa.me/6281234567890?text=Saya%20ingin%20donasi%20untuk%20program..." target="_blank" class="payment-option text-decoration-none text-dark">
-                        <i class="bi bi-whatsapp text-success fs-4 me-3"></i>
-                        <div class="flex-grow-1">
-                            <div class="fw-bold small">Konfirmasi WhatsApp</div>
-                            <div class="small text-muted">Kirim bukti transfer</div>
+                                <button type="submit" class="btn btn-success w-100 btn-sm fw-bold shadow-sm" id="btnPay">
+                                    Bayar Sekarang <i class="bi bi-arrow-right"></i>
+                                </button>
+                            </form>
                         </div>
-                        <i class="bi bi-arrow-right-short"></i>
-                    </a>
+                    </div>
+                    {{-- AKHIR FORM DONASI ONLINE --}}
+
+                    {{-- Metode Donasi Manual (Collapse) --}}
+                    <div class="accordion accordion-flush mb-4" id="accordionManual">
+                        <div class="accordion-item border rounded overflow-hidden">
+                            <h2 class="accordion-header" id="flush-headingOne">
+                                <button class="accordion-button collapsed small py-2 bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne">
+                                    <i class="bi bi-bank me-2"></i> Transfer Manual / Tunai
+                                </button>
+                            </h2>
+                            <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionManual">
+                                <div class="accordion-body small p-3">
+                                    
+                                    {{-- Opsi 1: Transfer Bank --}}
+                                    <div class="payment-option" onclick="copyToClipboard('1234567890', 'Rekening BSI')">
+                                        <img src="{{ asset('images/icons/bsi.png') }}" class="payment-icon" onerror="this.src='/images/icons/donasi.png'">
+                                        <div class="flex-grow-1">
+                                            <div class="fw-bold small">Bank Syariah Indonesia (BSI)</div>
+                                            <div class="small text-muted">1234 5678 90 a.n Masjid Al-Kautsar</div>
+                                        </div>
+                                        <i class="bi bi-files text-primary"></i>
+                                    </div>
+
+                                    {{-- Opsi 3: Konfirmasi WA --}}
+                                    <a href="https://wa.me/6281234567890?text=Saya%20ingin%20donasi%20untuk%20program..." target="_blank" class="payment-option text-decoration-none text-dark mb-0">
+                                        <i class="bi bi-whatsapp text-success fs-4 me-3"></i>
+                                        <div class="flex-grow-1">
+                                            <div class="fw-bold small">Konfirmasi WhatsApp</div>
+                                            <div class="small text-muted">Kirim bukti transfer</div>
+                                        </div>
+                                        <i class="bi bi-arrow-right-short"></i>
+                                    </a>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     {{-- Pesan Donatur --}}
                     <h6 class="fw-bold border-bottom pb-2 mb-3 mt-4">Doa & Dukungan</h6>
@@ -254,6 +268,12 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{{-- (BARU) Script Midtrans Snap --}}
+<script type="text/javascript"
+    src="https://app.sandbox.midtrans.com/snap/snap.js"
+    data-client-key="{{ config('midtrans.client_key') }}"></script>
+
 <script>
     // --- Swiper Init ---
     document.addEventListener('DOMContentLoaded', function() {
@@ -275,12 +295,20 @@
         currentDonasiId = id;
         currentDonaturPage = 1;
         
+        // (BARU) Set ID ke form payment hidden
+        document.getElementById('pay_id_donasi').value = id; 
+        
         // Reset Tampilan
         document.getElementById('loadingDetail').classList.remove('d-none');
         document.getElementById('contentDetail').classList.add('d-none');
         document.getElementById('donaturList').innerHTML = '';
         document.getElementById('btnLoadMore').classList.add('d-none');
         
+        // Reset Form Payment
+        document.getElementById('formDonasiOnline').reset();
+        document.getElementById('btnPay').innerHTML = 'Bayar Sekarang <i class="bi bi-arrow-right"></i>';
+        document.getElementById('btnPay').disabled = false;
+
         modalDetail.show();
 
         fetchDataDonasi(id);
@@ -345,6 +373,66 @@
                 modalDetail.hide();
             });
     }
+
+    // (BARU) Logic Submit Form Donasi Online (Midtrans)
+    document.getElementById('formDonasiOnline').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const btn = document.getElementById('btnPay');
+        const originalBtnText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Memproses...';
+        btn.disabled = true;
+
+        // Ambil Data Form
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            // Request Token ke Backend
+            const response = await fetch('/donasi/checkout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                // Munculkan Popup Midtrans
+                window.snap.pay(result.snap_token, {
+                    onSuccess: function(result){
+                        Swal.fire('Terima Kasih!', 'Donasi Anda berhasil diterima.', 'success').then(() => {
+                            modalDetail.hide();
+                            location.reload(); // Reload untuk update progress bar
+                        });
+                    },
+                    onPending: function(result){
+                        Swal.fire('Menunggu Pembayaran', 'Silakan selesaikan pembayaran Anda via ' + result.payment_type, 'info');
+                    },
+                    onError: function(result){
+                        Swal.fire('Gagal', 'Pembayaran gagal.', 'error');
+                    },
+                    onClose: function(){
+                        btn.innerHTML = originalBtnText;
+                        btn.disabled = false;
+                    }
+                });
+            } else {
+                Swal.fire('Gagal', result.message || 'Terjadi kesalahan saat memproses donasi.', 'error');
+                btn.innerHTML = originalBtnText;
+                btn.disabled = false;
+            }
+
+        } catch (error) {
+            console.error(error);
+            Swal.fire('Error', 'Terjadi kesalahan koneksi.', 'error');
+            btn.innerHTML = originalBtnText;
+            btn.disabled = false;
+        }
+    });
 
     // Copy to Clipboard Helper
     function copyToClipboard(text, label) {

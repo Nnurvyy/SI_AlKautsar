@@ -11,10 +11,18 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+
+        // alias jika ada
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
+        ]);
+
+        // Tambahkan pengecualian CSRF (Laravel 11 & 12)
+        $middleware->validateCsrfTokens(except: [
+            '/midtrans/callback',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
-    })->create();
+    })
+    ->create();

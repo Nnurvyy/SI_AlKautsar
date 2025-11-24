@@ -18,10 +18,13 @@ class PemasukanDonasi extends Model
     protected $fillable = [
         'id_pemasukan_donasi',
         'id_donasi',
+        'order_id',      
         'tanggal',
         'nama_donatur',
         'metode_pembayaran',
         'nominal',
+        'status',        
+        'snap_token',    
         'pesan',
     ];
 

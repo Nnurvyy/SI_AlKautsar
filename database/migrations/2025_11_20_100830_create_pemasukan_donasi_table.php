@@ -16,15 +16,19 @@ return new class extends Migration
 
             // Foreign key ke donasi
             $table->uuid('id_donasi');
+            $table->string('order_id')->nullable()->unique();
             $table->foreign('id_donasi')
                   ->references('id_donasi')
                   ->on('donasi')
                   ->onDelete('cascade');
+            // Status: pending, success, failed, expire
 
             $table->date('tanggal');
             $table->string('nama_donatur');
             $table->enum('metode_pembayaran', ['tunai', 'transfer', 'whatsapp'])->default('tunai');
             $table->bigInteger('nominal');
+            $table->string('status')->default('pending');
+            $table->string('snap_token')->nullable();
             $table->text('pesan')->nullable();
 
             $table->timestamps();

@@ -21,6 +21,7 @@ use App\Http\Controllers\KategoriKeuanganController;
 use App\Http\Controllers\ArtikelController;
 use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DonasiPaymentController;
 
 
 use App\Http\Controllers\KajianController; 
@@ -39,6 +40,13 @@ Route::get('/artikel', [PublicController::class, 'artikel'])->name('public.artik
 Route::get('/artikel/detail/{id}', [PublicController::class, 'getArtikelDetail'])->name('public.artikel.detail');
 Route::get('/donasi', [PublicController::class, 'donasi'])->name('public.donasi');
 Route::get('/donasi/detail/{id}', [PublicController::class, 'getDonasiDetail'])->name('public.donasi.detail');
+// Route Checkout (Untuk Ajax Form)
+Route::post('/donasi/checkout', [DonasiPaymentController::class, 'checkout'])->name('donasi.checkout');
+
+// Route Callback (Wajib POST)
+Route::post('/midtrans/callback', [DonasiPaymentController::class, 'callback']);
+
+
 Route::get('/program', [PublicController::class, 'program'])->name('public.program');
 Route::get('/program/detail/{id}', [PublicController::class, 'getProgramDetail'])->name('public.program.detail');
 

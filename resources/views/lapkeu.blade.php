@@ -13,27 +13,26 @@
             </h5>
         </div>
         <div class="card-body">
-            
-            <form action="{{ route('pengurus.lapkeu.export.pdf') }}" method="GET" target="_blank">
+            <form action="{{ route('pengurus.lapkeu.index') }}" method="GET">
                 
                 <div class="row g-3 align-items-end mb-3">
                     
                     <div class="col-md-3">
                         <label for="tipe_transaksi" class="form-label">Tipe Transaksi</label>
                         <select id="tipe_transaksi" name="tipe_transaksi" class="form-select">
-                            <option value="semua" selected>Pemasukan & Pengeluaran</option>
-                            <option value="pemasukan">Pemasukan Saja</option>
-                            <option value="pengeluaran">Pengeluaran Saja</option>
+                            <option value="semua" {{ request('tipe_transaksi') == 'semua' ? 'selected' : '' }}>Pemasukan & Pengeluaran</option>
+                            <option value="pemasukan" {{ request('tipe_transaksi') == 'pemasukan' ? 'selected' : '' }}>Pemasukan Saja</option>
+                            <option value="pengeluaran" {{ request('tipe_transaksi') == 'pengeluaran' ? 'selected' : '' }}>Pengeluaran Saja</option>
                         </select>
                     </div>
 
                     <div class="col-md-3">
                         <label for="filter-periode" class="form-label">Periode Waktu</label>
                         <select id="filter-periode" name="periode" class="form-select">
-                            <option value="semua" selected>Semua</option>
-                            <option value="per_bulan">Per Bulan</option>
-                            <option value="per_tahun">Per Tahun</option>
-                            <option value="rentang_waktu">Rentang Waktu</option>
+                            <option value="semua" {{ request('periode') == 'semua' ? 'selected' : '' }}>Semua</option>
+                            <option value="per_bulan" {{ request('periode') == 'per_bulan' ? 'selected' : '' }}>Per Bulan</option>
+                            <option value="per_tahun" {{ request('periode') == 'per_tahun' ? 'selected' : '' }}>Per Tahun</option>
+                            <option value="rentang_waktu" {{ request('periode') == 'rentang_waktu' ? 'selected' : '' }}>Rentang Waktu</option>
                         </select>
                     </div>
 
@@ -42,26 +41,18 @@
                             <div class="col-6">
                                 <label for="filter_bulan" class="form-label">Bulan</label>
                                 <select id="filter_bulan" name="bulan" class="form-select">
-                                    <option value="1">Januari</option>
-                                    <option value="2">Februari</option>
-                                    <option value="3">Maret</option>
-                                    <option value="4">April</option>
-                                    <option value="5">Mei</option>
-                                    <option value="6">Juni</option>
-                                    <option value="7">Juli</option>
-                                    <option value="8">Agustus</option>
-                                    <option value="9">September</option>
-                                    <option value="10">Oktober</option>
-                                    <option value="11">November</option>
-                                    <option value="12">Desember</option>
+                                    @foreach(range(1, 12) as $m)
+                                        <option value="{{ $m }}" {{ request('bulan') == $m ? 'selected' : '' }}>
+                                            {{ \Carbon\Carbon::create()->month($m)->locale('id')->monthName }}
+                                        </option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="col-6">
                                 <label for="tahun_bulanan" class="form-label">Tahun</label>
                                 <select id="tahun_bulanan" name="tahun_bulanan" class="form-select">
-                                    <option value="2025">2025</option>
-                                    <option value="2024">2024</option>
-                                    <option value="2023">2023</option>
+                                    <option value="2025" {{ request('tahun_bulanan') == '2025' ? 'selected' : '' }}>2025</option>
+                                    <option value="2024" {{ request('tahun_bulanan') == '2024' ? 'selected' : '' }}>2024</option>
                                 </select>
                             </div>
                         </div>
@@ -70,9 +61,8 @@
                     <div class="col-md-3" id="filter-tahunan" style="display: none;">
                         <label for="tahun_tahunan" class="form-label">Tahun</label>
                         <select id="tahun_tahunan" name="tahun_tahunan" class="form-select">
-                            <option value="2025">2025</option>
-                            <option value="2024">2024</option>
-                            <option value="2023">2023</option>
+                            <option value="2025" {{ request('tahun_tahunan') == '2025' ? 'selected' : '' }}>2025</option>
+                            <option value="2024" {{ request('tahun_tahunan') == '2024' ? 'selected' : '' }}>2024</option>
                         </select>
                     </div>
 
@@ -80,23 +70,28 @@
                         <div class="row g-2">
                             <div class="col-6">
                                 <label for="tanggal_mulai" class="form-label">Tanggal Mulai</label>
-                                <input type="date" class="form-control" id="tanggal_mulai" name="tanggal_mulai">
+                                <input type="date" class="form-control" id="tanggal_mulai" name="tanggal_mulai" value="{{ request('tanggal_mulai') }}">
                             </div>
                             <div class="col-6">
                                 <label for="tanggal_akhir" class="form-label">Tanggal Akhir</label>
-                                <input type="date" class="form-control" id="tanggal_akhir" name="tanggal_akhir">
+                                <input type="date" class="form-control" id="tanggal_akhir" name="tanggal_akhir" value="{{ request('tanggal_akhir') }}">
                             </div>
                         </div>
                     </div>
 
-                </div> <div class="row">
+                </div> 
+                <div class="row">
                     <div class="col-12">
-                        <button type="submit" class="btn btn-danger me-2">
-                            <i class="bi bi-file-earmark-pdf me-1"></i>
-                            Export PDF
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="bi bi-search me-1"></i> Terapkan Filter
+                        </button>
+
+                        <button type="submit" formaction="{{ route('pengurus.lapkeu.export.pdf') }}" formtarget="_blank" class="btn btn-danger">
+                            <i class="bi bi-file-earmark-pdf me-1"></i> Export PDF
                         </button>
                     </div>
-                </div> </form>
+                </div> 
+            </form>
         </div>
     </div>
 
@@ -106,7 +101,9 @@
                 <div class="card-body">
                     <div>
                         <p class="text-muted mb-1">Total Pemasukan</p>
-                        <h4 class="fw-bold mb-0 text-custom-green">Rp 0</h4>
+                        <h4 class="fw-bold mb-0 text-success">
+                            Rp {{ number_format($totalPemasukan, 0, ',', '.') }}
+                        </h4>
                     </div>
                 </div>
             </div>
@@ -116,7 +113,9 @@
                 <div class="card-body">
                     <div>
                         <p class="text-muted mb-1">Total Pengeluaran</p>
-                        <h4 class="fw-bold mb-0 text-custom-red">Rp 0</h4>
+                        <h4 class="fw-bold mb-0 text-danger">
+                            Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}
+                        </h4>
                     </div>
                 </div>
             </div>
@@ -125,8 +124,10 @@
             <div class="card stat-card">
                 <div class="card-body">
                     <div>
-                        <p class="text-muted mb-1">Saldo</p>
-                        <h4 class="fw-bold mb-0 text-custom-blue">Rp 0</h4>
+                        <p class="text-muted mb-1">Saldo (Berdasarkan Filter)</p>
+                        <h4 class="fw-bold mb-0 {{ $saldo < 0 ? 'text-danger' : 'text-primary' }}">
+                            Rp {{ number_format($saldo, 0, ',', '.') }}
+                        </h4>
                     </div>
                 </div>
             </div>
@@ -135,31 +136,74 @@
 
     <div class="card transaction-table border-0 shadow-sm">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold">Data Transaksi - Semua Periode</h5>
-            <small class="text-muted">0 transaksi</small> 
+            <h5 class="mb-0 fw-bold">Data Transaksi</h5>
+            <small class="text-muted">
+                Menampilkan {{ $transaksi->firstItem() ?? 0 }} - {{ $transaksi->lastItem() ?? 0 }} dari {{ $transaksi->total() }} transaksi
+            </small> 
         </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th scope="col" style="width: 10%;">Tanggal</th>
+                            <th scope="col" style="width: 12%;">Tanggal</th>
                             <th scope="col" style="width: 10%;">Tipe</th>
                             <th scope="col" style="width: 15%;">Kategori</th>
-                            <th scope="col" style="width: 15%;">Divisi</th>
+                            <th scope="col" style="width: 10%;">Divisi</th>
                             <th scope="col">Deskripsi</th>
                             <th scope="col" style="width: 15%;" class="text-end">Jumlah</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td colspan="6" class="text-center text-muted p-4">
-                                Tidak ada data transaksi untuk periode ini.
-                            </td>
-                        </tr>
+                        @forelse($transaksi as $item)
+                            @php
+                                $isPemasukan = $item->tipe == 'pemasukan';
+                                $badgeClass = $isPemasukan ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger';
+                                $textClass = $isPemasukan ? 'text-success' : 'text-danger';
+                                $symbol = $isPemasukan ? '+' : '-';
+                            @endphp
+                            <tr>
+                                <td>
+                                    {{ \Carbon\Carbon::parse($item->tanggal)->locale('id')->translatedFormat('d M Y') }}
+                                </td>
+                                <td>
+                                    <span class="badge {{ $badgeClass }} rounded-pill">
+                                        {{ ucfirst($item->tipe) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {{ $item->kategori->nama_kategori_keuangan ?? '-' }}
+                                </td>
+                                <td>
+                                    {{-- Note: Model Keuangan tidak ada kolom divisi, 
+                                         jika kategori punya divisi bisa diganti $item->kategori->divisi --}}
+                                    - 
+                                </td>
+                                <td>
+                                    <span class="d-inline-block text-truncate" style="max-width: 300px;">
+                                        {{ $item->deskripsi ?? '-' }}
+                                    </span>
+                                </td>
+                                <td class="text-end fw-bold {{ $textClass }}">
+                                    {{ $symbol }} Rp {{ number_format($item->nominal, 0, ',', '.') }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center text-muted p-5">
+                                    <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                                    Tidak ada data transaksi yang sesuai filter ini.
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
+
+            <div class="mt-4 d-flex justify-content-end">
+                {{ $transaksi->withQueryString()->links() }}
+            </div>
+
         </div>
     </div>
 </div>
@@ -194,6 +238,7 @@
         }
 
         periodeFilter.addEventListener('change', toggleFilterVisibility);
+        // Jalankan sekali saat load agar sesuai dengan old input (jika ada)
         toggleFilterVisibility();
     });
 </script>
