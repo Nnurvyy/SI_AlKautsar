@@ -71,7 +71,10 @@ class PengaturanController extends Controller
             'nama_masjid' => 'required|string|max:255',
             'lokasi_nama' => 'required|string|max:255',
             'lokasi_id_api' => 'required|string|max:10',
-            'lokasi_nama_api' => 'required|string|max:255', // <-- PENTING
+            'lokasi_nama_api' => 'required|string|max:255', 
+            'deskripsi_masjid' => 'nullable|string',
+            'latitude' => 'required|numeric|between:-90,90',
+            'longitude' => 'required|numeric|between:-180,180',
             'foto_masjid' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', 
             'social_facebook' => 'nullable|url',
             'social_instagram' => 'nullable|url',

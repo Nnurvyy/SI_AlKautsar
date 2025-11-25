@@ -247,7 +247,7 @@
                 @if (!empty($settings->social_whatsapp)) <a href="https://wa.me/{{ $settings->social_whatsapp }}" class="social-icon bg-whatsapp" target="_blank"><i class="bi bi-whatsapp"></i></a> @endif
             </div>
             <p class="footer-address"><strong>Masjid {{ $settings->nama_masjid }}</strong><br>{!! nl2br(e($settings->lokasi_nama)) !!}</p>
-            <div class="copyright-text">Copyright © {{ $settings->nama_masjid }} {{ date('Y') }}</div>
+            <div class="copyright-text">Copyright © Masjid {{ $settings->nama_masjid }} {{ date('Y') }}</div>
         </div>
     </footer>
 

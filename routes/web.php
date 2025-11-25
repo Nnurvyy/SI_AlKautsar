@@ -63,6 +63,8 @@ Route::get('/tabungan-qurban-saya', function() {
     return view('public.tabungan-qurban-saya'); 
 })->name('public.tabungan-qurban-saya');
 
+Route::get('/tentang-kami', [App\Http\Controllers\PublicController::class, 'tentangKami'])->name('public.tentang-kami');
+
 
 /*
 |--------------------------------------------------------------------------

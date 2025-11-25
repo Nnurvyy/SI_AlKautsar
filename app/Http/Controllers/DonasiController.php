@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class DonasiController extends Controller
 {
@@ -18,12 +19,13 @@ class DonasiController extends Controller
     // Data JSON untuk DataTables/Pagination
     public function data(Request $request)
     {
-        $search = $request->query('search', '');
+        $search  = $request->query('search', '');
+        $status  = $request->query('status', 'aktif'); // Default 'aktif'
         $perPage = $request->query('perPage', 10);
-        $sortBy = $request->query('sortBy', 'created_at');
+        $sortBy  = $request->query('sortBy', 'created_at');
         $sortDir = $request->query('sortDir', 'desc');
 
-        // Subquery untuk menghitung total terkumpul per donasi
+        // Subquery total terkumpul
         $totalTerkumpulSubquery = DB::table('pemasukan_donasi')
             ->select(DB::raw('COALESCE(SUM(nominal), 0)'))
             ->whereColumn('id_donasi', 'donasi.id_donasi');
@@ -31,16 +33,34 @@ class DonasiController extends Controller
         $query = Donasi::select('donasi.*')
             ->selectSub($totalTerkumpulSubquery, 'total_terkumpul');
 
-        // Filter Search
+        // 1. Filter Search
         if (!empty($search)) {
             $query->where('nama_donasi', 'ILIKE', "%{$search}%");
         }
 
-        // Sorting
+        // 2. Filter Status
+        $today = Carbon::today();
+        if ($status === 'aktif') {
+            // Aktif = Tanggal Selesai >= Hari Ini ATAU Tanggal Selesai NULL (Unlimited)
+            $query->where(function($q) use ($today) {
+                $q->whereDate('tanggal_selesai', '>=', $today)
+                  ->orWhereNull('tanggal_selesai');
+            });
+        } elseif ($status === 'lewat') {
+            // Lewat = Tanggal Selesai < Hari Ini
+            $query->whereDate('tanggal_selesai', '<', $today);
+        }
+        // Jika 'semua', tidak ada where tambahan
+
+        // 3. Sorting
+        $allowedSorts = ['nama_donasi', 'target_dana', 'tanggal_mulai', 'tanggal_selesai', 'created_at'];
+        
         if ($sortBy === 'total_terkumpul') {
             $query->orderByRaw("($totalTerkumpulSubquery) $sortDir");
-        } else {
+        } elseif (in_array($sortBy, $allowedSorts)) {
             $query->orderBy($sortBy, $sortDir);
+        } else {
+            $query->orderBy('created_at', 'desc');
         }
 
         $data = $query->paginate($perPage);

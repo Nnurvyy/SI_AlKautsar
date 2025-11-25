@@ -133,37 +133,40 @@ class PublicController extends Controller
 
     public function donasi()
     {
-        // Ambil data donasi yang masih aktif (tanggal selesai >= hari ini ATAU null/selamanya)
-        $programDonasi = Donasi::withSum('pemasukan', 'nominal') // Hitung total pemasukan otomatis
-            ->where(function($query) {
-                $query->whereDate('tanggal_selesai', '>=', Carbon::today())
+        // Gunakan Carbon startOfDay agar akurat membandingkan tanggal (jam 00:00:00)
+        $today = Carbon::now()->startOfDay();
+
+        // Ambil donasi yang BELUM berakhir atau UNLIMITED
+        $programDonasi = Donasi::withSum('pemasukan', 'nominal')
+            ->where(function($query) use ($today) {
+                $query->whereDate('tanggal_selesai', '>=', $today)
                       ->orWhereNull('tanggal_selesai');
             })
-            ->orderBy('created_at', 'desc')
+            ->orderBy('created_at', 'desc') // Tampilkan yang terbaru dibuat di atas
             ->get();
 
-        // Mempersiapkan data tambahan untuk View (Persentase & Gambar)
-        // Agar di blade tinggal panggil properti ini
+        // Transformasi data untuk mempermudah View
         $programDonasi->transform(function($item) {
             $target = $item->target_dana;
             $terkumpul = $item->pemasukan_sum_nominal ?? 0;
             
-            // Hitung Persentase (maksimal 100%)
+            // Hitung Persentase
             $persentase = ($target > 0) ? round(($terkumpul / $target) * 100) : 0;
             
-            // Tambahkan properti custom ke objek
+            // Inject property baru ke object model
             $item->dana_terkumpul = $terkumpul;
-            $item->persentase = min($persentase, 100); // Cap di 100% untuk progress bar visual
-            $item->persentase_asli = $persentase; // Untuk teks (bisa lebih dari 100%)
+            $item->persentase = min($persentase, 100); // Max 100% (Visual Bar)
+            $item->persentase_asli = $persentase;      // Text asli (bisa > 100%)
             
-            // URL Gambar (Gunakan foto dari DB atau default)
+            // URL Gambar
             $item->gambar_url = $item->foto_donasi 
                 ? asset('storage/' . $item->foto_donasi) 
-                : asset('images/donasi/default.jpg'); // Pastikan ada gambar default ini
+                : asset('images/donasi/default.jpg'); 
 
             return $item;
         });
 
+        // Jika $programDonasi kosong, View akan otomatis menampilkan alert Biru (Sesuai kode blade sebelumnya)
         return view('public.donasi', compact('programDonasi'));
     }
 
@@ -303,6 +306,21 @@ class PublicController extends Controller
             Log::error('Error in jadwalAdzanApi: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Terjadi kesalahan pada server.'], 500);
         }
+    }
+
+    public function tentangKami()
+    {
+        // Ambil data profil masjid
+        $masjidSettings = \App\Models\MasjidProfil::first();
+
+        // Fallback jika data kosong (untuk mencegah error view)
+        if (!$masjidSettings) {
+            $masjidSettings = new \App\Models\MasjidProfil();
+            $masjidSettings->nama_masjid = 'Nama Masjid';
+            $masjidSettings->lokasi_nama = 'Alamat Belum Diisi';
+        }
+
+        return view('public.tentang-kami', compact('masjidSettings'));
     }
 
     public function landingPage()

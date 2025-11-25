@@ -336,7 +336,7 @@
                 <div>
                     <h5>Jadwal Adzan</h5>
                     <p class="mb-2" style="font-size: 0.75rem; color: #555; margin-bottom: 0 !important;">
-                        (Tasikmalaya)
+                        {{ $masjidSettings->lokasi_nama_api }}
                     </p>
                     <div class="prayer-times-in-card" id="prayerTimesContainerMobile">
                         <div class="prayer-card">
@@ -397,6 +397,15 @@
                         <img src="{{ asset('images/icons/qurban.png') }}" alt="Tabungan Qurban Icon" class="feature-icon-img">
                         <span>Tabungan Qurban</span>
                     </a>
+                    <a href="{{ route('public.jadwal-khotib') }}" class="feature-item bg-purple">
+                        <img src="{{ asset('images/icons/khutbah-jumat.png') }}" alt="Khutbah Icon" class="feature-icon-img">
+                        <span>Khutbah Jumat</span>
+                    </a>
+
+                    <a href="{{ route('public.tentang-kami') }}" class="feature-item bg-blue">
+                        <img src="{{ asset('images/icons/info.png') }}" alt="Info Icon" class="feature-icon-img">
+                        <span>Tentang Kami</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -418,7 +427,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const KOTA_ID = '1218';
+            const KOTA_ID = {{ $masjidSettings->lokasi_id_api }};
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');

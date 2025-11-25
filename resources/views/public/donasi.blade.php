@@ -119,9 +119,24 @@
     <p class="donasi-title-sub">Setiap donasi Anda membawa harapan baru.</p>
 </div>
 
-{{-- SLIDER --}}
-<div class="container mb-5">
-    @if(!$programDonasi->isEmpty())
+{{-- LOGIKA UTAMA: Cek apakah ada program donasi aktif --}}
+@if($programDonasi->isEmpty())
+
+    {{-- TAMPILAN JIKA KOSONG (Div Biru Muda) --}}
+    <div class="container mb-5">
+        <div class="alert text-center py-5 rounded-4 shadow-sm border-0" style="background-color: #dbeafe; color: #1e40af;">
+            <i class="bi bi-info-circle mb-3 d-block" style="font-size: 3rem; color: #3b82f6;"></i>
+            <h5 class="fw-bold" style="color: #1e3a8a;">Belum ada Donasi</h5>
+            <p class="mb-0" style="color: #1e40af;">Saat ini belum ada program donasi yang aktif atau tersedia.</p>
+        </div>
+    </div>
+
+@else
+
+    {{-- TAMPILAN JIKA ADA DATA (Slider & List) --}}
+
+    {{-- 1. SLIDER --}}
+    <div class="container mb-5">
         <div class="swiper-container-wrapper">
             <div class="swiper donasi-swiper">
                 <div class="swiper-wrapper">
@@ -148,58 +163,69 @@
                 <div class="donasi-button-prev"></div>
             </div>
         </div>
-    @endif
-</div>
+    </div>
 
-{{-- LIST CARD --}}
-<div class="container mt-3"> 
-    <h4 class="fw-bold mb-4 text-dark">Daftar Donasi</h4>
-    <div class="donation-list-grid">
-        @foreach($programDonasi as $program)
-        <div class="card donation-list-card">
-            <div class="row g-0 h-100">
-                <div class="col-4">
-                    <img src="{{ $program->gambar_url }}" class="card-img" alt="{{ $program->nama_donasi }}">
-                </div>
-                <div class="col-8">
-                    <div class="card-body">
-                        <div>
-                            <h5 class="card-title text-dark">{{ $program->nama_donasi }}</h5>
-                            <div class="mb-2">
-                                @if($program->tanggal_selesai)
-                                    @php $sisa = \Carbon\Carbon::now()->diffInDays(\Carbon\Carbon::parse($program->tanggal_selesai), false); @endphp
-                                    @if($sisa > 0) <small class="text-warning fw-bold"><i class="bi bi-clock"></i> Sisa {{ ceil($sisa) }} hari</small>
-                                    @elseif($sisa == 0) <small class="text-danger fw-bold"><i class="bi bi-exclamation-circle"></i> Berakhir Hari Ini</small>
-                                    @else <small class="text-muted fw-bold"><i class="bi bi-x-circle"></i> Berakhir</small> @endif
-                                @else
-                                    <small class="text-success fw-bold"><i class="bi bi-infinity"></i> Unlimited</small>
-                                @endif
+    {{-- 2. LIST CARD --}}
+    <div class="container mt-3 mb-5"> 
+        <h4 class="fw-bold mb-4 text-dark">Daftar Donasi</h4>
+        <div class="donation-list-grid">
+            @foreach($programDonasi as $program)
+            <div class="card donation-list-card">
+                <div class="row g-0 h-100">
+                    <div class="col-4">
+                        <img src="{{ $program->gambar_url }}" class="card-img" alt="{{ $program->nama_donasi }}">
+                    </div>
+                    <div class="col-8">
+                        <div class="card-body">
+                            <div>
+                                <h5 class="card-title text-dark">{{ $program->nama_donasi }}</h5>
+                                <div class="mb-2">
+                                    @if($program->tanggal_selesai)
+                                        @php $sisa = \Carbon\Carbon::now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($program->tanggal_selesai)->startOfDay(), false); @endphp
+                                        
+                                        @if($sisa > 0) 
+                                            <small class="text-warning fw-bold"><i class="bi bi-clock"></i> Sisa {{ ceil($sisa) }} hari</small>
+                                        @elseif($sisa == 0) 
+                                            <small class="text-danger fw-bold"><i class="bi bi-exclamation-circle"></i> Berakhir Hari Ini</small>
+                                        @else 
+                                            {{-- Seharusnya tidak muncul karena difilter controller, tapi untuk jaga-jaga --}}
+                                            <small class="text-muted fw-bold"><i class="bi bi-x-circle"></i> Berakhir</small> 
+                                        @endif
+                                    @else
+                                        <small class="text-success fw-bold"><i class="bi bi-infinity"></i> Unlimited</small>
+                                    @endif
+                                </div>
                             </div>
-                        </div>
-                        <div>
-                            <div class="d-flex justify-content-between align-items-end mb-1">
-                                <span class="small text-muted">Terkumpul</span>
-                                <span class="fw-bold text-success small">Rp {{ number_format($program->dana_terkumpul, 0, ',', '.') }}</span>
-                            </div>
-                            <div class="progress mb-3">
-                                <div class="progress-bar" role="progressbar" style="width: {{ $program->persentase }}%"></div>
-                            </div>
-                            <div class="text-end">
-                                <button onclick="openDonasiModal('{{ $program->id_donasi }}')" class="btn-detail-donasi">Lihat Detail</button>
+                            <div>
+                                <div class="d-flex justify-content-between align-items-end mb-1">
+                                    <span class="small text-muted">Terkumpul</span>
+                                    <span class="fw-bold text-success small">Rp {{ number_format($program->dana_terkumpul, 0, ',', '.') }}</span>
+                                </div>
+                                <div class="progress mb-3">
+                                    <div class="progress-bar" role="progressbar" style="width: {{ $program->persentase }}%"></div>
+                                </div>
+                                <div class="text-end">
+                                    <button onclick="openDonasiModal('{{ $program->id_donasi }}')" class="btn-detail-donasi">Lihat Detail</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            @endforeach
         </div>
-        @endforeach
     </div>
-</div>
+
+@endif
 
 {{-- ========================================== --}}
-{{-- MODAL DETAIL DONASI --}}
+{{-- MODAL DETAIL DONASI (Tetap Load di Luar IF) --}}
 {{-- ========================================== --}}
+{{-- Saran: Pindahkan kode modal panjang tadi ke file terpisah atau biarkan di sini tapi pastikan di luar blok @if($programDonasi->isEmpty()) agar JS tidak error --}}
+
+{{-- Kode Modal kamu yg asli taruh disini (di bawah ini) --}}
 <div class="modal fade" id="modalDonasiDetail" tabindex="-1" aria-hidden="true">
+    {{-- ... (Isi modal sama persis seperti kode kamu sebelumnya) ... --}}
     <div class="modal-dialog modal-narrow"> 
         <div class="modal-content border-0 shadow rounded-4 overflow-hidden">
             
@@ -244,13 +270,6 @@
                                 <label class="form-label small fw-bold text-dark">Nominal Donasi</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-white border-end-0 fw-bold text-success">Rp</span>
-                                    
-                                    {{-- 
-                                        REVISI: 
-                                        1. Type text (bukan number) agar bisa ada titik.
-                                        2. inputmode numeric agar di HP muncul angka.
-                                        3. autocomplete off agar browser tidak menimpa format.
-                                    --}}
                                     <input type="text" inputmode="numeric" class="form-control border-start-0 input-nominal" id="pay_nominal" name="nominal" placeholder="1.000" autocomplete="off" required>
                                 </div>
                                 <small class="text-danger d-none" id="nominalError" style="font-size: 0.75rem;">Minimal Rp 1.000</small>
@@ -280,7 +299,7 @@
                             
                             <div class="text-center mt-3 pt-2 border-top border-success border-opacity-25">
                                 <small class="text-muted d-block mb-2" style="font-size: 0.7rem;">Transfer Manual / Tanya Admin?</small>
-                                <a href="https://wa.me/6281234567890?text=Assalamualaikum,%20saya%20ingin%20bertanya%20tentang%20donasi..." target="_blank" class="btn btn-outline-success btn-sm w-100">
+                                <a href="https://wa.me/6281234567890" target="_blank" class="btn btn-outline-success btn-sm w-100">
                                     <i class="bi bi-whatsapp me-1"></i> Hubungi WhatsApp
                                 </a>
                             </div>

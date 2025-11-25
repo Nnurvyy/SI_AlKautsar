@@ -8,10 +8,23 @@
 <div class="container-fluid p-4">
     {{-- Header & Filter --}}
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-        <div class="input-group search-bar me-2" style="width: 350px;">
-            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-            <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Cari program donasi...">
+        
+        <div class="d-flex flex-wrap align-items-center">
+            {{-- 1. Filter Status (BARU) --}}
+            <div class="me-2 mb-2 mb-md-0">
+                <select class="form-select" id="statusFilter" style="width: 160px;">
+                    <option value="aktif" selected>Status: Aktif</option>
+                    <option value="lewat">Status: Lewat</option>
+                    <option value="semua">Semua Status</option>
+                </select>
+            </div>
+
+            <div class="input-group search-bar me-2" style="width: 300px;">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Cari program donasi...">
+            </div>
         </div>
+
         <button class="btn btn-primary" id="btnTambahDonasi">
             <i class="bi bi-plus-circle me-2"></i> Program Baru
         </button>
@@ -27,6 +40,15 @@
                             <th class="text-center">No</th>
                             <th class="text-center">Poster</th>
                             <th>Nama Program</th>
+                            
+                            {{-- 2. Kolom Sortable Tanggal (BARU) --}}
+                            <th class="text-center cursor-pointer" id="sortMulai" style="cursor: pointer;">
+                                Tgl Mulai <i class="bi bi-arrow-down-up small text-muted sort-icon"></i>
+                            </th>
+                            <th class="text-center cursor-pointer" id="sortSelesai" style="cursor: pointer;">
+                                Tgl Selesai <i class="bi bi-arrow-down-up small text-muted sort-icon"></i>
+                            </th>
+
                             <th class="text-end">Target Dana</th>
                             <th class="text-end">Terkumpul</th>
                             <th class="text-center">Progress</th>

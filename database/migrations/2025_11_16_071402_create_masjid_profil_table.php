@@ -18,6 +18,9 @@ return new class extends Migration
             $table->string('lokasi_nama')->nullable(); 
             $table->string('lokasi_id_api')->nullable(); 
             $table->string('lokasi_nama_api')->nullable();
+            $table->text('deskripsi_masjid')->nullable();
+            $table->decimal('latitude', 10, 8)->nullable()->after('lokasi_nama_api');
+            $table->decimal('longitude', 11, 8)->nullable()->after('latitude');
             $table->string('social_facebook')->nullable();
             $table->string('social_instagram')->nullable();
             $table->string('social_twitter')->nullable();
