@@ -24,7 +24,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DonasiPaymentController;
 use App\Http\Controllers\HewanQurbanController;
 use App\Http\Controllers\KajianController; 
-use App\Http\Controllers\ProgramDonasiController;
+use App\Http\Controllers\TabunganPaymentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,7 +42,7 @@ Route::get('/artikel/detail/{id}', [PublicController::class, 'getArtikelDetail']
 Route::get('/donasi', [PublicController::class, 'donasi'])->name('public.donasi');
 Route::get('/donasi/detail/{id}', [PublicController::class, 'getDonasiDetail'])->name('public.donasi.detail');
 Route::post('/donasi/checkout', [DonasiPaymentController::class, 'checkout'])->name('donasi.checkout');
-Route::post('/midtrans/callback', [DonasiPaymentController::class, 'callback']);
+Route::post('/tripay/callback', [DonasiPaymentController::class, 'callback']);
 
 Route::get('/program', [PublicController::class, 'program'])->name('public.program');
 Route::get('/program/detail/{id}', [PublicController::class, 'getProgramDetail'])->name('public.program.detail');
@@ -51,21 +51,9 @@ Route::get('/khutbah-jumat', [PublicController::class, 'jadwalKhotib'])->name('p
 Route::get('/jadwal-kajian', [PublicController::class, 'jadwalKajian'])->name('public.jadwal-kajian');
 Route::get('/tentang-kami', [App\Http\Controllers\PublicController::class, 'tentangKami'])->name('public.tentang-kami');
 
-// --- ROUTE SPESIAL TABUNGAN QURBAN (LOGIC GANDA) ---
-// Jika login -> Pakai Controller logic (data lengkap). Jika belum -> Tampil view saja (modal login).
-Route::get('/tabungan-qurban-saya', function() {
-    if (Auth::guard('jamaah')->check()) {
-        // Render view menggunakan controller agar data tabungan terload
-        return app(App\Http\Controllers\QurbanController::class)->index();
-    }
-    // Jika guest, load view kosong (nanti view handle modal login)
-    return view('public.tabungan-qurban-saya', [
-        'user' => null,
-        'tabungans' => collect([]),
-        'totalAset' => 0,
-        'masterHewan' => []
-    ]); 
-})->name('public.tabungan-qurban-saya');
+
+Route::get('/tabungan-qurban-saya', [PublicController::class, 'tabunganQurbanSaya'])
+    ->name('public.tabungan-qurban-saya');
 
 
 /*
@@ -144,6 +132,8 @@ Route::middleware(['auth:pengurus'])->prefix('pengurus')->name('pengurus.')->gro
     // Content
     Route::get('artikel-data', [ArtikelController::class, 'artikelData'])->name('artikel.data');
     Route::resource('artikel', ArtikelController::class);
+    Route::get('artikel-data/{id}', [ArtikelController::class, 'artikelData']);
+
     Route::resource('program', ProgramController::class);
     Route::get('program-data', [ProgramController::class, 'data'])->name('program.data');
 
@@ -174,4 +164,5 @@ Route::middleware(['auth:jamaah'])->name('jamaah.')->group(function () {
     // Ambil Detail JSON (Untuk Modal Riwayat)
     // Menggunakan PublicController::getTabunganDetail yang baru kita buat
     Route::get('/qurban-saya/{id}', [PublicController::class, 'getTabunganDetail'])->name('qurban.show');
+    Route::post('/tabungan-qurban/checkout', [TabunganPaymentController::class, 'checkout'])->name('tabungan.checkout');
 });

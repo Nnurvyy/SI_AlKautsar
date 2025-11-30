@@ -5,32 +5,43 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Laporan Pemasukan Tabungan Qurban</title>
     <style>
-        body { font-family: sans-serif; font-size: 11px; color: #333; }
+        body { font-family: sans-serif; font-size: 10px; color: #333; }
         .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-        .header h1 { margin: 0; font-size: 18px; text-transform: uppercase; }
-        .header p { margin: 2px 0; font-size: 12px; }
-        .info { margin-bottom: 15px; font-size: 12px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border: 1px solid #444; padding: 6px 8px; text-align: left; vertical-align: top; }
+        .header h1 { margin: 0; font-size: 16px; text-transform: uppercase; }
+        .header p { margin: 2px 0; font-size: 11px; }
+        .info { margin-bottom: 10px; font-size: 11px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        th, td { border: 1px solid #444; padding: 5px 6px; text-align: left; vertical-align: top; }
         th { background-color: #f0f0f0; font-weight: bold; text-align: center; }
         .text-end { text-align: right; }
         .text-center { text-align: center; }
-        .summary { float: right; width: 300px; margin-top: 10px; }
-        .summary th, .summary td { border: none; padding: 5px; }
-        .summary th { text-align: left; }
-        .badge { font-size: 10px; padding: 2px 4px; border-radius: 3px; background: #eee; border: 1px solid #ccc; margin-right: 3px; display: inline-block; margin-bottom: 2px; }
+        .text-uppercase { text-transform: uppercase; }
+        .text-muted { color: #666; }
+        
+        /* Summary Box */
+        .summary-container { width: 100%; text-align: right; margin-top: 10px; }
+        .summary-table { width: auto; display: inline-table; border: 1px solid #333; }
+        .summary-table td { border: none; padding: 5px 10px; font-size: 12px; }
+        .summary-table .label { background-color: #f0f0f0; font-weight: bold; }
+        .summary-table .value { font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="header">
     <h1>Laporan Pemasukan Tabungan Qurban</h1>
-    <p>{{ $settings->nama_masjid }}</p>
+    <p>{{ $settings->nama_masjid ?? 'Masjid Besar' }}</p>
+    <p>{{ $settings->alamat ?? 'Alamat Masjid' }}</p>
     <p>Dicetak pada: {{ $tanggalCetak }}</p>
 </div>
 
 <div class="info">
-    <strong>Filter Laporan:</strong> {{ $periodeTeks }}
+    <table style="width: 100%; border: none; margin: 0;">
+        <tr style="border: none;">
+            <td style="border: none; padding: 0; width: 50%;"><strong>Filter:</strong> {{ $periodeTeks }}</td>
+            <td style="border: none; padding: 0; text-align: right;"><strong>Status:</strong> Lunas / Terbayar (Success)</td>
+        </tr>
+    </table>
 </div>
 
 <table>
@@ -38,51 +49,79 @@
     <tr>
         <th style="width: 5%;">No</th>
         <th style="width: 12%;">Tanggal</th>
-        <th style="width: 25%;">Nama Penyetor</th>
-        <th style="width: 40%;">Rincian Hewan Qurban</th>
-        <th style="width: 18%;">Nominal Setoran</th>
+        <th style="width: 20%;">Penyetor</th>
+        <th style="width: 33%;">Rincian Hewan</th>
+        <th style="width: 12%;">Metode</th> <th style="width: 18%;">Nominal</th>
     </tr>
     </thead>
     <tbody>
     @forelse ($pemasukanData as $index => $item)
         <tr>
             <td class="text-center">{{ $index + 1 }}</td>
-            <td class="text-center">{{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}</td>
-            <td>
-                <strong>{{ $item->tabunganHewanQurban->jamaah->name ?? 'Jamaah Terhapus' }}</strong>
-                <br>
-                <span style="font-size: 10px; color: #666;">ID: {{ substr($item->tabunganHewanQurban->id_tabungan_hewan_qurban, 0, 8) }}</span>
+            <td class="text-center">
+                {{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}
             </td>
             <td>
-                {{-- Loop Detail Hewan karena relasi One to Many --}}
-                @if($item->tabunganHewanQurban->details->count() > 0)
-                    @foreach($item->tabunganHewanQurban->details as $detail)
-                        <div style="margin-bottom: 2px;">
-                            • {{ $detail->jumlah_hewan }} Ekor 
-                            {{ ucfirst($detail->hewan->nama_hewan ?? '-') }} 
-                            ({{ ucfirst($detail->hewan->kategori_hewan ?? '-') }})
-                        </div>
-                    @endforeach
+                {{-- Nama Jamaah --}}
+                <strong style="font-size: 11px;">
+                    {{ $item->tabunganHewanQurban->jamaah->name ?? 'Jamaah Terhapus' }}
+                </strong>
+                <br>
+                {{-- ID Tabungan --}}
+                <span class="text-muted" style="font-size: 9px;">
+                    ID: {{ substr($item->tabunganHewanQurban->id_tabungan_hewan_qurban, 0, 8) }}
+                </span>
+            </td>
+            <td>
+                {{-- Rincian Hewan --}}
+                @if($item->tabunganHewanQurban && $item->tabunganHewanQurban->details->count() > 0)
+                    <ul style="margin: 0; padding-left: 12px;">
+                        @foreach($item->tabunganHewanQurban->details as $detail)
+                            <li>
+                                {{ $detail->jumlah_hewan }} Ekor 
+                                {{ ucfirst($detail->hewan->nama_hewan ?? '-') }}
+                                <span style="font-size: 9px;">({{ ucfirst($detail->hewan->kategori_hewan ?? '') }})</span>
+                            </li>
+                        @endforeach
+                    </ul>
                 @else
-                    <span style="color: red;">Data Hewan Tidak Ditemukan</span>
+                    <span style="color: red;">-</span>
                 @endif
             </td>
-            <td class="text-end">Rp {{ number_format($item->nominal, 0, ',', '.') }}</td>
+            <td class="text-center">
+                {{-- Info Metode Pembayaran & Ref --}}
+                <div class="text-uppercase" style="font-weight: bold; font-size: 9px;">
+                    {{ $item->metode_pembayaran ?? 'TUNAI' }}
+                </div>
+                @if($item->order_id)
+                    <div class="text-muted" style="font-size: 8px;">
+                        Ref: {{ substr($item->order_id, -8) }}
+                    </div>
+                @endif
+            </td>
+            <td class="text-end">
+                Rp {{ number_format($item->nominal, 0, ',', '.') }}
+            </td>
         </tr>
     @empty
         <tr>
-            <td colspan="5" class="text-center" style="padding: 20px;">Tidak ada data pemasukan pada periode ini.</td>
+            <td colspan="6" class="text-center" style="padding: 20px;">
+                Tidak ada data pemasukan pada periode ini.
+            </td>
         </tr>
     @endforelse
     </tbody>
 </table>
 
-<table class="summary">
-    <tr>
-        <th style="font-size: 14px;">Total Pemasukan:</th>
-        <td class="text-end" style="font-size: 14px;"><strong>Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</strong></td>
-    </tr>
-</table>
+{{-- Total Summary --}}
+<div class="summary-container">
+    <table class="summary-table">
+        <tr>
+            <td class="label">Total Pemasukan:</td>
+            <td class="value">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</td>
+        </tr>
+    </table>
+</div>
 
 </body>
 </html>

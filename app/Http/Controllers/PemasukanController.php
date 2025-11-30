@@ -3,34 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Models\Keuangan;
-use App\Models\KategoriKeuangan;
 use Illuminate\Http\Request;
-use App\Models\Pemasukan;
-use App\Models\KategoriPemasukan;
-use App\Models\Donasi; 
-use Illuminate\Support\Facades\Log;
 
 class PemasukanController extends Controller
 {
     public function index()
     {
-        // Hitung total pemasukan
         $totalPemasukan = Keuangan::where('tipe', 'pemasukan')->sum('nominal');
         return view('pemasukan', compact('totalPemasukan'));
     }
 
     public function data(Request $request)
     {
-        // Load data dengan relasi kategori
-        $query = Keuangan::with('kategori')
-            ->where('tipe', 'pemasukan');
+        $query = Keuangan::with('kategori')->where('tipe', 'pemasukan');
 
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where('deskripsi', 'ILIKE', "%{$search}%");
         }
 
-        // Pagination & Sorting
         $data = $query->orderBy('tanggal', 'desc')->paginate(10);
         return response()->json($data);
     }
@@ -39,13 +30,14 @@ class PemasukanController extends Controller
     {
         $request->validate([
             'tanggal' => 'required|date',
-            'id_kategori_keuangan' => 'required|exists:kategori_keuangan,id_kategori_keuangan',
+            // VALIDASI KETAT: Pastikan ID Kategori yang dipilih TYPE-nya adalah 'pemasukan'
+            'id_kategori_keuangan' => 'required|exists:kategori_keuangan,id_kategori_keuangan,tipe,pemasukan',
             'nominal' => 'required|numeric|min:1',
             'deskripsi' => 'nullable|string|max:255',
         ]);
 
         $data = $request->all();
-        $data['tipe'] = 'pemasukan'; // Paksa tipe pemasukan
+        $data['tipe'] = 'pemasukan'; 
 
         Keuangan::create($data);
 
@@ -63,7 +55,8 @@ class PemasukanController extends Controller
         
         $request->validate([
             'tanggal' => 'required|date',
-            'id_kategori_keuangan' => 'required|exists:kategori_keuangan,id_kategori_keuangan',
+            // VALIDASI KETAT JUGA DI SINI
+            'id_kategori_keuangan' => 'required|exists:kategori_keuangan,id_kategori_keuangan,tipe,pemasukan',
             'nominal' => 'required|numeric|min:1',
             'deskripsi' => 'nullable|string|max:255',
         ]);

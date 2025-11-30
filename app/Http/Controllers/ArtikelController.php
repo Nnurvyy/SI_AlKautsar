@@ -81,7 +81,9 @@ class ArtikelController extends Controller
 
         $validator = Validator::make($request->all(), [
             'judul_artikel' => 'required|string|max:255',
-            'isi_artikel' => 'required',
+            // Hapus validasi 'required' untuk isi_artikel di sini jika Anda mengandalkan validasi JS
+            // atau pastikan input hidden terisi.
+            'isi_artikel' => 'nullable', 
             'status_artikel' => 'required|in:draft,published',
             'penulis_artikel' => 'required|string|max:100',
             'tanggal_terbit_artikel' => 'required|date',
@@ -93,22 +95,36 @@ class ArtikelController extends Controller
         }
 
         $data = $validator->validated();
+        
+        // Pastikan isi artikel tidak kosong jika validator di atas 'nullable'
+        if (empty($request->isi_artikel) || trim(strip_tags($request->isi_artikel)) == '') {
+             return redirect()->back()->with('error', 'Isi artikel tidak boleh kosong.')->withInput();
+        }
 
-        // Foto baru?
-        if ($request->hasFile('foto_artikel')) {
-
-            // Hapus foto lama
+        // --- LOGIKA BARU: Cek apakah ada permintaan hapus foto ---
+        if ($request->has('hapus_foto') && $request->hapus_foto == '1') {
+            // Hapus file lama jika ada
             if ($artikel->foto_artikel) {
                 Storage::disk('public')->delete($artikel->foto_artikel);
             }
+            // Set kolom di DB menjadi null
+            $data['foto_artikel'] = null;
+        }
 
-            // Upload foto baru
+        // --- Logika upload foto baru (jika ada file diupload) ---
+        if ($request->hasFile('foto_artikel')) {
+            // Hapus foto lama (jika belum dihapus oleh logika 'hapus_foto' di atas)
+            if ($artikel->foto_artikel && Storage::disk('public')->exists($artikel->foto_artikel)) {
+                Storage::disk('public')->delete($artikel->foto_artikel);
+            }
+            // Upload baru
             $path = $request->file('foto_artikel')->store('artikel_photos', 'public');
             $data['foto_artikel'] = $path;
-
-        } else {
-            // Jangan hapus foto_artikel jika user tidak upload baru
-            unset($data['foto_artikel']);
+        } 
+        // Jika tidak ada file baru DAN tidak ada request hapus foto, 
+        // maka jangan update kolom foto_artikel (hapus dari array $data)
+        elseif (!array_key_exists('foto_artikel', $data)) {
+             unset($data['foto_artikel']);
         }
 
         try {

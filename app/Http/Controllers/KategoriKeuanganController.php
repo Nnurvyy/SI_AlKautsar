@@ -4,15 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Models\KategoriKeuangan;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Validation\Rule; // Tambahkan ini untuk validasi unique
 
 class KategoriKeuanganController extends Controller
 {
-    // Ambil data kategori berdasarkan tipe (untuk list di modal & dropdown)
+    // Ambil data kategori (Otomatis difilter JS berdasarkan tipe halaman)
     public function data(Request $request)
     {
-        $tipe = $request->query('tipe'); // 'pemasukan' atau 'pengeluaran'
-        $data = KategoriKeuangan::where('tipe', $tipe)->orderBy('nama_kategori_keuangan')->get();
+        $query = KategoriKeuangan::query();
+
+        // Jika ada parameter tipe (pemasukan/pengeluaran), filter datanya
+        if ($request->has('tipe')) {
+            $query->where('tipe', $request->query('tipe'));
+        }
+
+        $data = $query->orderBy('nama_kategori_keuangan', 'asc')->get();
         return response()->json($data);
     }
 
@@ -20,11 +26,18 @@ class KategoriKeuanganController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_kategori_keuangan' => 'required|string|max:100',
-            'tipe' => 'required|in:pemasukan,pengeluaran'
+            'tipe' => 'required|in:pemasukan,pengeluaran',
+            'nama_kategori_keuangan' => [
+                'required',
+                'string',
+                'max:100',
+                // Cek agar nama unik berdasarkan tipenya
+                Rule::unique('kategori_keuangan')->where(function ($query) use ($request) {
+                    return $query->where('tipe', $request->tipe);
+                }),
+            ],
         ]);
 
-        // ID otomatis generate di Model (boot method)
         $kategori = KategoriKeuangan::create($request->all());
 
         return response()->json(['message' => 'Kategori berhasil ditambah.', 'data' => $kategori]);
@@ -36,7 +49,15 @@ class KategoriKeuanganController extends Controller
         $kategori = KategoriKeuangan::findOrFail($id);
         
         $request->validate([
-            'nama_kategori_keuangan' => 'required|string|max:100',
+            'nama_kategori_keuangan' => [
+                'required', 
+                'string', 
+                'max:100',
+                // Cek unik tapi abaikan ID dirinya sendiri
+                Rule::unique('kategori_keuangan')->where(function ($query) use ($kategori) {
+                    return $query->where('tipe', $kategori->tipe);
+                })->ignore($kategori->id_kategori_keuangan, 'id_kategori_keuangan'),
+            ],
         ]);
 
         $kategori->update(['nama_kategori_keuangan' => $request->nama_kategori_keuangan]);
@@ -48,6 +69,10 @@ class KategoriKeuanganController extends Controller
     public function destroy($id)
     {
         $kategori = KategoriKeuangan::findOrFail($id);
+        
+        // Opsional: Cek apakah kategori sedang dipakai di transaksi sebelum hapus
+        // if($kategori->keuangan()->exists()) { ... return error ... }
+
         $kategori->delete();
 
         return response()->json(['message' => 'Kategori berhasil dihapus.']);

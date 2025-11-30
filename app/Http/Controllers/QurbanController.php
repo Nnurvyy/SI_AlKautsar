@@ -7,35 +7,44 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\TabunganHewanQurban;
 use App\Models\DetailTabunganHewanQurban;
+use App\Models\PemasukanTabunganQurban; // Pastikan Model Pemasukan di-import
 use App\Models\HewanQurban;
 use Illuminate\Support\Str;
 
 class QurbanController extends Controller
 {
-    // Halaman Utama Jamaah Tabungan
+    /**
+     * Halaman Utama Tabungan Jamaah
+     */
     public function index()
     {
         $user = Auth::guard('jamaah')->user();
 
-        // Ambil list tabungan user
+        // 1. Ambil list tabungan user beserta detail & pemasukan
         $tabungans = TabunganHewanQurban::with(['details.hewan', 'pemasukanTabunganQurban'])
                         ->where('id_jamaah', $user->id)
                         ->orderBy('created_at', 'desc')
                         ->get();
 
-        // Hitung total aset seluruh tabungan
-        $totalAset = 0;
-        foreach($tabungans as $t) {
-            $totalAset += $t->pemasukanTabunganQurban->sum('nominal');
-        }
+        // 2. Hitung Total Aset (HANYA YANG SUKSES)
+        // Logika: Ambil semua pemasukan milik user ini -> Filter Status Success -> Jumlahkan Nominal
+        $totalAset = PemasukanTabunganQurban::whereHas('tabunganHewanQurban', function($q) use ($user){
+                        $q->where('id_jamaah', $user->id);
+                    })
+                    ->where('status', 'success') // <--- FILTER PENTING: Pending tidak dihitung
+                    ->sum('nominal');
 
-        // Data master hewan untuk modal "Buka Tabungan"
-        $masterHewan = HewanQurban::where('is_active', true)->orderBy('nama_hewan')->get();
+        // 3. Data master hewan untuk modal "Buka Tabungan"
+        $masterHewan = HewanQurban::where('is_active', true)
+                        ->orderBy('nama_hewan')
+                        ->get();
 
         return view('public.tabungan-qurban-saya', compact('user', 'tabungans', 'totalAset', 'masterHewan'));
     }
 
-    // Logic Buka Tabungan Baru (Dari Modal Jamaah)
+    /**
+     * Logic Buka Tabungan Baru (Dari Modal Jamaah)
+     */
     public function store(Request $request)
     {
         $user = Auth::guard('jamaah')->user();
@@ -49,7 +58,7 @@ class QurbanController extends Controller
             return response()->json(['message' => 'Anda maksimal hanya boleh memiliki 2 tabungan qurban aktif.'], 422);
         }
 
-        // 2. Validasi Input Array Hewan
+        // 2. Validasi Input
         $request->validate([
             'saving_type' => 'required|in:bebas,cicilan',
             'duration_months' => 'nullable|integer|min:1',
@@ -60,7 +69,7 @@ class QurbanController extends Controller
 
         DB::beginTransaction();
         try {
-            // Hitung Grand Total Server Side (Keamanan)
+            // Hitung Grand Total Server Side (Demi Keamanan)
             $grandTotal = 0;
             $itemsToInsert = [];
 
@@ -69,6 +78,7 @@ class QurbanController extends Controller
                 $subtotal = $hewan->harga_hewan * $item['qty'];
                 $grandTotal += $subtotal;
                 
+                // Simpan sementara data hewan untuk diinsert ke detail nanti
                 $itemsToInsert[] = [
                     'hewan' => $hewan,
                     'qty' => $item['qty'],
@@ -76,17 +86,18 @@ class QurbanController extends Controller
                 ];
             }
 
-            // Create Header Tabungan
+            // 3. Create Header Tabungan
             $tabungan = TabunganHewanQurban::create([
                 'id_jamaah' => $user->id,
                 'status' => 'menunggu', // Default Status
                 'saving_type' => $request->saving_type,
                 'duration_months' => ($request->saving_type == 'cicilan') ? $request->duration_months : null,
                 'total_tabungan' => 0,
-                'total_harga_hewan_qurban' => $grandTotal
+                'total_harga_hewan_qurban' => $grandTotal,
+                'tanggal_pembuatan' => now()
             ]);
 
-            // Create Detail Tabungan
+            // 4. Create Detail Tabungan
             foreach($itemsToInsert as $data) {
                 DetailTabunganHewanQurban::create([
                     'id_tabungan_hewan_qurban' => $tabungan->id_tabungan_hewan_qurban,
@@ -106,14 +117,16 @@ class QurbanController extends Controller
         }
     }
 
-    // Ambil Data Detail Tabungan (untuk Modal Riwayat di View Jamaah)
+    /**
+     * Ambil Data Detail Tabungan (untuk Modal Riwayat/Dashboard di View Jamaah)
+     */
     public function show($id) {
         $user = Auth::guard('jamaah')->user();
         
         $tabungan = TabunganHewanQurban::with(['details.hewan', 'pemasukanTabunganQurban' => function($q){
             $q->orderBy('tanggal', 'desc');
         }])
-        ->where('id_jamaah', $user->id) // Security check owner
+        ->where('id_jamaah', $user->id) // Security check: Pastikan milik user yg login
         ->findOrFail($id);
 
         return response()->json($tabungan);

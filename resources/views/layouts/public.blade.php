@@ -23,13 +23,27 @@
         }
         .hero-top-nav .navbar-brand { color: white; font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
         
-        /* Profil Icon di Mobile Top Nav */
+        /* [UBAH] Style untuk Foto Profil di Header Mobile */
         .hero-top-nav .profile-trigger {
             color: white; font-size: 1.5rem; text-decoration: none; text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-            border: none; background: none; padding: 0;
+            border: none; background: none; padding: 0; cursor: pointer;
         }
         .hero-top-nav .profile-img-nav {
-            width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid white;
+            width: 36px; height: 36px; /* Ukuran disamakan dgn desktop */
+            border-radius: 50%; /* Membuat bulat */
+            object-fit: cover; /* Agar gambar tidak gepeng */
+            border: 2px solid white; /* Border putih agar kontras dengan background masjid */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        /* Fallback jika tidak ada foto (Huruf Inisial) */
+        .hero-top-nav .profile-initial-nav {
+            width: 36px; height: 36px; 
+            border-radius: 50%; 
+            background-color: #198754; 
+            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 1rem;
+            border: 2px solid white;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
@@ -48,13 +62,27 @@
         .navbar-bottom-item img {
             width: 24px; height: 24px; object-fit: contain; margin-bottom: 2px;
         }
-        /* Khusus Icon Akun (Jika user login & punya foto) */
+        
+        /* [UBAH] Khusus Foto Profil di Bottom Nav */
         .navbar-bottom-item .account-img {
-            width: 24px; height: 24px; border-radius: 50%; object-fit: cover; margin-bottom: 2px;
+            width: 26px; height: 26px; /* Sedikit lebih besar dari icon biasa */
+            border-radius: 50%; /* Membuat bulat */
+            object-fit: cover; 
+            margin-bottom: 2px;
             border: 1px solid #dee2e6;
         }
+        /* Inisial Huruf di Bottom Nav */
+        .navbar-bottom-item .account-initial {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            background-color: #198754; color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 0.75rem;
+            margin-bottom: 2px;
+        }
+
         .navbar-bottom-item.active { color: #4caf50; font-weight: 600; }
-        .navbar-bottom-item.active .account-img { border-color: #4caf50; }
+        .navbar-bottom-item.active .account-img { border-color: #4caf50; border-width: 2px; }
 
         /* --- Styles Lainnya (Tidak Berubah) --- */
         .feature-header { background-color: #ffffff; border-bottom: 1px solid #dee2e6; position: sticky; top: 0; z-index: 1020; }
@@ -104,7 +132,7 @@
 <body class="d-flex flex-column min-vh-100">
 
     {{-- =========================================================== --}}
-    {{-- 1. DESKTOP NAVBAR                                           --}}
+    {{-- 1. DESKTOP NAVBAR                                         --}}
     {{-- =========================================================== --}}
     <header class="d-none d-lg-block shadow-sm" style="position: sticky; top: 0; z-index: 1030; background-color: white;">
         <nav class="navbar navbar-expand-lg navbar-light bg-white">
@@ -199,12 +227,17 @@
                     {{-- Dropdown User Mobile --}}
                     <div class="dropdown">
                         <a href="#" class="profile-trigger" data-bs-toggle="dropdown" aria-expanded="false">
-                            @php $user = Auth::guard('pengurus')->check() ? Auth::guard('pengurus')->user() : Auth::guard('jamaah')->user(); @endphp
+                            @php 
+                                $user = Auth::guard('pengurus')->check() ? Auth::guard('pengurus')->user() : Auth::guard('jamaah')->user(); 
+                            @endphp
                             
+                            {{-- [UBAH] Tampilan Foto Profil Mobile Atas --}}
                             @if($user->avatar)
                                 <img src="{{ $user->avatar_url }}" alt="Profil" class="profile-img-nav">
                             @else
-                                <i class="bi bi-person-circle" style="font-size: 1.8rem;"></i>
+                                <div class="profile-initial-nav">
+                                    {{ substr($user->name, 0, 1) }}
+                                </div>
                             @endif
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow mt-2 border-0 rounded-3" style="min-width: 200px;">
@@ -283,9 +316,11 @@
             <span>Lainnya</span>
         </a>
 
-        {{-- ITEM BARU: AKUN --}}
+        {{-- [UBAH] ITEM BARU: AKUN DENGAN FOTO --}}
         @auth
-            @php $user = Auth::guard('pengurus')->check() ? Auth::guard('pengurus')->user() : Auth::guard('jamaah')->user(); @endphp
+            @php 
+                $user = Auth::guard('pengurus')->check() ? Auth::guard('pengurus')->user() : Auth::guard('jamaah')->user(); 
+            @endphp
             {{-- Jika Login: Ke Halaman Edit Profil --}}
             <a href="{{ Auth::guard('pengurus')->check() ? route('pengurus.profile.edit') : route('jamaah.profile.edit') }}" 
                class="navbar-bottom-item {{ Request::routeIs('*.profile.edit') ? 'active' : '' }}">
@@ -293,8 +328,10 @@
                 @if($user->avatar)
                     <img src="{{ $user->avatar_url }}" alt="Akun" class="account-img">
                 @else
-                    {{-- Fallback icon jika belum ada foto --}}
-                    <i class="bi bi-person-circle text-secondary" style="font-size: 24px; margin-bottom: 2px;"></i>
+                    {{-- Fallback jika belum ada foto (Inisial) --}}
+                    <div class="account-initial">
+                        {{ substr($user->name, 0, 1) }}
+                    </div>
                 @endif
                 <span>Akun</span>
             </a>

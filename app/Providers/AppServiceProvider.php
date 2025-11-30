@@ -1,10 +1,11 @@
 <?php
 
 namespace App\Providers;
+
 use App\Models\MasjidProfil;
 use Illuminate\Support\Facades\Schema;
-
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL; // PENTING: Tambahkan import ini
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,6 +22,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // --- 1. FIX GAMBAR NGROK (FORCE HTTPS) ---
+        // Jika sedang di Production atau URL mengandung 'ngrok-free.app', paksa pakai HTTPS
+        if($this->app->environment('production') || str_contains(request()->url(), 'ngrok-free.app')) {
+            URL::forceScheme('https');
+        }
+
+        // --- 2. LOGIC LAMA ANDA (SHARE SETTINGS) ---
+        // Cek dulu apakah tabel ada untuk menghindari error saat migrate fresh
         if (Schema::hasTable('masjid_profil')) {
 
             // Ambil data, atau buat data default jika tabel kosong

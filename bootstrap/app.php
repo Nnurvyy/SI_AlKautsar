@@ -19,7 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Tambahkan pengecualian CSRF (Laravel 11 & 12)
         $middleware->validateCsrfTokens(except: [
-            '/midtrans/callback',
+            '/tripay/callback',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

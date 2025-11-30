@@ -53,7 +53,7 @@
         <li class="nav-item">
             <a href="{{ route('pengurus.khotib-jumat.index') }}"
                class="nav-link {{ request()->routeIs('pengurus.khotib-jumat.*') ? 'active' : '' }}">
-                <i class="bi bi-person-fill"></i> Khotib Jumat
+                <i class="bi bi-mic-fill"></i> Khutbah Jumat
             </a>
         </li>
 
@@ -61,7 +61,7 @@
         <li class="nav-item">
             <a href="{{ route('pengurus.kajian.index') }}"
                class="nav-link {{ request()->routeIs('pengurus.kajian.*') ? 'active' : '' }}">
-                <i class="bi bi-person-fill"></i> Kajian
+                <i class="bi bi-mortarboard"></i> Kajian
             </a>
         </li>
 

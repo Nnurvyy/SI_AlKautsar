@@ -8,6 +8,7 @@ use App\Models\Donasi;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http; // Pastikan ini ada
 use Illuminate\Support\Facades\Auth; // Pastikan ini ada
+use App\Models\PemasukanTabunganQurban;
 
 class DonasiPaymentController extends Controller
 {
@@ -111,12 +112,10 @@ class DonasiPaymentController extends Controller
 
     public function callback(Request $request)
     {
-        // 1. Ambil data callback
+        // 1. Validasi Signature (Sama seperti sebelumnya)
         $callbackSignature = $request->server('HTTP_X_CALLBACK_SIGNATURE');
         $json = $request->getContent();
         $data = json_decode($json);
-
-        // 2. Validasi Signature
         $privateKey = config('services.tripay.private_key');
         $signature = hash_hmac('sha256', $json, $privateKey);
 
@@ -124,15 +123,34 @@ class DonasiPaymentController extends Controller
             return response()->json(['success' => false, 'message' => 'Invalid Signature'], 400);
         }
 
-        // 3. Proses Status
+        // 2. Logic Multi-Transaksi
         if ($request->header('X-Callback-Event') === 'payment_status') {
-            $transaksi = PemasukanDonasi::where('order_id', $data->merchant_ref)->first();
             
-            if ($transaksi) {
-                if ($data->status === 'PAID') {
-                    $transaksi->update(['status' => 'success']);
-                } elseif (in_array($data->status, ['EXPIRED', 'FAILED', 'REFUND'])) {
-                    $transaksi->update(['status' => 'failed']);
+            $merchantRef = $data->merchant_ref;
+            $status = $data->status;
+
+            // CEK 1: Apakah ini Transaksi Donasi? (Prefix 'DON-')
+            if (str_starts_with($merchantRef, 'DON-')) {
+                $transaksi = PemasukanDonasi::where('order_id', $merchantRef)->first();
+                
+                if ($transaksi) {
+                    if ($status === 'PAID') {
+                        $transaksi->update(['status' => 'success']);
+                    } elseif (in_array($status, ['EXPIRED', 'FAILED', 'REFUND'])) {
+                        $transaksi->update(['status' => 'failed']);
+                    }
+                }
+            } 
+            // CEK 2: Apakah ini Transaksi Tabungan Qurban? (Prefix 'TRQ-')
+            elseif (str_starts_with($merchantRef, 'TRQ-')) {
+                $transaksi = PemasukanTabunganQurban::where('order_id', $merchantRef)->first();
+
+                if ($transaksi) {
+                    if ($status === 'PAID') {
+                        $transaksi->update(['status' => 'success']);
+                    } elseif (in_array($status, ['EXPIRED', 'FAILED', 'REFUND'])) {
+                        $transaksi->update(['status' => 'failed']);
+                    }
                 }
             }
         }

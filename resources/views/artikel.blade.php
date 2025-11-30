@@ -49,11 +49,12 @@
                     <thead class="table-light">
                         <tr>
                             <th scope="col" style="width: 5%;" class="text-center">No</th>
-                            <th scope="col" style="width: 30%;" class="text-center">Judul Artikel</th>
+                            <th scope="col" style="width: 10%;" class="text-center">Foto</th>
+                            <th scope="col" style="width: 25%;" class="text-center">Judul Artikel</th>
                             <th scope="col" style="width: 15%;" class="text-center">Penulis Artikel</th>
-                            <th scope="col" style="width: 10%;" class="text-center">Status Artikel</th>
-                            <th scope="col" style="width: 20%;" class="text-center">Tanggal Terbit</th>
-                            <th scope="col" style="width: 13%;" class="text-center">Aksi</th>
+                            <th scope="col" style="width: 10%;" class="text-center">Status</th>
+                            <th scope="col" style="width: 15%;" class="text-center">Tanggal Terbit</th>
+                            <th scope="col" style="width: 20%;" class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -66,44 +67,40 @@
                 <span id="paginationInfo">Menampilkan 0 dari 0 data</span>
                 <nav id="paginationLinks"></nav>
             </div>
-            </div>
+        </div>
     </div>
 </div>
 
-<!-- Modal Detail Artikel -->
-<div class="modal fade" id="modalDetailArtikel" tabindex="-1" aria-labelledby="detailArtikelLabel" aria-hidden="true">
+<div class="modal fade" id="modalDetailArtikel" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
 
       <div class="modal-header py-2">
-        <h5 class="modal-title fw-bold">Detail Artikel: <span id="detailJudulArtikel"></span></h5>
+        <h5 class="modal-title fw-bold">Detail Artikel</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
 
       <div class="modal-body">
         <div class="row">
 
-          <!-- Foto -->
           <div class="col-md-4 text-center mb-3">
-              <h6>Foto Artikel</h6>
               <img id="detailFotoArtikel" src="#" class="img-fluid rounded shadow-sm"
                    style="max-height: 250px; object-fit: cover;">
           </div>
 
-          <!-- Tabel Data -->
           <div class="col-md-8">
-              <table class="table table-sm table-striped table-bordered">
+              <h4 id="detailJudulArtikel" class="fw-bold mb-3"></h4>
+              <table class="table table-sm table-borderless">
                   <tbody>
-                      <tr><th>Judul</th><td id="d_judul"></td></tr>
-                      <tr><th>Penulis</th><td id="d_penulis"></td></tr>
-                      <tr><th>Status</th><td id="d_status_artikel"></td></tr>
-                      <tr><th>Tanggal Terbit</th><td id="d_tanggal_terbit"></td></tr>
+                      <tr><td class="fw-bold" width="120">Penulis</td><td>: <span id="d_penulis"></span></td></tr>
+                      <tr><td class="fw-bold">Status</td><td>: <span id="d_status_artikel"></span></td></tr>
+                      <tr><td class="fw-bold">Tanggal Terbit</td><td>: <span id="d_tanggal_terbit"></span></td></tr>
                   </tbody>
               </table>
           </div>
 
-          <!-- Isi Artikel -->
           <div class="col-12 mt-3">
+              <hr>
               <h6 class="fw-bold">Isi Artikel:</h6>
               <div id="d_isi" class="p-3 border rounded bg-light"></div>
           </div>
@@ -119,38 +116,42 @@
   </div>
 </div>
 
-
-
-
-
 <style>
+    /* CSS Modal Scroll & Pagination (YG LAMA) */
+    #modalDetailArtikel .modal-dialog { max-height: 90vh; }
+    #modalDetailArtikel .modal-body { overflow-y: auto; max-height: 75vh; }
+    #paginationLinks .pagination { margin-bottom: 0; }
+    #paginationLinks .page-link { cursor: pointer; }
 
-/* CSS Modal Scroll */
-#modalKhotib .modal-dialog { max-height: 80vh; display: flex; flex-direction: column; }
-#modalKhotib .modal-content { height: 100%; display: flex; flex-direction: column; }
-#modalKhotib .modal-body { overflow-y: auto; max-height: 70vh; }
-#modalKhotib .modal-footer { position: sticky; bottom: 0; background: white; z-index: 2; border-top: 1px solid #dee2e6; }
+    /* --- TAMBAHAN CSS BARU UNTUK MOBILE --- */
+    /* Pada layar kecil (mobile), ubah kolom aksi menjadi flex column */
+    @media (max-width: 767.98px) {
+        /* Target kolom yang memiliki class 'aksi-col' */
+        #tabelartikel .aksi-col {
+            display: flex !important;
+            flex-direction: column; /* Susun ke bawah */
+            gap: 4px;               /* Jarak antar tombol */
+            align-items: center;    /* Posisikan di tengah, JANGAN stretch */
+        }
 
-/* CSS Tombol 'x' di field */
-#clearFile:hover { color: #212529; }
-#clearFile:focus { box-shadow: none; }
+        /* Hapus margin kanan dan atur ukuran tombol */
+        #tabelartikel .aksi-col .btn,
+        #tabelartikel .aksi-col a {
+            margin-right: 0 !important;
+            margin-bottom: 0;
 
-/* CSS untuk Pagination */
-#paginationLinks .pagination {
-    margin-bottom: 0;
-}
-#paginationLinks .page-item.disabled .page-link {
-    background-color: #e9ecef;
-}
-#paginationLinks .page-item.active .page-link {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-}
-#paginationLinks .page-link {
-    cursor: pointer;
-}
+            /* Bikin tombol jadi kotak kecil (Square) */
+            width: 32px !important;
+            height: 32px !important;
+            padding: 0 !important; /* Hapus padding bawaan bootstrap */
+
+            /* Pastikan ikon di tengah tombol */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+    }
 </style>
-
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ asset('js/artikel.js') }}"></script>

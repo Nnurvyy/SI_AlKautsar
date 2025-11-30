@@ -4,28 +4,39 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Relations\BelongsTo; // Tambahkan import
+use Illuminate\Support\Str;
 
 class PemasukanTabunganQurban extends Model
 {
     use HasFactory, HasUuids;
 
     protected $table = 'pemasukan_tabungan_qurban';
-    protected $primaryKey = 'id_pemasukan_tabungan_qurban'; // <-- INI HARUSNYA PK ANDA
+    protected $primaryKey = 'id_pemasukan_tabungan_qurban';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
-    /**
-     * Tentukan kolom yang akan di-generate UUID-nya secara otomatis
-     */
-    public function uniqueIds()
+    protected $fillable = [
+        'id_pemasukan_tabungan_qurban',
+        'id_tabungan_hewan_qurban',
+        'order_id',          // Baru
+        'tripay_reference',  // Baru
+        'checkout_url',      // Baru
+        'tanggal',
+        'nominal',
+        'metode_pembayaran', // Baru
+        'status'             // Baru
+    ];
+
+    // Generate UUID otomatis (opsional jika sudah pakai trait HasUuids, tapi aman ditambahkan)
+    protected static function booted(): void
     {
-        // Pastikan nama kolom ini sesuai dengan Primary Key Anda
-        return ['id_pemasukan_tabungan_qurban'];
+        static::creating(function ($model) {
+            if (empty($model->{$model->getKeyName()})) {
+                $model->{$model->getKeyName()} = (string) Str::uuid();
+            }
+        });
     }
 
-    protected $fillable = ['id_tabungan_hewan_qurban', 'tanggal', 'nominal'];
-
-
-    // RELASI KE TABUNGAN HEWAN QURBAN
     public function tabunganHewanQurban()
     {
         return $this->belongsTo(TabunganHewanQurban::class, 'id_tabungan_hewan_qurban');

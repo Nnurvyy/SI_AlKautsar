@@ -25,11 +25,11 @@
                 <span class="input-group-text bg-white border-end-0">
                     <i class="bi bi-search"></i>
                 </span>
-                <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Cari Nama Program atau tanggal...">
+                <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Cari Nama Program...">
             </div>
         </div>
         
-        {{-- Tombol Tambah Khotib --}}
+        {{-- Tombol Tambah --}}
         <div class="d-flex align-items-center mt-2 mt-md-0">
             <button class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalProgram">
                 <i class="bi bi-plus-circle me-2"></i>
@@ -46,15 +46,16 @@
     <div class="card transaction-table border-0 shadow-sm">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover align-middle" id="tabelKhotib">
+                <table class="table table-hover align-middle" id="tabelProgram">
                     <thead class="table-light">
                         <tr> 
                             <th scope="col" style="width: 5%;" class="text-center">No</th>
-                            <th scope="col" style="width: 30%" class="text-center">Nama Program</th>
-                            <th scope="col" style="width: 15%" class="text-center">Tanggal Program</th>
-                            <th scope="col" style="width: 20%" class="text-center">Lokasi Program</th>
-                            <th scope="col" style="width: 15%" class="text-center">Status</th> <!-- Kolom Status Baru -->
-                            <th scope="col" style="width: 15%" class="text-center">Aksi</th>
+                            <th scope="col" style="width: 10%;" class="text-center">Foto</th>
+                            <th scope="col" style="width: 20%;" class="text-center">Nama Program</th>
+                            <th scope="col" style="width: 15%;" class="text-center">Tanggal</th>
+                            <th scope="col" style="width: 15%;" class="text-center">Lokasi</th>
+                            <th scope="col" style="width: 15%;" class="text-center">Status</th>
+                            <th scope="col" style="width: 20%;" class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -67,11 +68,10 @@
                 <span id="paginationInfo">Menampilkan 0 dari 0 data</span>
                 <nav id="paginationLinks"></nav>
             </div>
-            </div>
+        </div>
     </div>
 </div>
 
-<!-- Modal Form Program -->
 <div class="modal fade" id="modalProgram" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -79,54 +79,53 @@
       <form id="formProgram" enctype="multipart/form-data">
         <input type="hidden" id="id_program" name="id_program">
 
-        <!-- HEADER -->
-        <div class="modal-header py-2">
+        <div class="modal-header">
           <h5 class="modal-title fw-bold">Form Data Program</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
 
-        <!-- BODY -->
         <div class="modal-body">
 
-          <!-- File Foto -->
           <div class="mb-3">
             <label class="form-label mb-1">Foto Program</label>
-            <input type="file" class="form-control" name="foto_program" id="foto_program" accept="image/*">
+            <input type="file" class="d-none" id="foto_program" name="foto_program" accept="image/*">
             
-            <div id="previewContainer" class="mt-2 d-none text-center">
-                <img id="previewFoto" src="#" alt="Preview Foto Program" style="max-width: 100%; max-height: 200px; object-fit: cover;">
-                
-                <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="clearFile">
-                    <i class="bi bi-x-circle-fill"></i> Hapus Foto
+            <div class="position-relative">
+                <label for="foto_program" id="foto_program_label" class="form-control d-block text-truncate" style="cursor: pointer;">
+                    <span class="text-muted">Pilih foto...</span>
+                </label>
+                <button type="button" class="btn position-absolute d-none" id="clearFile" title="Hapus foto" 
+                        style="top: 50%; right: 0.3rem; transform: translateY(-50%); z-index: 5; padding: 0 0.5rem; font-size: 1.2rem; color: #6c757d; line-height: 1; background: transparent; border: 0;">
+                    <i class="bi bi-x-lg"></i>
                 </button>
             </div>
-        </div>
 
-          <!-- Nama Program -->
+            <div id="previewContainer" class="position-relative d-none mt-2 text-center">
+                <img id="previewFoto" class="rounded mt-2" style="max-width: 100%; max-height: 200px; object-fit: cover;">
+            </div>
+          </div>
+
           <div class="mb-3">
             <label for="nama_program" class="form-label mb-1">Nama Program <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="nama_program" name="nama_program">
+            <input type="text" class="form-control" id="nama_program" name="nama_program" required>
           </div>
 
-          <!-- Penyelenggara -->
           <div class="mb-3">
             <label for="penyelenggara_program" class="form-label mb-1">Penyelenggara <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="penyelenggara_program" name="penyelenggara_program">
+            <input type="text" class="form-control" id="penyelenggara_program" name="penyelenggara_program" required>
           </div>
 
-          <!-- Lokasi -->
           <div class="mb-3">
             <label for="lokasi_program" class="form-label mb-1">Lokasi <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="lokasi_program" name="lokasi_program">
+            <input type="text" class="form-control" id="lokasi_program" name="lokasi_program" required>
           </div>
 
-          <!-- Tanggal -->
           <div class="mb-3">
-            <label for="tanggal_program" class="form-label mb-1">Tanggal Pelaksanaan<span class="text-danger">*</span></label>
-            <input type="datetime-local" class="form-control" id="tanggal_program" name="tanggal_program">
+            <label for="tanggal_program" class="form-label mb-1">Tanggal Pelaksanaan <span class="text-danger">*</span></label>
+            <input type="datetime-local" class="form-control" id="tanggal_program" name="tanggal_program" required>
           </div>
 
-        <div class="mb-3">
+          <div class="mb-3">
             <label for="status_program" class="form-label">Status Program</label>
                 <select class="form-select" id="status_program" name="status_program" required>
                     <option value="" disabled selected>Pilih Status</option>
@@ -134,19 +133,16 @@
                     <option value="sedang berjalan">Sedang Berjalan</option>
                     <option value="sudah dijalankan">Sudah Dijalankan</option>
                 </select>
-            <div class="invalid-feedback" id="status_program_error"></div>
-        </div>            
+          </div>            
 
-          <!-- Deskripsi -->
           <div class="mb-1">
             <label for="deskripsi_program" class="form-label mb-1">Deskripsi <span class="text-danger">*</span></label>
-            <textarea class="form-control" id="deskripsi_program" name="deskripsi_program" rows="3"></textarea>
+            <textarea class="form-control" id="deskripsi_program" name="deskripsi_program" rows="3" required></textarea>
           </div>
 
         </div>
 
-        <!-- FOOTER -->
-        <div class="modal-footer py-2">
+        <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
           <button type="submit" class="btn btn-success">Simpan</button>
         </div>
@@ -156,79 +152,93 @@
   </div>
 </div>
 
-<!-- Modal Detail Program -->
-<div class="modal fade" id="modalDetailProgram" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+<div class="modal fade" id="modalDetailProgram" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg"> 
     <div class="modal-content">
       
-      <div class="modal-header py-2">
-        <h5 class="modal-title fw-bold" id="detailModalTitle">Detail Program: <span id="detailNamaProgram"></span></h5>
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Detail Program</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       
-      <div class="modal-body" id="detailProgramBody">
+      <div class="modal-body">
         <div class="row">
-            
-            <div class="col-md-4 text-center mb-3">
-                <h6>Foto Program</h6>
-                <img id="detailFotoProgram" src="#" alt="Foto Program" class="img-fluid rounded shadow-sm" style="max-height: 250px; object-fit: cover;">
+            <div class="col-md-5 text-center mb-3">
+                <img id="detailFotoProgram" src="#" alt="Foto Program" class="img-fluid rounded shadow-sm" style="max-height: 300px; object-fit: cover;">
             </div>
             
-            <div class="col-md-8">
-                <table class="table table-sm table-striped table-bordered">
-                    <tbody>
-                        <tr><th>Nama Program</th><td id="d_nama"></td></tr>
-                        <tr><th>Penyelenggara</th><td id="d_penyelenggara"></td></tr>
-                        <tr><th>Lokasi</th><td id="d_lokasi"></td></tr>
-                        <tr><th>Tanggal Pelaksanaan</th><td id="d_tanggal"></td></tr>
-                        <tr><th>Status</th><td id="d_status"></td></tr>
-                    </tbody>
+            <div class="col-md-7">
+                <h4 id="d_nama" class="fw-bold mb-3"></h4>
+                <table class="table table-borderless">
+                    <tr><td style="width: 140px;" class="fw-bold">Penyelenggara</td><td>: <span id="d_penyelenggara"></span></td></tr>
+                    <tr><td class="fw-bold">Lokasi</td><td>: <span id="d_lokasi"></span></td></tr>
+                    <tr><td class="fw-bold">Waktu</td><td>: <span id="d_tanggal"></span></td></tr>
+                    <tr><td class="fw-bold">Status</td><td>: <span id="d_status"></span></td></tr>
                 </table>
-            </div>
-            
-            <div class="col-12 mt-3">
-                <h6 class="fw-bold">Deskripsi Lengkap:</h6>
-                <div id="d_deskripsi" class="p-3 border rounded bg-light"></div>
+                
+                <div class="mt-3">
+                    <label class="fw-bold">Deskripsi:</label>
+                    <p id="d_deskripsi" class="text-muted bg-light p-2 rounded"></p>
+                </div>
             </div>
         </div>
       </div>
       
-      <div class="modal-footer py-2">
+      <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
       </div>
     </div>
   </div>
 </div>
 
-
 <style>
-
 /* CSS Modal Scroll */
-#modalKhotib .modal-dialog { max-height: 80vh; display: flex; flex-direction: column; }
-#modalKhotib .modal-content { height: 100%; display: flex; flex-direction: column; }
-#modalKhotib .modal-body { overflow-y: auto; max-height: 70vh; }
-#modalKhotib .modal-footer { position: sticky; bottom: 0; background: white; z-index: 2; border-top: 1px solid #dee2e6; }
+#modalProgram .modal-dialog { max-height: 80vh; display: flex; flex-direction: column; }
+#modalProgram .modal-content { height: 100%; display: flex; flex-direction: column; }
+#modalProgram .modal-body { overflow-y: auto; max-height: 70vh; }
+#modalProgram .modal-footer { position: sticky; bottom: 0; background: white; z-index: 2; border-top: 1px solid #dee2e6; }
 
-/* CSS Tombol 'x' di field */
-#clearFile:hover { color: #212529; }
+/* CSS Tombol 'x' di field foto */
+#clearFile:hover { color: #212529 !important; }
 #clearFile:focus { box-shadow: none; }
 
-/* CSS untuk Pagination */
-#paginationLinks .pagination {
-    margin-bottom: 0;
+/* --- CSS MOBILE FIX (Agar tombol aksi menumpuk rapi di HP) --- */
+#tabelProgram .badge {
+    white-space: normal !important; /* KUNCI: Memaksa teks wrap */
+    display: inline-block;          /* Agar padding rapi */
+    text-align: center;             /* Teks rata tengah */
+    line-height: 1.2;               /* Jarak antar baris diperkecil sedikit */
+    padding: 6px 8px;               /* Padding agar badge terlihat kotak rapi */
+    min-width: 80px;                /* Opsional: lebar minimal agar enak dilihat */
 }
-#paginationLinks .page-item.disabled .page-link {
-    background-color: #e9ecef;
-}
-#paginationLinks .page-item.active .page-link {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-}
-#paginationLinks .page-link {
-    cursor: pointer;
+
+/* CSS Mobile Fix yang tadi (Tombol Aksi) - BIARKAN SEPERTI INI */
+@media (max-width: 767.98px) {
+    /* Container kolom aksi */
+    #tabelProgram .aksi-col {
+        display: flex !important;
+        flex-direction: column; /* Susun ke bawah */
+        gap: 4px;               /* Jarak antar tombol diperkecil */
+        align-items: center;    /* Posisikan tombol di tengah-tengah kolom */
+    }
+
+    /* Tombol aksi */
+    #tabelProgram .aksi-col .btn {
+        margin-right: 0 !important;
+        margin-bottom: 0;
+
+        /* Bikin tombol jadi kotak kecil (Square) */
+        width: 32px !important; 
+        height: 32px !important;
+        padding: 0 !important;    /* Hapus padding bawaan bootstrap */
+        
+        /* Pastikan ikon di tengah tombol */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
 }
 </style>
-
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ asset('js/program.js') }}"></script>

@@ -64,36 +64,58 @@
 {{-- MODAL 1: Form Transaksi (Tambah/Edit) --}}
 <div class="modal fade" id="modalTransaksi" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
             <form id="formTransaksi">
                 <input type="hidden" id="id_keuangan" name="id_keuangan">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTransaksiTitle">Tambah Pemasukan</h5>
+                
+                {{-- Header Modern --}}
+                <div class="modal-header border-0 pb-0 ps-4 pe-4 pt-4">
+                    <h4 class="modal-title fw-bold" id="modalTransaksiTitle" style="color: #2c3e50;">
+                        </h4>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Tanggal</label>
-                        <input type="date" class="form-control" name="tanggal" id="inputTanggal" required value="{{ date('Y-m-d') }}">
+
+                <div class="modal-body p-4">
+                    {{-- Input Nominal (Fokus Utama) --}}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-success" id="labelNominal">Nominal Transaksi</label>
+                        <div class="input-group input-group-lg shadow-sm">
+                            <span class="input-group-text bg-white text-success fw-bold border-end-0" style="border-top-left-radius: 10px; border-bottom-left-radius: 10px;">Rp</span>
+                            {{-- PENTING: type="text" agar bisa menerima titik, bukan number --}}
+                            <input type="text" class="form-control border-start-0 fs-4 fw-bold text-dark" 
+                                   name="nominal_display" id="inputNominal" required placeholder="0" autocomplete="off"
+                                   style="border-top-right-radius: 10px; border-bottom-right-radius: 10px;">
+                        </div>
+                        <small class="text-muted fst-italic ms-1">Masukkan nominal tanpa titik.</small>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Kategori</label>
-                        <select class="form-select" name="id_kategori_keuangan" id="selectKategori" required>
-                            <option value="">-- Pilih Kategori --</option>
-                        </select>
+
+                    {{-- Grid untuk Tanggal & Kategori --}}
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Tanggal</label>
+                            <input type="date" class="form-control py-2" name="tanggal" id="inputTanggal" required value="{{ date('Y-m-d') }}" style="border-radius: 8px;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-muted">Kategori</label>
+                            <select class="form-select py-2" name="id_kategori_keuangan" id="selectKategori" required style="border-radius: 8px;">
+                                <option value="">-- Pilih --</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Nominal (Rp)</label>
-                        <input type="number" class="form-control" name="nominal" id="inputNominal" required min="1">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Deskripsi</label>
-                        <textarea class="form-control" name="deskripsi" id="inputDeskripsi" rows="2"></textarea>
+
+                    <div class="mb-2">
+                        <label class="form-label fw-bold small text-muted">Deskripsi / Catatan</label>
+                        <textarea class="form-control" name="deskripsi" id="inputDeskripsi" rows="3" placeholder="Contoh: Sedekah hamba Allah..." style="border-radius: 8px;"></textarea>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-success">Simpan</button>
+
+                <div class="modal-footer border-0 px-4 pb-4">
+                    <button type="button" class="btn btn-light fw-bold text-muted px-4" data-bs-dismiss="modal" style="border-radius: 8px;">Batal</button>
+                    
+                    {{-- Tombol menyesuaikan halaman (Merah/Hijau diatur via JS atau class bawaan) --}}
+                    <button type="submit" class="btn btn-success fw-bold px-4 py-2 shadow-sm" id="btnSimpanTransaksi" style="border-radius: 8px; min-width: 120px;">
+                        Simpan <i class="bi bi-arrow-right ms-1"></i>
+                    </button>
                 </div>
             </form>
         </div>
@@ -103,27 +125,41 @@
 {{-- MODAL 2: Kelola Kategori (CRUD) --}}
 <div class="modal fade" id="modalKategori" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Kelola Kategori Pemasukan</h5>
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+            {{-- Header --}}
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold" style="color: #2c3e50;">Kelola Kategori</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
+
+            <div class="modal-body p-4">
                 {{-- Form Tambah/Edit Kategori --}}
-                <form id="formKategori" class="mb-4 p-3 bg-light rounded">
+                <form id="formKategori" class="mb-4">
                     <input type="hidden" id="id_kategori" name="id_kategori">
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="nama_kategori" name="nama_kategori_keuangan" placeholder="Nama Kategori Baru" required>
-                        <button class="btn btn-primary" type="submit" id="btnSimpanKategori">
-                            <i class="bi bi-plus-lg"></i> Tambah
+                    <label class="form-label fw-bold small text-muted">Nama Kategori</label>
+                    <div class="input-group shadow-sm" style="border-radius: 10px; overflow: hidden;">
+                        <input type="text" class="form-control border-0 py-2 bg-light" id="nama_kategori" name="nama_kategori_keuangan" placeholder="Tulis kategori baru..." required>
+                        
+                        {{-- Tombol Simpan (Warna akan handle by JS/Bootstrap default) --}}
+                        <button class="btn btn-primary px-3 fw-bold" type="submit" id="btnSimpanKategori">
+                            <i class="bi bi-plus-lg"></i>
                         </button>
-                        <button type="button" class="btn btn-secondary d-none" id="btnBatalEditKategori">Batal</button>
+                        
+                        {{-- Tombol Batal Edit --}}
+                        <button type="button" class="btn btn-secondary px-3 d-none" id="btnBatalEditKategori">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
                     </div>
                 </form>
 
                 {{-- List Kategori --}}
-                <h6 class="fw-bold mb-2">Daftar Kategori</h6>
-                <div class="list-group" id="listKategoriContainer" style="max-height: 300px; overflow-y: auto;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold text-muted mb-0">Daftar Kategori</h6>
+                    <span class="badge bg-light text-secondary rounded-pill" id="totalKategoriBadge">0 Item</span>
+                </div>
+                
+                {{-- Container List dengan Scroll --}}
+                <div id="listKategoriContainer" class="px-1 py-1" style="max-height: 300px; overflow-y: auto;">
                     {{-- List dimuat via JS --}}
                 </div>
             </div>
