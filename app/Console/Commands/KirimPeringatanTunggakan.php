@@ -4,115 +4,119 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\TabunganHewanQurban;
-use App\Models\Jamaah;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class KirimPeringatanTunggakan extends Command
 {
-    /**
-     * Nama dan signature dari console command.
-     */
     protected $signature = 'qurban:kirim-peringatan';
-
-    /**
-     * Deskripsi dari console command.
-     */
     protected $description = 'Kirim email peringatan ke penabung qurban (tipe cicilan) yang tidak memenuhi target akumulasi bulanan.';
 
-    /**
-     * Jalankan logic command.
-     */
     public function handle()
     {
-        $this->info('Memulai pengecekan tunggakan tabungan qurban berdasarkan target akumulasi...');
+        $this->info('Memulai pengecekan tunggakan tabungan qurban...');
 
-        // 1. Ambil semua tabungan yang belum lunas dan bertipe 'cicilan'
-        $tabunganCicilanAktif = TabunganHewanQurban::with('jamaah')
+        $tabunganList = TabunganHewanQurban::with(['jamaah', 'details.hewan', 'pemasukanTabunganQurban'])
             ->where('saving_type', 'cicilan')
-            ->whereRaw(
-                '(SELECT COALESCE(SUM(nominal), 0) FROM pemasukan_tabungan_qurban WHERE id_tabungan_hewan_qurban = tabungan_hewan_qurban.id_tabungan_hewan_qurban) < total_harga_hewan_qurban'
-            )
+            ->where('status', 'disetujui') 
+            // Cek yang belum lunas (total tabungan < harga deal)
+            ->whereRaw('total_tabungan < total_harga_hewan_qurban') 
             ->get();
 
-        if ($tabunganCicilanAktif->isEmpty()) {
-            $this->info('Tidak ditemukan tabungan cicilan aktif yang belum lunas. Pekerjaan selesai.');
+        if ($tabunganList->isEmpty()) {
+            $this->info('Tidak ditemukan tabungan cicilan aktif yang belum lunas.');
             return 0;
         }
 
         $penunggakDitemukan = 0;
         $tanggalHariIni = Carbon::now();
 
-        foreach ($tabunganCicilanAktif as $tabungan) {
-            // Pastikan durasi cicilan valid
-            if ($tabungan->duration_months <= 0) continue;
+        $bar = $this->output->createProgressBar(count($tabunganList));
+        $bar->start();
 
-            // 2. Hitung Angsuran Bulanan (cicilan per bulan)
-            $installmentAmount = round($tabungan->total_harga_hewan_qurban / $tabungan->duration_months);
+        foreach ($tabunganList as $tabungan) {
+            // Validasi data
+            if ($tabungan->duration_months <= 0 || !$tabungan->jamaah) {
+                $bar->advance();
+                continue;
+            }
 
-            // 3. Hitung Jumlah Bulan Berlalu (sejak dibuat sampai bulan INI)
-            // Menggunakan created_at sebagai tanggal mulai
-            $tanggalMulai = Carbon::parse($tabungan->created_at);
+            // [PERBAIKAN 1] Gunakan tanggal_pembuatan, bukan created_at
+            $tanggalMulai = Carbon::parse($tabungan->tanggal_pembuatan);
 
-            // Hitung selisih bulan (termasuk bulan saat ini sebagai 1 bulan)
-            // Misal created_at 15 Nov, hari ini 19 Nov -> 1 bulan berlalu
-            // Misal created_at 15 Nov, hari ini 5 Dec -> 2 bulan berlalu (Nov & Dec)
-            $monthsPassed = $tanggalHariIni->diffInMonths($tanggalMulai) + 1;
+            // [PERBAIKAN 2] Rumus Selisih Bulan Kalender (Mei ke Juni = 1 Bulan)
+            // Logic: ((Tahun Sekarang - Tahun Buat) * 12) + (Bulan Sekarang - Bulan Buat)
+            $monthsPassed = (($tanggalHariIni->year - $tanggalMulai->year) * 12) + ($tanggalHariIni->month - $tanggalMulai->month);
 
-            // Jika tabungan sudah melewati total durasi, tapi belum lunas, anggap semua bulan sudah berlalu
+            // Cap maksimal agar tidak melebihi durasi kontrak
             $monthsPassed = min($monthsPassed, $tabungan->duration_months);
 
-            // 4. Hitung Target Akumulasi yang seharusnya sudah terkumpul
-            // Target Akumulasi = Cicilan Bulanan * Bulan Berlalu
+            // Jika diff <= 0, berarti masih di bulan yang sama saat mendaftar (Grace Period)
+            if ($monthsPassed <= 0) {
+                $bar->advance();
+                continue;
+            }
+
+            // Hitung Angsuran & Target
+            $installmentAmount = round($tabungan->total_harga_hewan_qurban / $tabungan->duration_months);
+            
+            // Target: Harusnya sudah bayar untuk bulan-bulan sebelumnya
             $accumulatedTarget = $installmentAmount * $monthsPassed;
 
-            // 5. Cek Tunggakan: Apakah total tabungan saat ini KURANG dari Target Akumulasi
+            // Hitung Uang Masuk
             $totalTerkumpul = $tabungan->pemasukanTabunganQurban->sum('nominal');
 
+            // Cek Menunggak
             if ($totalTerkumpul < $accumulatedTarget) {
-                // PENUNGGAK DITEMUKAN
                 $penunggakDitemukan++;
                 $jamaah = $tabungan->jamaah;
-
-                if (!$jamaah || !$jamaah->email) {
-                    Log::warning("Tabungan ID {$tabungan->id_tabungan_hewan_qurban} menunggak tapi tidak memiliki data jamaah/email.");
-                    continue;
-                }
-
                 $sisaKekurangan = $accumulatedTarget - $totalTerkumpul;
 
-                $teksEmail = "Halo, {$jamaah->name}.\n\n"
-                    . "Kami dari Pengelola E-Masjid Al Kautsar ingin menginformasikan bahwa tabungan qurban Anda ({$tabungan->nama_hewan}, Target: " . number_format($tabungan->total_harga_hewan_qurban, 0, ',', '.') . " dalam {$tabungan->duration_months} bulan) mengalami tunggakan.\n\n"
-                    . "Berdasarkan cicilan bulanan sebesar Rp " . number_format($installmentAmount, 0, ',', '.') . ", target setoran akumulasi Anda hingga bulan ini seharusnya Rp " . number_format($accumulatedTarget, 0, ',', '.') . ".\n"
-                    . "Namun, total setoran Anda saat ini baru mencapai Rp " . number_format($totalTerkumpul, 0, ',', '.') . ".\n\n"
-                    . "Kekurangan setoran untuk memenuhi target akumulasi Anda adalah **Rp " . number_format($sisaKekurangan, 0, ',', '.') . "**.\n\n"
-                    . "Mohon segera melakukan setoran minimal senilai kekurangan di atas agar tabungan Anda kembali normal.\n\n"
-                    . "Terima kasih.\n\n"
-                    . "Salam,\n"
-                    . "Admin Masjid Al Kautsar";
+                // String Hewan
+                $listHewanStr = $tabungan->details->map(function($detail) {
+                    $namaHewan = $detail->hewan ? $detail->hewan->nama_hewan : 'Hewan';
+                    return "{$detail->jumlah_hewan} ekor {$namaHewan}";
+                })->join(', ');
 
-                try {
-                    Mail::raw($teksEmail, function ($message) use ($jamaah) {
-                        $message->to($jamaah->email, $jamaah->name)
-                            ->subject('Peringatan Tunggakan Tabungan Qurban (Target Akumulasi)')
-                            ->from(config('mail.from.address'), config('mail.from.name'));
-                    });
+                // Kirim Email
+                if ($jamaah->email) {
+                    $teksEmail = "Assalamu'alaikum Warahmatullahi Wabarakatuh, Sdr/i {$jamaah->name}.\n\n"
+                        . "Semoga Anda dalam keadaan sehat walafiat.\n\n"
+                        . "Kami dari Pengelola Tabungan Qurban Masjid Al Kautsar menginformasikan status tabungan Anda:\n"
+                        . "--------------------------------------------------\n"
+                        . "Tanggal Daftar  : " . $tanggalMulai->format('d M Y') . "\n" // Info Tanggal Ditambah
+                        . "Rincian Hewan   : {$listHewanStr}\n"
+                        . "Total Deal      : Rp " . number_format($tabungan->total_harga_hewan_qurban, 0, ',', '.') . "\n"
+                        . "Durasi          : {$tabungan->duration_months} Bulan\n"
+                        . "Cicilan/bulan   : Rp " . number_format($installmentAmount, 0, ',', '.') . "\n"
+                        . "--------------------------------------------------\n\n"
+                        . "Hingga bulan ke-{$monthsPassed} (sejak pendaftaran), target akumulasi setoran seharusnya: Rp " . number_format($accumulatedTarget, 0, ',', '.') . ".\n"
+                        . "Total setoran Anda saat ini: Rp " . number_format($totalTerkumpul, 0, ',', '.') . ".\n\n"
+                        . "Terdapat kekurangan/tunggakan sebesar: **Rp " . number_format($sisaKekurangan, 0, ',', '.') . "**.\n\n"
+                        . "Mohon kesediaannya untuk melakukan setoran agar target Qurban dapat tercapai tepat waktu.\n\n"
+                        . "Wassalamu'alaikum Warahmatullahi Wabarakatuh,\n"
+                        . "Admin Masjid Al Kautsar";
 
-                    $this->info("Email peringatan berhasil dikirim ke: {$jamaah->email} (Kekurangan: Rp " . number_format($sisaKekurangan, 0, ',', '.') . ")");
-
-                } catch (\Exception $e) {
-                    $this->error("Gagal mengirim email ke {$jamaah->email}: " . $e->getMessage());
-                    Log::error("Gagal kirim email tunggakan ke {$jamaah->email}: " . $e->getMessage());
+                    try {
+                        Mail::raw($teksEmail, function ($message) use ($jamaah) {
+                            $message->to($jamaah->email, $jamaah->name)
+                                ->subject('Peringatan Tunggakan Tabungan Qurban');
+                        });
+                        Log::info("Email tunggakan terkirim ke: {$jamaah->email}");
+                    } catch (\Exception $e) {
+                        Log::error("Gagal kirim email ke {$jamaah->email}: " . $e->getMessage());
+                    }
                 }
-
-            } else {
-                // Sudah memenuhi target akumulasi, tidak perlu kirim peringatan
-                $this->info("Tabungan ID {$tabungan->id_tabungan_hewan_qurban} (Cicilan) sudah memenuhi target akumulasi. Dilewati.");
             }
+
+            $bar->advance();
         }
 
-        $this->info("Total {$penunggakDitemukan} email peringatan telah diproses. Pekerjaan selesai.");
+        $bar->finish();
+        $this->newLine();
+        $this->info("Selesai. Total {$penunggakDitemukan} jamaah terdeteksi menunggak dan diproses.");
+        
         return 0;
     }
 }

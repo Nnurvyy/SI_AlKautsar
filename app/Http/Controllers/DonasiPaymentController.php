@@ -6,111 +6,137 @@ use Illuminate\Http\Request;
 use App\Models\PemasukanDonasi;
 use App\Models\Donasi;
 use Illuminate\Support\Str;
-use Midtrans\Config;
-use Midtrans\Snap;
+use Illuminate\Support\Facades\Http; // Pastikan ini ada
+use Illuminate\Support\Facades\Auth; // Pastikan ini ada
 
 class DonasiPaymentController extends Controller
 {
-    public function __construct()
-    {
-        // Konfigurasi Midtrans
-        Config::$serverKey = config('midtrans.server_key');
-        Config::$isProduction = config('midtrans.is_production');
-        Config::$isSanitized = config('midtrans.is_sanitized');
-        Config::$is3ds = config('midtrans.is_3ds');
-    }
-
     public function checkout(Request $request)
     {
-        // 1. Validasi Input dari Frontend
+        // 1. Cek Login Jamaah
+        $user = Auth::guard('jamaah')->user();
+
+        // 2. Validasi Input (Email dihapus dari validasi frontend, kita handle di backend)
         $request->validate([
             'id_donasi' => 'required',
-            'nama' => 'required|string',
             'nominal' => 'required|numeric|min:1000',
+            'method' => 'required',
+            // Nama hanya wajib jika TIDAK login (jika login, kita ambil dari DB)
+            'nama' => $user ? 'nullable' : 'required|string', 
         ]);
-
-        // 2. Cek Data Donasi
+        
         $donasi = Donasi::find($request->id_donasi);
-        if (!$donasi) {
-            return response()->json(['status' => 'error', 'message' => 'Donasi tidak ditemukan.'], 404);
+        if (!$donasi) return response()->json(['message' => 'Donasi tidak ditemukan'], 404);
+
+        // 3. Tentukan Nama & Email
+        if ($user) {
+            // Jika Jamaah Login
+            $customerName = $user->name;
+            $customerEmail = $user->email;
+            $idJamaah = $user->id;
+        } else {
+            // Jika Tamu (Guest)
+            $customerName = $request->nama;
+            // Tripay WAJIB butuh email. Kita buat dummy email jika user tidak input.
+            // Format: guest_{timestamp}_{random}@nomail.com
+            $customerEmail = 'guest_' . time() . '_' . Str::random(3) . '@nomail.com';
+            $idJamaah = null;
         }
 
-        try {
-            // 3. Buat Order ID Unik
-            $orderId = 'DON-' . time() . '-' . Str::random(5);
+        // 4. Ambil Config Tripay
+        $merchantCode = config('services.tripay.merchant_code');
+        $apiKey       = config('services.tripay.api_key');
+        $privateKey   = config('services.tripay.private_key');
+        $amount       = (int) $request->nominal;
+        $merchantRef  = 'DON-' . time() . '-' . Str::random(5);
 
-            // 4. Simpan ke Database (Status Pending)
-            $pemasukan = PemasukanDonasi::create([
-                'id_donasi' => $donasi->id_donasi,
-                'order_id' => $orderId,
-                'tanggal' => now(),
-                'nama_donatur' => $request->nama,
-                
-                // --- PENTING: SESUAIKAN DENGAN ENUM DI MIGRATION ---
-                // Database kamu cuma terima: 'tunai', 'transfer', 'whatsapp'
-                // Jadi kita pakai 'transfer' untuk Midtrans.
-                'metode_pembayaran' => 'transfer', 
-                // --------------------------------------------------
+        // 5. Generate Signature
+        $signature = hash_hmac('sha256', $merchantCode . $merchantRef . $amount, $privateKey);
 
-                'nominal' => $request->nominal,
-                'status' => 'pending', // Status awal
-                'pesan' => $request->pesan ?? '-',
-            ]);
+        // 6. Data Request ke Tripay
+        $data = [
+            'method'         => $request->input('method'),
+            'merchant_ref'   => $merchantRef,
+            'amount'         => $amount,
+            'customer_name'  => $customerName,
+            'customer_email' => $customerEmail, // Email asli (jamaah) atau dummy (tamu)
+            'customer_phone' => $user ? $user->no_hp : '08123456789', // Jika jamaah ada HP pakai itu
+            'order_items'    => [
+                [
+                    'sku'      => $donasi->id_donasi,
+                    'name'     => substr($donasi->nama_donasi, 0, 250),
+                    'price'    => $amount,
+                    'quantity' => 1
+                ]
+            ],
+            'return_url'   => route('public.donasi'),
+            'expired_time' => (time() + (24 * 60 * 60)),
+            'signature'    => $signature
+        ];
 
-            // 5. Siapkan Parameter untuk Midtrans
-            $params = [
-                'transaction_details' => [
-                    'order_id' => $orderId,
-                    'gross_amount' => (int) $request->nominal,
-                ],
-                'customer_details' => [
-                    'first_name' => $request->nama,
-                    'email' => $request->email, // Email wajib untuk notifikasi Midtrans
-                ],
-                'item_details' => [[
-                    'id' => $donasi->id_donasi,
-                    'price' => (int) $request->nominal,
-                    'quantity' => 1,
-                    'name' => substr($donasi->nama_donasi, 0, 50), // Midtrans limit nama item 50 char
-                ]]
-            ];
+        // 7. Kirim Request ke API Tripay
+        $url = config('services.tripay.api_url');
+        $response = Http::withToken($apiKey)->post($url, $data);
+        $res = $response->json();
 
-            // 6. Minta Snap Token ke Midtrans
-            $snapToken = Snap::getSnapToken($params);
-            
-            // 7. Simpan Token ke Database (untuk jaga-jaga)
-            $pemasukan->update(['snap_token' => $snapToken]);
-
-            // 8. Kirim Token ke Frontend
-            return response()->json(['status' => 'success', 'snap_token' => $snapToken]);
-
-        } catch (\Exception $e) {
+        if (!$response->successful() || empty($res['success']) || !$res['success']) {
             return response()->json([
                 'status' => 'error', 
-                'message' => $e->getMessage()
+                'message' => $res['message'] ?? 'Gagal request ke Tripay'
             ], 500);
         }
+
+        // 8. Simpan ke Database
+        $dataTripay = $res['data'];
+        
+        PemasukanDonasi::create([
+            'id_donasi' => $donasi->id_donasi,
+            'id_jamaah' => $idJamaah, // Simpan ID Jamaah jika ada
+            'order_id' => $merchantRef,
+            'tripay_reference' => $dataTripay['reference'],
+            'tanggal' => now(),
+            'nama_donatur' => $customerName,
+            'metode_pembayaran' => 'transfer',
+            'nominal' => $amount,
+            'status' => 'pending',
+            'pesan' => $request->pesan ?? '-',
+            'checkout_url' => $dataTripay['checkout_url'],
+        ]);
+
+        return response()->json([
+            'status' => 'success', 
+            'checkout_url' => $dataTripay['checkout_url']
+        ]);
     }
 
     public function callback(Request $request)
     {
-        $serverKey = config('midtrans.server_key');
-        // Verifikasi tanda tangan keamanan dari Midtrans
-        $hashed = hash("sha512", $request->order_id.$request->status_code.$request->gross_amount.$serverKey);
+        // 1. Ambil data callback
+        $callbackSignature = $request->server('HTTP_X_CALLBACK_SIGNATURE');
+        $json = $request->getContent();
+        $data = json_decode($json);
 
-        if ($hashed == $request->signature_key) {
-            // Cari transaksi berdasarkan Order ID
-            $transaksi = PemasukanDonasi::where('order_id', $request->order_id)->first();
+        // 2. Validasi Signature
+        $privateKey = config('services.tripay.private_key');
+        $signature = hash_hmac('sha256', $json, $privateKey);
+
+        if ($signature !== $callbackSignature) {
+            return response()->json(['success' => false, 'message' => 'Invalid Signature'], 400);
+        }
+
+        // 3. Proses Status
+        if ($request->header('X-Callback-Event') === 'payment_status') {
+            $transaksi = PemasukanDonasi::where('order_id', $data->merchant_ref)->first();
             
             if ($transaksi) {
-                // Update status berdasarkan respon Midtrans
-                if ($request->transaction_status == 'capture' || $request->transaction_status == 'settlement') {
+                if ($data->status === 'PAID') {
                     $transaksi->update(['status' => 'success']);
-                } elseif (in_array($request->transaction_status, ['expire', 'cancel', 'deny'])) {
+                } elseif (in_array($data->status, ['EXPIRED', 'FAILED', 'REFUND'])) {
                     $transaksi->update(['status' => 'failed']);
                 }
             }
         }
-        return response()->json(['status' => 'ok']);
+
+        return response()->json(['success' => true]);
     }
 }

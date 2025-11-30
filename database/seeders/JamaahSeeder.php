@@ -19,6 +19,7 @@ class JamaahSeeder extends Seeder
                 'name' => 'joko',
                 // Buat password default, misal 'password'
                 'password' => Hash::make('password'),
+                'no_hp' => '081234567890',
             ]
         );
     }

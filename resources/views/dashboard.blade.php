@@ -43,8 +43,8 @@
             <div class="card stat-card">
                 <div class="card-body">
                     <div>
-                        <p class="text-muted mb-1">Total Penabung Qurban</p>
-                        <h5 class="fw-bold mb-0">{{ $totalPenabungQurban }} Orang</h5>
+                        <p class="text-muted mb-1">Total Tabungan Qurban</p>
+                        <h5 class="fw-bold mb-0">{{ $totalPenabungQurban }}</h5>
                     </div>
                     <div class="stat-card-icon bg-warning bg-opacity-10 text-warning">
                         <i class="bi bi-person-check"></i>

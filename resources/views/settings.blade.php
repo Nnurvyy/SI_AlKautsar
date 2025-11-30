@@ -50,7 +50,7 @@
                 {{-- ================================================= --}}
                 <div class="mb-3">
                     <label class="form-label fw-bold">Lokasi Masjid (Peta)</label>
-                    <p class="text-muted small mb-2">Geser pin merah ke lokasi masjid yang tepat, atau gunakan tombol cari.</p>
+                    <p class="text-muted small mb-2">Geser pin biru ke lokasi masjid yang tepat</p>
                     
                     {{-- Wrapper Peta --}}
                     <div class="position-relative mb-3">
@@ -85,12 +85,37 @@
                     <textarea class="form-control" name="deskripsi_masjid" rows="3">{{ $settings->deskripsi_masjid }}</textarea>
                 </div>
 
-                {{-- Foto & Sosmed (Kode Lama) ... --}}
-                {{-- (Saya persingkat agar fokus ke map, copy paste bagian foto/sosmed yang lama kesini) --}}
-                <div class="mb-3"><label>Foto Masjid</label><input type="file" class="form-control" name="foto_masjid"></div>
-                <div class="mb-3"><label>WhatsApp</label><input type="text" class="form-control" name="social_whatsapp" value="{{ $settings->social_whatsapp }}"></div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><i class="bi bi-whatsapp text-success me-1"></i> WhatsApp (No. HP)</label>
+                        <input type="text" class="form-control" name="social_whatsapp" value="{{ $settings->social_whatsapp }}" placeholder="Contoh: 6281234567890">
+                        <div class="form-text small">Gunakan format 62... tanpa spasi atau tanda strip.</div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><i class="bi bi-instagram text-danger me-1"></i> Instagram (Link Profil)</label>
+                        <input type="text" class="form-control" name="social_instagram" value="{{ $settings->social_instagram }}" placeholder="Contoh: https://instagram.com/masjid_alkautsar">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><i class="bi bi-facebook text-primary me-1"></i> Facebook (Link Halaman)</label>
+                        <input type="text" class="form-control" name="social_facebook" value="{{ $settings->social_facebook }}" placeholder="Contoh: https://facebook.com/masjidalkautsar">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><i class="bi bi-youtube text-danger me-1"></i> YouTube (Link Channel)</label>
+                        <input type="text" class="form-control" name="social_youtube" value="{{ $settings->social_youtube }}" placeholder="Contoh: https://youtube.com/@masjidalkautsar">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label"><i class="bi bi-twitter text-info me-1"></i> Twitter / X (Link Profil)</label>
+                        <input type="text" class="form-control" name="social_twitter" value="{{ $settings->social_twitter }}" placeholder="Contoh: https://twitter.com/masjidalkautsar">
+                    </div>
+                </div>
                 
-                <button type="submit" class="btn btn-primary w-100">Simpan Perubahan</button>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold py-2"><i class="bi bi-save me-2"></i> Simpan Perubahan</button>
+                </div>
             </div>
         </div>
     </form>

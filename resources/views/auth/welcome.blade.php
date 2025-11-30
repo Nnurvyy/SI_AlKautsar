@@ -16,7 +16,7 @@
             
             </div>
         
-        <a href="{{ route('login') }}" class="btn btn-primary" style="margin-bottom: 0.5rem;">Login With Email</a>
+        <a href="{{ route('login') }}" class="btn btn-primary" style="margin-bottom: 0.5rem;">Sign In With Email</a>
         
         <footer class="auth-footer">
             <p>Don't have an account? <a href="{{ route('register') }}" class="link">Sign Up</a></p>

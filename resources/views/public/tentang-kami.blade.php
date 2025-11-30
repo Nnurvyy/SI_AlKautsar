@@ -5,29 +5,34 @@
 @push('styles')
 <style>
     /* Style Khusus Halaman Ini */
-    .about-header-img {
-        width: 100%;
-        height: 250px;
-        object-fit: cover;
-        border-radius: 0 0 25px 25px;
-        margin-bottom: -60px;
-        position: relative;
-        z-index: 1;
-    }
     
+    /* 1. Card Utama Wrapper */
     .about-info-card {
         background: white;
         border-radius: 20px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        padding: 2rem;
+        overflow: hidden; /* Agar gambar tidak keluar dari radius border */
         position: relative;
         z-index: 2;
         margin-bottom: 2rem;
+        padding: 0; 
+    }
+
+    /* 2. Gambar di dalam Card */
+    .about-header-img {
+        width: 100%;
+        height: auto; /* Tinggi menyesuaikan rasio asli gambar */
+        display: block;
+    }
+
+    /* 3. Wrapper untuk Teks (Nama, Alamat, Deskripsi) */
+    .about-content-body {
+        padding: 2rem; 
     }
 
     .map-container iframe {
         width: 100%;
-        height: 350px;
+        height: 300px; /* Sedikit dikecilkan agar proporsional dengan lebar baru */
         border-radius: 15px;
         border: 0;
         box-shadow: 0 4px 10px rgba(0,0,0,0.05);
@@ -37,12 +42,12 @@
     .contact-btn {
         display: flex;
         align-items: center;
-        padding: 1rem;
+        padding: 0.8rem 1rem; /* Padding sedikit diperkecil */
         border-radius: 12px;
         text-decoration: none;
         color: white;
         font-weight: 600;
-        margin-bottom: 1rem;
+        margin-bottom: 0.8rem;
         transition: transform 0.2s;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
@@ -51,8 +56,8 @@
         color: white;
     }
     .contact-btn i {
-        font-size: 1.5rem;
-        margin-right: 1rem;
+        font-size: 1.4rem;
+        margin-right: 0.8rem;
     }
     .btn-wa { background: linear-gradient(45deg, #25D366, #128C7E); }
     .btn-ig { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
@@ -60,37 +65,46 @@
     .btn-yt { background: linear-gradient(45deg, #FF0000, #cc0000); }
     .btn-tw { background: linear-gradient(45deg, #1DA1F2, #0d8bd9); }
 
+    /* Desktop Styles - Padding teks sedikit lebih besar */
     @media (min-width: 992px) {
-        .about-header-img { height: 400px; }
+        .about-content-body {
+            padding: 2.5rem; 
+        }
     }
 </style>
 @endpush
 
 @section('content')
 
-{{-- 1. HEADER IMAGE --}}
-<img src="{{ $masjidSettings->foto_masjid ? Storage::url($masjidSettings->foto_masjid) : asset('images/masjid.jpeg') }}" 
-     class="about-header-img shadow-sm" alt="Foto Masjid">
-
-<div class="container" style="max-width: 900px;">
+{{-- PERUBAHAN: Max-width diperkecil jadi 700px agar ramping --}}
+<div class="container mt-4" style="max-width: 700px;">
     
-    {{-- 2. INFO MASJID & DESKRIPSI --}}
-    <div class="about-info-card text-center">
-        <h2 class="fw-bold text-dark mb-1">{{ $masjidSettings->nama_masjid }}</h2>
-        <p class="text-muted mb-4"><i class="bi bi-geo-alt-fill text-danger"></i> {{ $masjidSettings->lokasi_nama }}</p>
+    {{-- 1. INFO MASJID & DESKRIPSI (Card Utama) --}}
+    <div class="about-info-card">
         
-        <hr class="w-25 mx-auto mb-4">
+        {{-- A. Gambar Masuk ke Sini (Paling Atas) --}}
+        {{-- height: auto memastikan gambar tampil utuh sesuai aslinya --}}
+        <img src="{{ $masjidSettings->foto_masjid ? Storage::url($masjidSettings->foto_masjid) : asset('images/masjid.jpeg') }}" 
+             class="about-header-img" alt="Foto Masjid">
 
-        <div class="text-start text-secondary" style="line-height: 1.8; white-space: pre-line;">
-            @if($masjidSettings->deskripsi_masjid)
-                {!! nl2br(e($masjidSettings->deskripsi_masjid)) !!}
-            @else
-                <p class="text-center text-muted fst-italic">Belum ada deskripsi profil masjid.</p>
-            @endif
+        {{-- B. Konten Teks --}}
+        <div class="about-content-body text-center">
+            <h2 class="fw-bold text-dark mb-1">{{ $masjidSettings->nama_masjid }}</h2>
+            <p class="text-muted mb-4"><i class="bi bi-geo-alt-fill text-danger"></i> {{ $masjidSettings->lokasi_nama }}</p>
+            
+            <hr class="w-25 mx-auto mb-4">
+
+            <div class="text-start text-secondary" style="line-height: 1.8; white-space: pre-line;">
+                @if($masjidSettings->deskripsi_masjid)
+                    {!! nl2br(e($masjidSettings->deskripsi_masjid)) !!}
+                @else
+                    <p class="text-center text-muted fst-italic">Belum ada deskripsi profil masjid.</p>
+                @endif
+            </div>
         </div>
     </div>
 
-    {{-- 3. LOKASI (LEAFLET MAP READ-ONLY) --}}
+    {{-- 2. LOKASI (LEAFLET MAP READ-ONLY) --}}
     @if($masjidSettings->latitude && $masjidSettings->longitude)
     <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
         <div class="card-body p-0">
@@ -103,7 +117,7 @@
                 </a>
             </div>
             {{-- Container Map --}}
-            <div id="publicMap" style="height: 350px; width: 100%;"></div>
+            <div id="publicMap" style="height: 300px; width: 100%;"></div>
         </div>
     </div>
 
@@ -122,7 +136,7 @@
                 const map = L.map('publicMap').setView([lat, lng], 15);
                 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; OpenStreetMap'
+                    attribution: '© OpenStreetMap'
                 }).addTo(map);
                 
                 L.marker([lat, lng]).addTo(map)
@@ -133,7 +147,7 @@
     @endpush
     @endif
 
-    {{-- 4. KONTAK KAMI (SOCIAL MEDIA) --}}
+    {{-- 3. KONTAK KAMI (SOCIAL MEDIA) --}}
     <div class="mb-5">
         <h5 class="fw-bold mb-3 ps-2 border-start border-4 border-primary">Hubungi Kami</h5>
         <div class="row">

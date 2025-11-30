@@ -104,7 +104,7 @@
 <body class="d-flex flex-column min-vh-100">
 
     {{-- =========================================================== --}}
-    {{-- 1. DESKTOP NAVBAR (Tetap sama, sudah OK)                    --}}
+    {{-- 1. DESKTOP NAVBAR                                           --}}
     {{-- =========================================================== --}}
     <header class="d-none d-lg-block shadow-sm" style="position: sticky; top: 0; z-index: 1030; background-color: white;">
         <nav class="navbar navbar-expand-lg navbar-light bg-white">
@@ -134,6 +134,7 @@
                     </ul>
                     <div class="d-flex align-items-center">
                         @auth('pengurus')
+                            {{-- DROPDOWN PENGURUS DI DESKTOP --}}
                             <div class="dropdown">
                                 <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
                                     @if(Auth::guard('pengurus')->user()->avatar)
@@ -144,10 +145,16 @@
                                     <span class="text-dark fw-medium">{{ Auth::guard('pengurus')->user()->name }}</span>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end shadow">
-                                    <li><a class="dropdown-item" href="{{ route('pengurus.dashboard') }}">Dashboard</a></li>
-                                    <li><a class="dropdown-item" href="{{ route('pengurus.profile.edit') }}">Profil Saya</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('pengurus.profile.edit') }}"><i class="bi bi-person me-2"></i> Profile</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('pengurus.settings.edit') }}"><i class="bi bi-gear me-2"></i> Settings</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('pengurus.dashboard') }}"><i class="bi bi-speedometer2 me-2"></i> Dashboard</a></li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><form action="{{ route('logout') }}" method="POST">@csrf<button type="submit" class="dropdown-item text-danger">Logout</button></form></li>
+                                    <li>
+                                        <form action="{{ route('logout') }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="dropdown-item text-danger fw-bold"><i class="bi bi-box-arrow-right me-2"></i> Logout</button>
+                                        </form>
+                                    </li>
                                 </ul>
                             </div>
                         @elseauth('jamaah')
@@ -179,7 +186,6 @@
     {{-- =========================================================== --}}
     {{-- 2. MOBILE HERO TOP NAV (KHUSUS UNTUK HALAMAN BERANDA)       --}}
     {{-- =========================================================== --}}
-    {{-- Nav ini hanya muncul jika di route landing page (Beranda) --}}
     @if(Request::is('/'))
         <nav class="hero-top-nav d-lg-none">
             <div class="container d-flex justify-content-between align-items-center px-4">
@@ -202,15 +208,17 @@
                             @endif
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow mt-2 border-0 rounded-3" style="min-width: 200px;">
-                            {{-- Header Nama di Dropdown --}}
+                            {{-- Header Nama --}}
                             <li class="px-3 py-2 border-bottom mb-1">
                                 <div class="fw-bold text-truncate" style="max-width: 180px;">{{ $user->name }}</div>
                                 <div class="small text-muted">{{ Auth::guard('pengurus')->check() ? 'Pengurus' : 'Jamaah' }}</div>
                             </li>
 
                             @if(Auth::guard('pengurus')->check())
+                                {{-- MENU PENGURUS MOBILE --}}
+                                <li><a class="dropdown-item py-2" href="{{ route('pengurus.profile.edit') }}"><i class="bi bi-person me-2 text-primary"></i> Profile</a></li>
+                                <li><a class="dropdown-item py-2" href="{{ route('pengurus.settings.edit') }}"><i class="bi bi-gear me-2 text-primary"></i> Settings</a></li>
                                 <li><a class="dropdown-item py-2" href="{{ route('pengurus.dashboard') }}"><i class="bi bi-speedometer2 me-2 text-primary"></i> Dashboard</a></li>
-                                <li><a class="dropdown-item py-2" href="{{ route('pengurus.profile.edit') }}"><i class="bi bi-person-gear me-2 text-primary"></i> Profil Saya</a></li>
                             @else
                                 <li><a class="dropdown-item py-2" href="{{ route('jamaah.profile.edit') }}"><i class="bi bi-person-gear me-2 text-success"></i> Profil Saya</a></li>
                                 <li><a class="dropdown-item py-2" href="{{ route('public.tabungan-qurban-saya') }}"><i class="bi bi-bank me-2 text-success"></i> Tabungan Qurban</a></li>
@@ -220,7 +228,7 @@
                             <li>
                                 <form action="{{ route('logout') }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="dropdown-item py-2 text-danger fw-medium">
+                                    <button type="submit" class="dropdown-item py-2 text-danger fw-bold">
                                         <i class="bi bi-box-arrow-right me-2"></i> Logout
                                     </button>
                                 </form>
@@ -264,11 +272,6 @@
             <img src="{{ asset('images/icons/kajian.png') }}" alt="Kajian">
             <span>Kajian</span>
         </a>
-
-        {{-- <a href="{{ route('public.jadwal-adzan') }}" class="navbar-bottom-item {{ Request::routeIs('public.jadwal-adzan*') ? 'active' : '' }}">
-            <img src="{{ asset('images/icons/adzan.png') }}" alt="Adzan">
-            <span>Adzan</span>
-        </a> --}}
         
         <a href="{{ route('public.donasi') }}" class="navbar-bottom-item {{ Request::routeIs('public.donasi*') ? 'active' : '' }}">
             <img src="{{ asset('images/icons/donasi.png') }}" alt="Donasi">

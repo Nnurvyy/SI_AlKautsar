@@ -6,9 +6,11 @@ use Illuminate\Database\Seeder;
 use App\Models\Jamaah;
 use App\Models\TabunganHewanQurban;
 use App\Models\PemasukanTabunganQurban;
-use Illuminate\Support\Facades\Hash;
+use App\Models\HewanQurban; 
+use App\Models\DetailTabunganHewanQurban; 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Carbon\Carbon; // Pastikan import Carbon
 
 class QurbanSeeder extends Seeder
 {
@@ -17,41 +19,101 @@ class QurbanSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Cari jamaah "joko" yang dibuat oleh JamaahSeeder
+        // 1. SEED MASTER HEWAN QURBAN
+        
+        $kambingReguler = HewanQurban::where('nama_hewan', 'kambing')
+            ->where('kategori_hewan', 'reguler')
+            ->first();
+
+        if (!$kambingReguler) {
+            $kambingReguler = HewanQurban::create([
+                'id_hewan_qurban' => (string) Str::uuid(),
+                'nama_hewan' => 'kambing',
+                'kategori_hewan' => 'reguler',
+                'harga_hewan' => 3500000,
+                'is_active' => true
+            ]);
+        }
+
+        $sapiPremium = HewanQurban::where('nama_hewan', 'sapi')
+            ->where('kategori_hewan', 'premium')
+            ->first();
+
+        if (!$sapiPremium) {
+            $sapiPremium = HewanQurban::create([
+                'id_hewan_qurban' => (string) Str::uuid(),
+                'nama_hewan' => 'sapi',
+                'kategori_hewan' => 'premium',
+                'harga_hewan' => 35000000,
+                'is_active' => true
+            ]);
+        }
+
+        // 2. Cari jamaah target (misal: joko)
         $joko = Jamaah::where('email', 'arctant2.5one@gmail.com')->first();
 
-        // 2. Hanya jalankan jika "joko" ditemukan
+        // 3. Buat Tabungan & Transaksi Dummy
         if ($joko) {
-            // Buat 1 Tabungan Hewan Qurban untuk Joko
-            $tabunganJoko = TabunganHewanQurban::create([
-                'id_tabungan_hewan_qurban' => (string) Str::uuid(), // Buat UUID untuk tabungan
-                'id_jamaah' => $joko->id, // Ambil ID dari joko
-                'nama_hewan' => 'kambing',
-                'total_hewan' => 1,
-                'total_harga_hewan_qurban' => 3500000, // Misal harga kambing 3.5jt
-                'total_tabungan' => 0,
-                // --- TAMBAHAN WAJIB BARU ---
-                'saving_type' => 'cicilan',
-                'duration_months' => 10, // 10 bulan cicilan
-                // --- AKHIR TAMBAHAN WAJIB BARU ---
-            ]);
+            // Cek apakah Joko sudah punya tabungan
+            $existingTabungan = TabunganHewanQurban::where('id_jamaah', $joko->id)->exists();
 
-            // 3. Buat Riwayat Setoran (Pemasukan) untuk tabungan Joko
-            PemasukanTabunganQurban::create([
-                'id_tabungan_hewan_qurban' => $tabunganJoko->id_tabungan_hewan_qurban,
-                'tanggal' => now()->subDays(30),
-                'nominal' => 1000000
-            ]);
-            PemasukanTabunganQurban::create([
-                'id_tabungan_hewan_qurban' => $tabunganJoko->id_tabungan_hewan_qurban,
-                'tanggal' => now()->subDays(15),
-                'nominal' => 1000000
-            ]);
-            PemasukanTabunganQurban::create([
-                'id_tabungan_hewan_qurban' => $tabunganJoko->id_tabungan_hewan_qurban,
-                'tanggal' => now()->subDays(2),
-                'nominal' => 500000
-            ]);
+            if (!$existingTabungan) {
+                DB::transaction(function () use ($joko, $kambingReguler) {
+                    
+                    $tabunganId = (string) Str::uuid();
+                    $jumlahHewan = 1;
+                    $totalHarga = $kambingReguler->harga_hewan * $jumlahHewan;
+
+                    // [PENTING] Set tanggal pembuatan mundur ke belakang (misal 2 bulan lalu)
+                    // Agar bisa ngetest logika "Menunggak" vs "Lancar"
+                    $tanggalPembuatan = Carbon::now()->subMonths(2)->toDateString(); 
+
+                    // A. Buat Header Tabungan
+                    $tabunganJoko = TabunganHewanQurban::create([
+                        'id_tabungan_hewan_qurban' => $tabunganId,
+                        'id_jamaah' => $joko->id,
+                        'status' => 'disetujui', 
+                        'saving_type' => 'cicilan',
+                        'duration_months' => 10,
+                        'total_tabungan' => 0, 
+                        'total_harga_hewan_qurban' => $totalHarga,
+                        'tanggal_pembuatan' => $tanggalPembuatan, // Set manual tanggal lama
+                        'created_at' => $tanggalPembuatan, // Samakan created_at agar rapi
+                    ]);
+
+                    // B. Buat Detail Tabungan
+                    DetailTabunganHewanQurban::create([
+                        'id_tabungan_hewan_qurban' => $tabunganId,
+                        'id_hewan_qurban' => $kambingReguler->id_hewan_qurban,
+                        'jumlah_hewan' => $jumlahHewan,
+                        'harga_per_ekor' => $kambingReguler->harga_hewan,
+                        'subtotal' => $totalHarga
+                    ]);
+
+                    // C. Buat Riwayat Setoran (Pemasukan)
+                    // Skenario: Total Target 3.5jt / 10 bulan = 350rb/bulan.
+                    // Sudah jalan 2 bulan, harusnya terkumpul 700rb.
+                    // Kita isi 2.5jt biar statusnya "Lancar" (Surplus)
+                    
+                    PemasukanTabunganQurban::create([
+                        'id_tabungan_hewan_qurban' => $tabunganId,
+                        'tanggal' => Carbon::now()->subDays(30),
+                        'nominal' => 1000000
+                    ]);
+                    
+                    PemasukanTabunganQurban::create([
+                        'id_tabungan_hewan_qurban' => $tabunganId,
+                        'tanggal' => Carbon::now()->subDays(15),
+                        'nominal' => 1000000
+                    ]);
+                    
+                    PemasukanTabunganQurban::create([
+                        'id_tabungan_hewan_qurban' => $tabunganId,
+                        'tanggal' => Carbon::now()->subDays(2),
+                        'nominal' => 500000
+                    ]);
+                });
+            }
         }
     }
 }

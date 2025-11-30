@@ -12,7 +12,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
-    <link href="https://cdn.datatables.net/2.0.10/css/dataTables.bootstrap5.css" rel="stylesheet">
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
     @stack('styles')
 
@@ -35,11 +34,9 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         
-                        {{-- PERBAIKAN: Tampilkan Foto Profil Pengurus --}}
                         @if(Auth::user()->avatar)
                             <img src="{{ Auth::user()->avatar_url }}" alt="Avatar" class="rounded-circle me-2 object-fit-cover" style="width: 40px; height: 40px;">
                         @else
-                            {{-- Jika tidak ada foto, gunakan inisial dengan styling user-avatar (sesuai CSS admin lama) --}}
                             <div class="user-avatar me-2 bg-primary text-white d-flex align-items-center justify-content-center rounded-circle" style="width: 40px; height: 40px; font-weight: bold;">
                                 {{ substr(Auth::user()->name, 0, 1) }}
                             </div>
@@ -50,14 +47,15 @@
                             <div class="small text-muted">{{ Auth::user()->email }}</div>
                         </div>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="{{ route('pengurus.profile.edit') }}">Profile</a></li>
-                        <li><a class="dropdown-item" href="{{ route('pengurus.settings.edit') }}">Settings</a></li>
-                        <li><a class="dropdown-item" href="{{ route('public.landing') }}">Landing Page</a></li>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                        <li><a class="dropdown-item py-2" href="{{ route('pengurus.profile.edit') }}"><i class="bi bi-person me-2"></i> Profile</a></li>
+                        <li><a class="dropdown-item py-2" href="{{ route('pengurus.settings.edit') }}"><i class="bi bi-gear me-2"></i> Settings</a></li>
+                        <li><a class="dropdown-item py-2" href="{{ route('public.landing') }}"><i class="bi bi-globe me-2"></i> Landing Page</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form-dropdown').submit();">
-                                Logout
+                            {{-- LOGOUT MERAH --}}
+                            <a class="dropdown-item py-2 text-danger fw-bold" href="#" onclick="event.preventDefault(); document.getElementById('logout-form-dropdown').submit();">
+                                <i class="bi bi-box-arrow-right me-2"></i> Logout
                             </a>
                             <form id="logout-form-dropdown" action="{{ route('logout') }}" method="POST" style="display: none;">
                                 @csrf
@@ -81,8 +79,7 @@
 
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/2.0.10/js/dataTables.js"></script>
-    <script src="https://cdn.datatables.net/2.0.10/js/dataTables.bootstrap5.js"></script>
+    
     <script>
         // Ambil elemen-elemen
         const sidebar = document.getElementById('sidebar');
@@ -139,5 +136,6 @@
         }
     </script>
 
-    @stack('scripts') </body>
+    @stack('scripts') 
+</body>
 </html>

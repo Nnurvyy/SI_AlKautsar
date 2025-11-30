@@ -6,7 +6,7 @@
     {{-- HANYA CSS yang dibutuhkan oleh landing page --}}
     <style>
         /* ================================== */
-        /* 1. MOBILE FIRST STYLES (< 992px)    */
+        /* 1. MOBILE FIRST STYLES (< 992px)   */
         /* ================================== */
         .hero-top-nav {
             position: absolute;
@@ -156,6 +156,8 @@
         .feature-item:hover {
             transform: translateY(-5px);
         }
+        
+        /* --- WARNA CARD FITUR --- */
         .feature-item.bg-pink {
             --start-color: #fce4ec;
             --end-color: #f8bbd0;
@@ -186,6 +188,23 @@
             --end-color: #b2dfdb;
             color: #009688;
         }
+        
+        /* --- WARNA BARU (Tambahan) --- */
+        
+        /* Khutbah Jumat (Indigo) */
+        .feature-item.bg-indigo {
+            --start-color: #e8eaf6;
+            --end-color: #c5cae9;
+            color: #3f51b5;
+        }
+        
+        /* Tentang Kami (Cyan - Lebih Adem) */
+        .feature-item.bg-cyan {
+            --start-color: #e0f7fa;
+            --end-color: #b2ebf2;
+            color: #00838f; /* Cyan Gelap */
+        }
+
         .feature-section-bg {
             background-color: #dee2e6;
         }
@@ -236,17 +255,13 @@
             color: white;
         }
 
-        /* */
-        
         /* ================================== */
         /* 2. TABLET STYLES (768px - 991.98px) */
         /* ================================== */
         @media (min-width: 768px) and (max-width: 991.98px) {
-            
             .hero-section {
-                height: 50vh; /* 1/2 layar */
+                height: 50vh; 
             }
-
             .prayer-times-in-card {
                 display: grid;
                 grid-template-columns: repeat(5, 1fr);
@@ -260,57 +275,51 @@
         }
 
         /* ================================== */
-        /* 3. DESKTOP STYLES (>= 992px)        */
+        /* 3. DESKTOP STYLES (>= 992px)       */
         /* ================================== */
         @media (min-width: 992px) { 
-            
             .hero-top-nav { 
-                display: none; /* Sembunyikan nav di desktop */
+                display: none; 
             } 
-            
             .hero-section { 
-                height: 80vh; /* Full screen */
+                height: 80vh; 
                 border-radius: 0; 
             } 
             .hero-section::before {
-                /* Gradasi lebih merata dari atas ke bawah */
                 background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6));
             }
             .hero-content {
                 position: absolute; 
-                top: 50%; /* Tengah vertikal */
-                left: 50%; /* Tengah horizontal */
-                transform: translate(-50%, -50%); /* Menyesuaikan posisi ke tengah */
+                top: 50%; 
+                left: 50%; 
+                transform: translate(-50%, -50%); 
                 width: 100%;
             }
             .hero-content h1 { 
-                font-size: 2.8rem; /* Sesuaikan ukuran font */
+                font-size: 2.8rem; 
             } 
             
-            /* =================================================
-              Style Adzan Card di Desktop
-              =================================================
-            */
             .prayer-times-in-card {
                 display: grid;
                 grid-template-columns: repeat(5, 1fr);
-                gap: 1rem; /* Jarak lebih besar */
+                gap: 1rem; 
                 overflow-x: visible;
             }
             .prayer-times-in-card .prayer-card {
                 width: auto;
                 flex-basis: auto;
-                padding: 1.25rem 0.5rem; /* Buat card lebih tinggi */
+                padding: 1.25rem 0.5rem; 
             }
             .prayer-times-in-card .prayer-card .time {
-                font-size: 1.25rem; /* Font waktu lebih besar */
+                font-size: 1.25rem; 
             }
             .prayer-times-in-card .prayer-card .name {
-                font-size: 0.9rem; /* Font nama lebih besar */
+                font-size: 0.9rem; 
             }
 
+            /* Layout 4 Kolom di Desktop */
             .feature-grid { 
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(4, 1fr);
                 gap: 1.5rem; 
             } 
         } 
@@ -318,8 +327,6 @@
 @endpush
 
 @section('content')
-
-
 
     <section class="hero-section" id="hero-section">
         <img src="{{ $masjidSettings->foto_masjid ? Storage::url($masjidSettings->foto_masjid) : asset('images/masjid.jpeg') }}" id="hero-bg-image" alt="Hero Background">
@@ -364,7 +371,7 @@
             </div>
         </div>
 
-        {{-- Grid Fitur (Tampil di semua ukuran layar) --}}
+        {{-- Grid Fitur --}}
         <div class="feature-section-bg mt-4 py-4">
             <div class="container px-4">
                 <div class="feature-grid">
@@ -373,36 +380,40 @@
                         <img src="{{ asset('images/icons/kajian.png') }}" alt="Kajian Icon" class="feature-icon-img">
                         <span>Kajian</span>
                     </a>
-                    {{-- <a href="{{ route('public.jadwal-khotib') }}" class="feature-item bg-purple">
-                        <img src="{{ asset('images/icons/khutbah-jumat.png') }}" alt="Khutbah Jumat Icon" class="feature-icon-img">
-                        <span>Khutbah Jumat</span>
-                    </a> --}}
+                    
                     <a href="{{ route('public.jadwal-adzan') }}" class="feature-item bg-purple">
                         <img src="{{ asset('images/icons/adzan.png') }}" alt="Jadwal Adzan Icon" class="feature-icon-img">
                         <span>Jadwal Adzan</span>
                     </a>
+                    
                     <a href="{{ route('public.artikel') }}" class="feature-item bg-orange">
                         <img src="{{ asset('images/icons/artikel.png') }}" alt="Artikel Icon" class="feature-icon-img">
                         <span>Artikel</span>
                     </a>
+                    
                     <a href="{{ route('public.donasi') }}" class="feature-item bg-blue">
                         <img src="{{ asset('images/icons/donasi.png') }}" alt="Donasi Icon" class="feature-icon-img">
                         <span>Donasi</span>
                     </a>
+                    
                     <a href="{{ route('public.program') }}" class="feature-item bg-green">
                         <img src="{{ asset('images/icons/program.png') }}" alt="Program Icon" class="feature-icon-img">
                         <span>Program</span>
                     </a>
+                    
                     <a href="{{ route('public.tabungan-qurban-saya') }}" class="feature-item bg-teal">
                         <img src="{{ asset('images/icons/qurban.png') }}" alt="Tabungan Qurban Icon" class="feature-icon-img">
                         <span>Tabungan Qurban</span>
                     </a>
-                    <a href="{{ route('public.jadwal-khotib') }}" class="feature-item bg-purple">
+                    
+                    {{-- Warna Indigo (Khutbah Jumat) --}}
+                    <a href="{{ route('public.jadwal-khotib') }}" class="feature-item bg-indigo">
                         <img src="{{ asset('images/icons/khutbah-jumat.png') }}" alt="Khutbah Icon" class="feature-icon-img">
                         <span>Khutbah Jumat</span>
                     </a>
 
-                    <a href="{{ route('public.tentang-kami') }}" class="feature-item bg-blue">
+                    {{-- Warna Cyan/Tosca (Tentang Kami) --}}
+                    <a href="{{ route('public.tentang-kami') }}" class="feature-item bg-cyan"> 
                         <img src="{{ asset('images/icons/info.png') }}" alt="Info Icon" class="feature-icon-img">
                         <span>Tentang Kami</span>
                     </a>
@@ -410,11 +421,8 @@
             </div>
         </div>
 
-        {{-- Layout kustom desktop sudah dihapus --}}
-
     </div>
     
-    {{-- (PENTING) Form logout juga harus ada di dalam @section('content') --}}
     @auth
         <form id="logoutForm" action="{{ route('logout') }}" method="POST" class="d-none">
             @csrf
@@ -423,11 +431,11 @@
 @endsection
 
 @push('scripts')
-    {{-- HANYA SCRIPT yang dibutuhkan oleh landing page --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const KOTA_ID = {{ $masjidSettings->lokasi_id_api }};
+            // Gunakan Null Coalescing (??) agar tidak error jika lokasi ID kosong
+            const KOTA_ID = {{ $masjidSettings->lokasi_id_api ?? 1301 }}; 
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -454,7 +462,6 @@
                         const jadwal = data.data.jadwal;
                         const now = new Date(); 
 
-                        // Hanya perlu referensi ke elemen mobile (krn layoutnya sama)
                         const prayerTimes = [
                             { name: 'subuh', time: jadwal.subuh, id_m: 'time-subuh-m' },
                             { name: 'dzuhur', time: jadwal.dzuhur, id_m: 'time-dzuhur-m' },
@@ -489,7 +496,7 @@
                             
                             nextPrayerElementMobile.scrollIntoView({
                                 behavior: 'smooth',
-                                inline: 'center', // Ini kuncinya
+                                inline: 'center', 
                                 block: 'nearest'
                             });
                         }

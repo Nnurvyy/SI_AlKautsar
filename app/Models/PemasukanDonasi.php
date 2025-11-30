@@ -18,13 +18,15 @@ class PemasukanDonasi extends Model
     protected $fillable = [
         'id_pemasukan_donasi',
         'id_donasi',
+        'id_jamaah',
         'order_id',      
         'tanggal',
         'nama_donatur',
         'metode_pembayaran',
         'nominal',
         'status',        
-        'snap_token',    
+        'tripay_reference',
+        'checkout_url',   
         'pesan',
     ];
 
@@ -42,5 +44,22 @@ class PemasukanDonasi extends Model
     public function donasi()
     {
         return $this->belongsTo(Donasi::class, 'id_donasi', 'id_donasi');
+    }
+
+    public function jamaah()
+    {
+        return $this->belongsTo(Jamaah::class, 'id_jamaah');
+    }
+
+    // Accessor untuk Avatar Donatur
+    public function getAvatarUrlAttribute()
+    {
+        // Jika ada ID Jamaah & punya avatar
+        if ($this->id_jamaah && $this->jamaah && $this->jamaah->avatar) {
+            return asset('storage/' . $this->jamaah->avatar);
+        }
+        
+        // Jika tidak login (User biasa) -> Avatar Default
+        return asset('images/default-user.png'); // Pastikan ada gambar ini atau pakai UI Avatars
     }
 }

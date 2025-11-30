@@ -1,554 +1,743 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- Definisi Elemen Utama ---
-    const token = document.querySelector('meta[name="csrf-token"]').content;
-    const tbody = document.querySelector('#tabelTabungan tbody');
-    const paginationContainer = document.getElementById('paginationLinks');
-    const paginationInfo = document.getElementById('paginationInfo');
-    const $jamaahList = document.getElementById('jamaahListTemplate');
+    // ==========================================
+    // 1. SETUP VARIABEL & ELEMENT GLOBAL
+    // ==========================================
+    const tokenMeta = document.querySelector('meta[name="csrf-token"]');
+    const token = tokenMeta ? tokenMeta.content : '';
 
-    // --- Elemen Filter & Sort ---
-    const statusFilter = document.getElementById('statusFilter');
-    const sortButton = document.getElementById('sortTotalTerkumpul');
-    const sortIcon = document.getElementById('sortIcon');
-
-    // --- Elemen Modal Tabungan (Tambah/Edit) ---
+    // Definisi Elemen Filter & Search [DIPERBARUI]
+    const filterTabunganEl = document.getElementById('filterStatusTabungan');
+    const filterSetoranEl = document.getElementById('filterStatusSetoran');
+    const filterTipeTabunganEl = document.getElementById('filterTipeTabungan'); // [BARU]
+    const searchNamaEl = document.getElementById('searchNama'); // [BARU]
+    
+    // Modal & Form Tabungan
     const modalTabunganEl = document.getElementById('modalTabungan');
-    const modalTabungan = new bootstrap.Modal(modalTabunganEl);
+    const modalTabungan = modalTabunganEl ? new bootstrap.Modal(modalTabunganEl) : null;
     const formTabungan = document.getElementById('formTabungan');
-    const modalTabunganTitle = document.getElementById('modalTabunganTitle');
-    const submitButton = formTabungan.querySelector('button[type="submit"]');
-    const originalButtonText = submitButton.innerHTML;
-
-    // --- Elemen Form Baru ---
-    const savingTypeInput = document.getElementById('saving_type');
-    const durationMonthsGroup = document.getElementById('duration_months_group');
-    const durationMonthsInput = document.getElementById('duration_months');
-    // --- Akhir Elemen Form Baru ---
-
-    // --- Elemen Modal Detail Setoran ---
+    const hewanContainer = document.getElementById('hewanContainer');
+    
+    // Modal & Form Detail
     const modalDetailEl = document.getElementById('modalDetailTabungan');
-    const modalDetail = new bootstrap.Modal(modalDetailEl);
-    const modalDetailTitle = document.getElementById('detailModalTitle');
-    const detailTotalTabungan = document.getElementById('detailTotalTabungan');
-    const detailSisaTarget = document.getElementById('detailSisaTarget');
-    const detailInstallmentAmount = document.getElementById('detailInstallmentAmount');
-    const detailSavingType = document.getElementById('detailSavingType'); // Element baru
-    const tabelRiwayatSetoran = document.getElementById('tabelRiwayatSetoran');
-
-    // --- Elemen Modal Tambah Setoran ---
-    const modalSetoranEl = document.getElementById('modalTambahSetoran');
-    const modalSetoran = new bootstrap.Modal(modalSetoranEl);
+    const modalDetail = modalDetailEl ? new bootstrap.Modal(modalDetailEl) : null;
+    
+    // Modal & Form Setoran
+    const modalSetorEl = document.getElementById('modalTambahSetoran');
+    const modalSetor = modalSetorEl ? new bootstrap.Modal(modalSetorEl) : null;
     const formSetoran = document.getElementById('formTambahSetoran');
-    const setoranSubmitButton = formSetoran.querySelector('button[type="submit"]');
-    const originalSetoranButtonText = setoranSubmitButton.innerHTML;
-    const inputIdTabunganSetoran = document.getElementById('tambah_setoran_id_tabungan');
 
-    // --- Elemen Filter PDF ---
-    const pdfPeriodeFilter = document.getElementById('filter-periode');
-    const pdfFilterBulanan = document.getElementById('filter-bulanan');
-    const pdfFilterTahunan = document.getElementById('filter-tahunan');
-    const pdfFilterRentang = document.getElementById('filter-rentang');
+    // Modal & Form Harga
+    const modalHargaEl = document.getElementById('modalHargaHewan');
+    const modalHarga = modalHargaEl ? new bootstrap.Modal(modalHargaEl) : null;
+    const formHarga = document.getElementById('formHargaHewan');
 
-    // --- State Management ---
+    // Modal Kontak Jamaah
+    const modalContactEl = document.getElementById('modalContactJamaah');
+    const modalContact = modalContactEl ? new bootstrap.Modal(modalContactEl) : null;
+
+    // Data Master Hewan
+    let hewanListMaster = [];
+    try {
+        const jsonEl = document.getElementById('hewanListJson');
+        if (jsonEl && jsonEl.value) {
+            hewanListMaster = JSON.parse(jsonEl.value);
+        }
+    } catch (e) {
+        console.error("Gagal parsing data master hewan:", e);
+    }
+
+    // State Variables [DIPERBARUI]
     let state = {
         currentPage: 1,
-        status: 'semua',
-        sortBy: 'total_terkumpul',
-        sortDir: 'desc',
+        statusTabungan: 'semua',
+        statusSetoran: 'semua',
+        tipeTabungan: 'semua', // [BARU]
+        searchNama: '',        // [BARU]
+        sortBy: 'created_at',
+        sortDir: 'desc'
     };
-    let currentDetailTabunganId = null;
+    let currentDetailId = null;
+    let searchTimeout = null; // Untuk delay pencarian
 
-    // --- Fungsi Helper ---
-    function formatRupiah(angka) {
-        if(isNaN(parseFloat(angka))) return "Rp 0";
-        return "Rp " + new Intl.NumberFormat('id-ID').format(angka);
-    }
+    // --- Helper Formatter ---
+    const fmtMoney = (n) => 'Rp ' + new Intl.NumberFormat('id-ID').format(n);
+    const formatDate = (str) => {
+        if (!str) return '-';
+        const date = new Date(str);
+        return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+    };
 
-    function formatTanggal(tanggalStr) {
-        if (!tanggalStr) return '-';
-        const date = new Date(tanggalStr);
-        return !isNaN(date)
-            ? date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })
-            : '-';
-    }
+    // ==========================================
+    // 2. FUNGSI UTAMA: LOAD TABLE
+    // ==========================================
+    
+    // Fungsi Delay Pencarian (Agar tidak request setiap ketik) [BARU]
+    window.loadTableDelay = function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            loadTable(1);
+        }, 500); // Tunggu 500ms setelah berhenti mengetik
+    };
 
-    function setFormLoading(form, button, originalText, isLoading) {
-        const cancelButton = form.querySelector('button[data-bs-dismiss="modal"]');
-        if (isLoading) {
-            button.disabled = true;
-            if(cancelButton) cancelButton.disabled = true;
-            button.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menyimpan...`;
-        } else {
-            button.disabled = false;
-            if(cancelButton) cancelButton.disabled = false;
-            button.innerHTML = originalText;
-        }
-    }
+    window.loadTable = function(page = 1) {
+        state.currentPage = page;
+        const tbody = document.getElementById('tableBody');
+        if (!tbody) return;
 
-    function togglePdfFilterVisibility() {
-        const selectedValue = pdfPeriodeFilter.value;
-        pdfFilterBulanan.style.display = 'none';
-        pdfFilterTahunan.style.display = 'none';
-        pdfFilterRentang.style.display = 'none';
+        // Ambil Value Filter [DIPERBARUI]
+        if (filterTabunganEl) state.statusTabungan = filterTabunganEl.value;
+        if (filterSetoranEl) state.statusSetoran = filterSetoranEl.value;
+        if (filterTipeTabunganEl) state.tipeTabungan = filterTipeTabunganEl.value;
+        if (searchNamaEl) state.searchNama = searchNamaEl.value;
 
-        if (selectedValue === 'per_bulan') pdfFilterBulanan.style.display = 'block';
-        else if (selectedValue === 'per_tahun') pdfFilterTahunan.style.display = 'block';
-        else if (selectedValue === 'rentang_waktu') pdfFilterRentang.style.display = 'block';
-    }
-    pdfPeriodeFilter.addEventListener('change', togglePdfFilterVisibility);
-    togglePdfFilterVisibility();
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>`;
 
-    // Logika Show/Hide Durasi Cicilan
-    function toggleDurationInput() {
-        if (savingTypeInput.value === 'cicilan') {
-            durationMonthsGroup.style.display = 'block';
-            durationMonthsInput.setAttribute('required', 'required');
-        } else {
-            durationMonthsGroup.style.display = 'none';
-            durationMonthsInput.removeAttribute('required');
-            durationMonthsInput.value = ''; // Kosongkan nilai jika tipe bebas
-        }
-    }
-    savingTypeInput.addEventListener('change', toggleDurationInput);
-
-    // --- Logika CRUD Utama ---
-
-    // 1. Muat Data Tabel Utama
-    async function loadTabungan() {
-        let colCount = tbody.closest('table').querySelector('thead tr').cells.length;
-        tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center"><div class="spinner-border text-primary"></div></td></tr>`;
-
-        const url = `/pengurus/tabungan-qurban-data?page=${state.currentPage}&status=${state.status}&sortBy=${state.sortBy}&sortDir=${state.sortDir}&perPage=10`;
-
-        try {
-            const res = await fetch(url);
-            if (!res.ok) throw new Error('Gagal memuat data');
-            const response = await res.json();
-
-            renderTable(response.data, response.from || 1);
-            renderPagination(response);
-        } catch (err) {
-            // Kolom total 9
-            const colCount = tbody.closest('table').querySelector('thead tr').cells.length;
-            tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center text-danger">${err.message}</td></tr>`;
-            paginationInfo.textContent = 'Gagal memuat data';
-            paginationContainer.innerHTML = '';
-        }
-    }
-
-    // 2. Render Tabel Utama
-    function renderTable(data, startingNumber) {
-        tbody.innerHTML = '';
-
-        if (data.length === 0) {
-            let colCount = tbody.closest('table').querySelector('thead tr').cells.length;
-            tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center">Belum ada data tabungan.</td></tr>`;
-            return;
-        }
-
-        data.forEach((item, i) => {
-            const totalTerkumpul = parseFloat(item.total_terkumpul || 0);
-            const totalHarga = parseFloat(item.total_harga_hewan_qurban);
-            const sisaTarget = totalHarga - totalTerkumpul;
-
-            let statusHtml;
-
-            // --- PERUBAHAN DI SINI: Status hanya menggunakan warna teks ---
-            if (item.current_status === 'lunas') {
-                statusHtml = '<span class="text-success fw-bold">Lunas</span>';
-            } else if (item.current_status === 'menunggak') {
-                // Teks dipersingkat menjadi "Menunggak" saja
-                statusHtml = `<span class="text-danger fw-bold">Menunggak</span>`;
-            } else if (item.saving_type === 'bebas') {
-                statusHtml = `<span class="text-muted">Bebas</span>`; // Cukup teks muted
-            } else { // Mencicil
-                statusHtml = `<span class="text-primary fw-bold">Mencicil</span>`;
-            }
-            // --- AKHIR PERUBAHAN STATUS ---
-
-            const namaJamaah = item.jamaah ? item.jamaah.name : 'N/A';
-            const installmentAmount = parseFloat(item.installment_amount || 0);
-
-            // --- PERUBAHAN DI SINI: Tipe Menabung hanya menggunakan teks ---
-            const savingTypeText = item.saving_type === 'cicilan' ?
-                `<span class="text-info" title="${item.duration_months} Bulan">${item.duration_months} Bln</span>` :
-                '<span class="text-muted">Bebas</span>';
-            // --- AKHIR PERUBAHAN TIPE ---
-
-            const row = `
-            <tr>
-                <td class="text-center">${startingNumber + i}</td>
-                <td>
-                    <div>${namaJamaah}</div>
-                    <small class="text-muted">${Str.ucfirst(item.nama_hewan)} (${item.total_hewan} ekor)</small>
-                </td>
-                <td class="text-end">${formatRupiah(totalHarga)}</td>
-                <td class="text-center">${savingTypeText}</td> <!-- Kolom Tipe Menabung -->
-                <td class="text-end">${installmentAmount > 0 ? formatRupiah(installmentAmount) : '-'}</td>
-                <td class="text-end" id="sortTotalTerkumpul">${formatRupiah(totalTerkumpul)}</td>
-                <td class="text-end ${sisaTarget > 0 ? 'text-danger' : 'text-success'}">
-                    ${sisaTarget <= 0 ? '-' : formatRupiah(sisaTarget)}
-                </td>
-                <td class="text-center">${statusHtml}</td>
-                <td class="text-center">
-                    <button class="btn btn-info btn-sm" title="Lihat Detail" onclick="window.showDetail('${item.id_tabungan_hewan_qurban}')">
-                        <i class="bi bi-eye"></i>
-                    </button>
-                    <button class="btn btn-warning btn-sm" title="Edit" onclick="window.editTabungan('${item.id_tabungan_hewan_qurban}')">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn btn-danger btn-sm" title="Hapus" onclick="window.hapusTabungan('${item.id_tabungan_hewan_qurban}')">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            </tr>`;
-            tbody.insertAdjacentHTML('beforeend', row);
+        // Susun URL dengan Parameter Baru [DIPERBARUI]
+        const params = new URLSearchParams({
+            page: page,
+            status_tabungan: state.statusTabungan,
+            status_setoran: state.statusSetoran,
+            tipe_tabungan: state.tipeTabungan,
+            search_nama: state.searchNama,
+            perPage: 10,
+            sortBy: state.sortBy,
+            sortDir: state.sortDir
         });
-    }
 
-    // 3. Render Pagination
+        fetch(`/pengurus/tabungan-qurban-data?${params.toString()}`)
+            .then(res => {
+                if (!res.ok) throw new Error("Gagal mengambil data");
+                return res.json();
+            })
+            .then(response => {
+                const data = response.data;
+                tbody.innerHTML = '';
+
+                if (data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">Data tidak ditemukan.</td></tr>`;
+                    renderPagination(response);
+                    return;
+                }
+
+                data.forEach((item, index) => {
+                    const no = (response.from || 1) + index;
+
+                    // --- LOGIKA NAMA JAMAAH KLIK ---
+                    let jamaahHtml = '<span class="text-muted">Unknown</span>';
+                    if (item.jamaah) {
+                        const jamaahJson = encodeURIComponent(JSON.stringify(item.jamaah));
+                        // Highlight teks pencarian (Opsional, agar user tau yg mana match)
+                        let nama = item.jamaah.name;
+                        
+                        jamaahHtml = `
+                            <div class="d-flex align-items-center">
+                                <a href="javascript:void(0)" 
+                                   onclick="openContactModal('${jamaahJson}')" 
+                                   class="fw-bold text-primary text-decoration-none" 
+                                   title="Lihat Kontak">
+                                   ${nama}
+                                </a>
+                                <i class="bi bi-info-circle-fill text-muted ms-1" style="font-size: 0.75rem; cursor:pointer;" onclick="openContactModal('${jamaahJson}')"></i>
+                            </div>
+                        `;
+                    }
+
+                    // Render List Hewan
+                    let hewanHtml = '<ul class="mb-0 ps-3 small text-muted">';
+                    if (item.details && item.details.length > 0) {
+                        item.details.forEach(d => {
+                            const nama = d.hewan ? d.hewan.nama_hewan : 'Unknown';
+                            const kat = d.hewan ? d.hewan.kategori_hewan : '';
+                            hewanHtml += `<li>${d.jumlah_hewan} ekor ${nama} (${kat})</li>`;
+                        });
+                    } else {
+                        hewanHtml += '<li>-</li>';
+                    }
+                    hewanHtml += '</ul>';
+
+                    // Badges
+                    let badgeApproval = '';
+                    let actionBtns = '';
+
+                    if (item.status === 'menunggu') {
+                        badgeApproval = '<span class="badge bg-warning text-dark">Menunggu Acc</span>';
+                        actionBtns = `
+                            <button class="btn btn-sm btn-success mb-1" title="Setujui" onclick="approveTabungan('${item.id_tabungan_hewan_qurban}', 'disetujui')"><i class="bi bi-check-lg"></i></button>
+                            <button class="btn btn-sm btn-danger mb-1" title="Tolak" onclick="approveTabungan('${item.id_tabungan_hewan_qurban}', 'ditolak')"><i class="bi bi-x-lg"></i></button>
+                            <button class="btn btn-sm btn-secondary mb-1" title="Hapus" onclick="deleteTabungan('${item.id_tabungan_hewan_qurban}')"><i class="bi bi-trash"></i></button>
+                        `;
+                    } else if (item.status === 'disetujui') {
+                        badgeApproval = '<span class="badge bg-success">Disetujui</span>';
+                        actionBtns = `
+                            <button class="btn btn-sm btn-info text-white mb-1" title="Detail & Setoran" onclick="openDetail('${item.id_tabungan_hewan_qurban}')"><i class="bi bi-eye"></i></button>
+                            <button class="btn btn-sm btn-warning mb-1" title="Edit" onclick="editTabungan('${item.id_tabungan_hewan_qurban}')"><i class="bi bi-pencil"></i></button>
+                        `;
+                    } else {
+                        badgeApproval = '<span class="badge bg-secondary">Ditolak</span>';
+                        actionBtns = `<button class="btn btn-sm btn-danger" onclick="deleteTabungan('${item.id_tabungan_hewan_qurban}')"><i class="bi bi-trash"></i></button>`;
+                    }
+
+                    let badgeFinance = '-';
+                    if (item.status === 'disetujui') {
+                        if (item.finance_status === 'lunas') {
+                            badgeFinance = '<span class="badge bg-success">Lunas</span>';
+                        } else if (item.finance_status === 'menunggak') {
+                            badgeFinance = '<span class="badge bg-danger">Menunggak</span>';
+                        } else {
+                            badgeFinance = `<span class="badge bg-primary">${item.finance_label || 'Aktif'}</span>`;
+                        }
+                    } else {
+                        badgeFinance = '<span class="text-muted small">-</span>';
+                    }
+
+                    // Render Row
+                    const row = `
+                        <tr>
+                            <td class="text-center">${no}</td>
+                            <td>${jamaahHtml}</td>
+                            <td>${hewanHtml}</td>
+                            <td class="text-end">
+                                <small class="d-block text-muted">Target: ${fmtMoney(item.total_harga_hewan_qurban)}</small>
+                                <strong class="text-success">${fmtMoney(item.terkumpul)}</strong>
+                            </td>
+                            <td class="text-center text-capitalize small">
+                                ${item.saving_type} <br> 
+                                ${item.saving_type == 'cicilan' ? '(' + (item.duration_months || '-') + ' bln)' : ''}
+                            </td>
+                            <td class="text-center">${badgeApproval}</td>
+                            <td class="text-center">${badgeFinance}</td>
+                            <td class="text-center">${actionBtns}</td>
+                        </tr>
+                    `;
+                    tbody.insertAdjacentHTML('beforeend', row);
+                });
+
+                renderPagination(response);
+            })
+            .catch(err => {
+                console.error(err);
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-danger">Gagal memuat data.</td></tr>`;
+            });
+    };
+
     function renderPagination(response) {
-        const { from, to, total, links } = response;
+        const container = document.getElementById('paginationLinks');
+        const info = document.getElementById('paginationInfo');
+        if (!container || !info) return;
 
-        if (total === 0) {
-            paginationInfo.textContent = 'Menampilkan 0 dari 0 data';
-            paginationContainer.innerHTML = '';
+        if (response.total === 0) {
+            info.innerText = 'Menampilkan 0 data';
+            container.innerHTML = '';
             return;
         }
+        info.innerText = `Menampilkan ${response.from} - ${response.to} dari ${response.total} data`;
 
-        paginationInfo.textContent = `Menampilkan ${from} - ${to} dari ${total} data`;
-
-        let linksHtml = '<ul class="pagination justify-content-center mb-0">';
-        links.forEach(link => {
-            let label = link.label;
-            if (label.includes('Previous')) label = '<';
-            else if (label.includes('Next')) label = '>';
-
-            const disabled = !link.url ? 'disabled' : '';
+        let nav = '<ul class="pagination pagination-sm m-0">';
+        response.links.forEach(link => {
             const active = link.active ? 'active' : '';
-            linksHtml += `
-                <li class="page-item ${disabled} ${active}">
-                    <a class="page-link" href="${link.url || '#'}">${label}</a>
-                </li>`;
+            const disabled = link.url ? '' : 'disabled';
+            const label = link.label.replace('&laquo;', '').replace('&raquo;', '');
+            
+            let pageNum = 1;
+            if (link.url) {
+                const urlObj = new URL(link.url);
+                pageNum = urlObj.searchParams.get('page');
+            }
+            nav += `<li class="page-item ${active} ${disabled}"><button class="page-link" onclick="loadTable(${pageNum})">${label}</button></li>`;
         });
-        linksHtml += '</ul>';
-        paginationContainer.innerHTML = linksHtml;
+        nav += '</ul>';
+        container.innerHTML = nav;
     }
 
-    // 4. Event Listeners Filter & Sort
-    statusFilter.addEventListener('change', () => {
-        state.status = statusFilter.value;
-        state.currentPage = 1;
-        loadTabungan();
-    });
+    // --- Event Listeners Filter [DIPERBARUI] ---
+    if (filterTabunganEl) filterTabunganEl.addEventListener('change', () => loadTable(1));
+    if (filterSetoranEl) filterSetoranEl.addEventListener('change', () => loadTable(1));
+    if (filterTipeTabunganEl) filterTipeTabunganEl.addEventListener('change', () => loadTable(1));
+    // Listener untuk search sudah dihandle via onkeyup="loadTableDelay()" di HTML
 
-    sortButton.addEventListener('click', () => {
-        state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
-        sortIcon.className = state.sortDir === 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down';
-        loadTabungan();
-    });
-
-    paginationContainer.addEventListener('click', e => {
-        e.preventDefault();
-        const target = e.target.closest('a.page-link');
-        if (!target || target.parentElement.classList.contains('disabled') || target.parentElement.classList.contains('active')) return;
-
-        const url = new URL(target.href);
-        const page = url.searchParams.get('page');
-        if (page) {
-            state.currentPage = parseInt(page);
-            loadTabungan();
-        }
-    });
-
-    // 5. Buka Modal Tambah
-    document.getElementById('btnTambahTabungan').addEventListener('click', () => {
+    // ==========================================
+    // 3. MODAL CREATE / EDIT TABUNGAN
+    // ==========================================
+    window.openModalCreate = function() {
+        if (!formTabungan) return;
         formTabungan.reset();
         document.getElementById('id_tabungan_hewan_qurban').value = '';
-        modalTabunganTitle.textContent = 'Tambah Tabungan Qurban Baru';
-        document.getElementById('id_jamaah').innerHTML = $jamaahList.innerHTML;
-
-        // Reset/set default untuk input baru
-        savingTypeInput.value = 'cicilan';
-        toggleDurationInput();
-
+        document.getElementById('modalTabunganTitle').innerText = 'Tambah Tabungan Baru';
+        hewanContainer.innerHTML = '';
+        addHewanRow();
+        updateTotalDisplay();
         modalTabungan.show();
-    });
-
-    // 6. Simpan/Update Tabungan (Logic POST/PUT di Controller sudah diupdate)
-    formTabungan.addEventListener('submit', async e => {
-        e.preventDefault();
-        setFormLoading(formTabungan, submitButton, originalButtonText, true);
-
-        const id = document.getElementById('id_tabungan_hewan_qurban').value;
-        const formData = new FormData(formTabungan);
-
-        // Hapus duration_months dari form data jika tipe bebas (Controller juga handle, tapi ini bersih)
-        if (savingTypeInput.value === 'bebas') {
-            formData.delete('duration_months');
-        }
-
-        let url = '/pengurus/tabungan-qurban';
-        if (id) {
-            url = `/pengurus/tabungan-qurban/${id}`;
-            formData.append('_method', 'PUT');
-        }
-
-        try {
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
-                body: formData
-            });
-
-            const data = await res.json();
-            if (res.ok) {
-                Swal.fire('Berhasil!', data.message, 'success');
-                modalTabungan.hide();
-                loadTabungan();
-            } else {
-                if (res.status === 422 && data.errors) {
-                    let errorMessages = Object.values(data.errors).map(err => err[0]).join('<br>');
-                    throw new Error(errorMessages);
-                }
-                throw new Error(data.message || 'Terjadi kesalahan');
-            }
-        } catch (err) {
-            Swal.fire('Gagal', err.message, 'error');
-        } finally {
-            setFormLoading(formTabungan, submitButton, originalButtonText, false);
-        }
-    });
-
-    // 7. Reset Modal
-    modalTabunganEl.addEventListener('hidden.bs.modal', function () {
-        formTabungan.reset();
-        document.getElementById('id_tabungan_hewan_qurban').value = '';
-        setFormLoading(formTabungan, submitButton, originalButtonText, false);
-    });
-
-    // 8. Edit Tabungan
-    window.editTabungan = async function(id) {
-        try {
-            const res = await fetch(`/pengurus/tabungan-qurban/${id}`);
-            if (!res.ok) throw new Error('Data tidak ditemukan');
-            const data = await res.json();
-
-            formTabungan.reset();
-            document.getElementById('id_tabungan_hewan_qurban').value = data.id_tabungan_hewan_qurban;
-            modalTabunganTitle.textContent = 'Update Tabungan Qurban';
-
-            document.getElementById('id_jamaah').innerHTML = $jamaahList.innerHTML;
-            document.getElementById('id_jamaah').value = data.id_jamaah;
-
-            document.getElementById('nama_hewan').value = data.nama_hewan;
-            document.getElementById('total_hewan').value = data.total_hewan;
-            document.getElementById('total_harga_hewan_qurban').value = data.total_harga_hewan_qurban;
-
-            // --- UPDATE INPUT BARU ---
-            savingTypeInput.value = data.saving_type;
-            durationMonthsInput.value = data.duration_months || '';
-            toggleDurationInput();
-            // --- AKHIR UPDATE INPUT BARU ---
-
-            modalTabungan.show();
-        } catch (err) {
-            Swal.fire('Gagal', err.message, 'error');
-        }
-    }
-
-    // 9. Hapus Tabungan (Logika tetap sama)
-    window.hapusTabungan = async function(id) {
-        const confirm = await Swal.fire({
-            title: 'Yakin ingin menghapus?',
-            text: 'Data tabungan dan semua riwayat setoran akan dihapus permanen!',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonText: 'Batal',
-            confirmButtonText: 'Ya, hapus'
-        });
-
-        if (!confirm.isConfirmed) return;
-
-        try {
-            const res = await fetch(`/pengurus/tabungan-qurban/${id}`, {
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' }
-            });
-
-            const data = await res.json();
-            if (res.ok) {
-                Swal.fire('Terhapus!', data.message, 'success');
-                loadTabungan();
-            } else {
-                throw new Error(data.message || 'Terjadi kesalahan');
-            }
-        } catch (err) {
-            Swal.fire('Gagal', err.message, 'error');
-        }
-    }
-
-    // 10. Tampilkan Detail
-    window.showDetail = async function(id) {
-        currentDetailTabunganId = id;
-        try {
-            const res = await fetch(`/pengurus/tabungan-qurban/${id}`);
-            if (!res.ok) throw new Error('Data tidak ditemukan');
-            const data = await res.json();
-
-            const namaJamaah = data.jamaah ? data.jamaah.name : 'N/A';
-            modalDetailTitle.textContent = `Detail: ${Str.ucfirst(data.nama_hewan)} (${namaJamaah})`;
-
-            const totalTerkumpul = data.pemasukan_tabungan_qurban.reduce((acc, p) => acc + parseFloat(p.nominal), 0);
-            const sisaTarget = parseFloat(data.total_harga_hewan_qurban) - totalTerkumpul;
-
-            // --- UPDATE DETAIL BARU ---
-            detailSavingType.textContent = data.saving_type === 'cicilan' ?
-                `Cicilan Waktu (${data.duration_months} Bulan)` : 'Tabungan Bebas';
-            detailInstallmentAmount.textContent = data.installment_amount > 0 ? formatRupiah(data.installment_amount) : '-';
-            // --- AKHIR UPDATE DETAIL BARU ---
-
-            detailTotalTabungan.textContent = formatRupiah(totalTerkumpul);
-            detailSisaTarget.textContent = formatRupiah(sisaTarget);
-            detailSisaTarget.classList.toggle('text-success', sisaTarget <= 0);
-            detailSisaTarget.classList.toggle('text-danger', sisaTarget > 0);
-
-            inputIdTabunganSetoran.value = id;
-            renderRiwayatSetoran(data.pemasukan_tabungan_qurban);
-
-            modalDetail.show();
-        } catch (err) {
-            Swal.fire('Gagal', err.message, 'error');
-        }
-    }
-
-    // 11. Render Riwayat (Logika tetap sama)
-    function renderRiwayatSetoran(pemasukanList) {
-        tabelRiwayatSetoran.innerHTML = '';
-        if (!pemasukanList || pemasukanList.length === 0) {
-            tabelRiwayatSetoran.innerHTML = '<tr><td colspan="3" class="text-center">Belum ada riwayat setoran.</td></tr>';
-            return;
-        }
-
-        pemasukanList.forEach(p => {
-            const row = `
-                <tr>
-                    <td>${formatTanggal(p.tanggal)}</td>
-                    <td>${formatRupiah(p.nominal)}</td>
-                    <td>
-                        <button class="btn btn-danger btn-sm py-0 px-1"
-                                title="Hapus setoran"
-                                onclick="window.hapusSetoran('${p.id_pemasukan_tabungan_qurban}')">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
-                </tr>`;
-            tabelRiwayatSetoran.insertAdjacentHTML('beforeend', row);
-        });
-    }
-
-    // 12. Refresh Modal Detail (Logika tetap sama)
-    async function refreshDetailModal() {
-        if (!currentDetailTabunganId) return;
-        try {
-            const res = await fetch(`/pengurus/tabungan-qurban/${currentDetailTabunganId}`);
-            if (!res.ok) {
-                modalDetail.hide();
-                return;
-            }
-            const data = await res.json();
-
-            const totalTerkumpul = data.pemasukan_tabungan_qurban.reduce((acc, p) => acc + parseFloat(p.nominal), 0);
-            const sisaTarget = parseFloat(data.total_harga_hewan_qurban) - totalTerkumpul;
-
-            detailTotalTabungan.textContent = formatRupiah(totalTerkumpul);
-            detailSisaTarget.textContent = formatRupiah(sisaTarget);
-            detailSisaTarget.classList.toggle('text-success', sisaTarget <= 0);
-            detailSisaTarget.classList.toggle('text-danger', sisaTarget > 0);
-
-            detailInstallmentAmount.textContent = data.installment_amount > 0 ? formatRupiah(data.installment_amount) : '-';
-
-            renderRiwayatSetoran(data.pemasukan_tabungan_qurban);
-
-        } catch (err) {
-            console.error('Gagal refresh detail modal:', err);
-        }
-    }
-
-    // 13. Simpan Setoran Baru (Logika tetap sama)
-    formSetoran.addEventListener('submit', async e => {
-        e.preventDefault();
-        setFormLoading(formSetoran, setoranSubmitButton, originalSetoranButtonText, true);
-
-        const formData = new FormData(formSetoran);
-
-        try {
-            const res = await fetch('/pengurus/pemasukan-qurban', {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
-                body: formData
-            });
-
-            const data = await res.json();
-            if (res.ok) {
-                Swal.fire('Berhasil!', data.message, 'success');
-                modalSetoran.hide();
-                formSetoran.reset();
-                refreshDetailModal();
-                loadTabungan();
-            } else {
-                if (res.status === 422 && data.errors) {
-                    let errorMessages = Object.values(data.errors).map(err => err[0]).join('<br>');
-                    throw new Error(errorMessages);
-                }
-                throw new Error(data.message || 'Terjadi kesalahan');
-            }
-        } catch (err) {
-            Swal.fire('Gagal', err.message, 'error');
-        } finally {
-            setFormLoading(formSetoran, setoranSubmitButton, originalSetoranButtonText, false);
-        }
-    });
-
-    // 14. Hapus Setoran (Logika tetap sama)
-    window.hapusSetoran = async function(idSetoran) {
-        const confirm = await Swal.fire({
-            title: 'Yakin ingin menghapus setoran?',
-            text: 'Data akan dihapus permanen!',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonText: 'Batal',
-            confirmButtonText: 'Ya, hapus'
-        });
-
-        if (!confirm.isConfirmed) return;
-
-        try {
-            const res = await fetch(`/pengurus/pemasukan-qurban/${idSetoran}`, {
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' }
-            });
-
-            const data = await res.json();
-            if (res.ok) {
-                Swal.fire('Terhapus!', data.message, 'success');
-                refreshDetailModal();
-                loadTabungan();
-            } else {
-                throw new Error(data.message || 'Terjadi kesalahan');
-            }
-        } catch (err) {
-            Swal.fire('Gagal', err.message, 'error');
-        }
-    }
-
-    const Str = {
-        ucfirst: (s) => (s && s.length) ? s.charAt(0).toUpperCase() + s.slice(1) : ''
     };
 
-    // --- Inisialisasi ---
-    loadTabungan();
+    window.addHewanRow = function(selectedId = null, selectedQty = 1) {
+        let options = '<option value="" data-harga="0">-- Pilih Hewan --</option>';
+        hewanListMaster.forEach(h => {
+            const sel = (selectedId && h.id_hewan_qurban == selectedId) ? 'selected' : '';
+            options += `<option value="${h.id_hewan_qurban}" data-harga="${h.harga_hewan}" ${sel}>${h.nama_hewan} (${h.kategori_hewan}) - ${fmtMoney(h.harga_hewan)}</option>`;
+        });
+
+        const rowDiv = document.createElement('div');
+        rowDiv.classList.add('hewan-row', 'row', 'g-2', 'align-items-center');
+        rowDiv.innerHTML = `
+            <div class="col-7">
+                <select name="hewan_items[][id_hewan]" class="form-select select-hewan" onchange="window.updateTotalDisplay()" required>${options}</select>
+            </div>
+            <div class="col-3">
+                <input type="number" name="hewan_items[][jumlah]" class="form-control input-qty" value="${selectedQty}" min="1" oninput="window.updateTotalDisplay()" required placeholder="Qty">
+            </div>
+            <div class="col-2">
+                <button type="button" class="btn btn-danger w-100" onclick="window.removeRow(this)"><i class="bi bi-trash"></i></button>
+            </div>
+        `;
+        hewanContainer.appendChild(rowDiv);
+        updateTotalDisplay();
+    };
+
+    window.removeRow = function(btn) {
+        if (document.querySelectorAll('.hewan-row').length > 1) {
+            btn.closest('.hewan-row').remove();
+            updateTotalDisplay();
+        } else {
+            Swal.fire('Info', 'Minimal harus ada 1 hewan.', 'info');
+        }
+    };
+
+    window.updateTotalDisplay = function() {
+        let total = 0;
+        document.querySelectorAll('.hewan-row').forEach(row => {
+            const select = row.querySelector('.select-hewan');
+            const qty = row.querySelector('.input-qty').value;
+            const selectedOption = select.options[select.selectedIndex];
+            const harga = selectedOption ? selectedOption.getAttribute('data-harga') : 0;
+            total += (parseInt(harga || 0) * parseInt(qty || 0));
+        });
+
+        const displayEl = document.getElementById('displayTotalTarget');
+        if (displayEl) displayEl.innerText = fmtMoney(total) + " (Estimasi Sistem)";
+
+        const inputEl = document.getElementById('total_harga_input');
+        if (inputEl) inputEl.value = total; 
+
+        const durationInput = document.getElementById('duration_months');
+        const estEl = document.getElementById('estBulan');
+        if (durationInput && estEl) {
+            const duration = durationInput.value;
+            const totalDeal = inputEl ? inputEl.value : total;
+            if (duration > 0) estEl.innerText = fmtMoney(Math.round(totalDeal / duration));
+            else estEl.innerText = '-';
+        }
+    };
+
+    const manualInputPrice = document.getElementById('total_harga_input');
+    if(manualInputPrice) {
+        manualInputPrice.addEventListener('input', function() {
+             const durationInput = document.getElementById('duration_months');
+             const estEl = document.getElementById('estBulan');
+             if (durationInput && estEl && durationInput.value > 0) {
+                 estEl.innerText = fmtMoney(Math.round(this.value / durationInput.value));
+             }
+        });
+    }
+
+    window.toggleDuration = function() {
+        const type = document.getElementById('saving_type').value;
+        const div = document.getElementById('divDuration');
+        const input = document.getElementById('duration_months');
+        if (type == 'bebas') {
+            div.style.display = 'none';
+            input.removeAttribute('required');
+        } else {
+            div.style.display = 'block';
+            input.setAttribute('required', 'required');
+        }
+        updateTotalDisplay();
+    };
+
+    if (formTabungan) {
+        formTabungan.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('id_tabungan_hewan_qurban').value;
+            const formData = new FormData(this);
+            formData.delete('hewan_items[][id_hewan]');
+            formData.delete('hewan_items[][jumlah]');
+            document.querySelectorAll('.hewan-row').forEach((row, index) => {
+                const idH = row.querySelector('.select-hewan').value;
+                const qty = row.querySelector('.input-qty').value;
+                formData.append(`hewan_items[${index}][id_hewan]`, idH);
+                formData.append(`hewan_items[${index}][jumlah]`, qty);
+            });
+
+            let url = "/pengurus/tabungan-qurban"; 
+            if (id) {
+                url = `/pengurus/tabungan-qurban/${id}`;
+                formData.append('_method', 'PUT');
+            }
+
+            fetch(url, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    Swal.fire('Berhasil', res.message, 'success');
+                    modalTabungan.hide();
+                    loadTable(state.currentPage);
+                } else {
+                    let msg = res.message;
+                    if (res.errors) msg = Object.values(res.errors).flat().join('\n');
+                    Swal.fire('Gagal', msg, 'error');
+                }
+            })
+            .catch(err => Swal.fire('Error', 'Terjadi kesalahan sistem', 'error'));
+        });
+    }
+
+    window.editTabungan = function(id) {
+        fetch(`/pengurus/tabungan-qurban/${id}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('id_tabungan_hewan_qurban').value = data.id_tabungan_hewan_qurban;
+                document.getElementById('id_jamaah').value = data.id_jamaah;
+                document.getElementById('saving_type').value = data.saving_type;
+                document.getElementById('duration_months').value = data.duration_months || '';
+
+                const inputEl = document.getElementById('total_harga_input');
+                if(inputEl) inputEl.value = data.total_harga_hewan_qurban;
+
+                toggleDuration();
+                document.getElementById('modalTabunganTitle').innerText = 'Edit Tabungan';
+                hewanContainer.innerHTML = '';
+                if (data.details && data.details.length > 0) {
+                    data.details.forEach(d => addHewanRow(d.id_hewan_qurban, d.jumlah_hewan));
+                } else {
+                    addHewanRow();
+                }
+                updateTotalDisplay();
+                // Override lagi setelah update display agar harga deal tetap muncul
+                if(inputEl) inputEl.value = data.total_harga_hewan_qurban; 
+                modalTabungan.show();
+            });
+    };
+
+    window.approveTabungan = function(id, status) {
+        Swal.fire({
+            title: `Konfirmasi ${status === 'disetujui' ? 'Menyetujui' : 'Menolak'}?`,
+            text: "Status akan diperbarui.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/pengurus/tabungan-qurban/${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token },
+                    body: JSON.stringify({ status: status })
+                })
+                .then(res => res.json())
+                .then(res => {
+                    Swal.fire('Sukses', res.message, 'success');
+                    loadTable(state.currentPage);
+                });
+            }
+        });
+    };
+
+    window.deleteTabungan = function(id) {
+        Swal.fire({
+            title: 'Hapus Data?',
+            text: "Data akan hilang permanen!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Hapus'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/pengurus/tabungan-qurban/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' }
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        Swal.fire('Terhapus', res.message, 'success');
+                        loadTable(state.currentPage);
+                    }
+                });
+            }
+        });
+    };
+
+    // ==========================================
+    // 4. DETAIL & SETORAN
+    // ==========================================
+    window.openDetail = function(id) {
+        currentDetailId = id;
+        const inputSetorId = document.getElementById('setoran_id_tabungan');
+        if (inputSetorId) inputSetorId.value = id;
+        refreshDetailModal(id);
+        if (modalDetail) modalDetail.show();
+    };
+
+    function refreshDetailModal(id) {
+        fetch(`/pengurus/tabungan-qurban/${id}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('detailModalTitle').innerText = `Detail: ${data.jamaah.name}`;
+                document.getElementById('detailSavingType').innerText = data.saving_type;
+                document.getElementById('detailStatusBadge').innerText = data.status.toUpperCase();
+
+                const terkumpul = data.pemasukan_tabungan_qurban.reduce((a, b) => a + parseInt(b.nominal), 0);
+                const sisa = data.total_harga_hewan_qurban - terkumpul;
+
+                document.getElementById('detailTotalHarga').innerText = fmtMoney(data.total_harga_hewan_qurban);
+                document.getElementById('detailTerkumpul').innerText = fmtMoney(terkumpul);
+                document.getElementById('detailSisa').innerText = fmtMoney(sisa);
+
+                const listUl = document.getElementById('detailListHewan');
+                listUl.innerHTML = '';
+                data.details.forEach(d => {
+                    listUl.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>${d.hewan.nama_hewan} (${d.hewan.kategori_hewan})</span>
+                        <span class="badge bg-primary rounded-pill">${d.jumlah_hewan} Ekor</span>
+                    </li>`;
+                });
+
+                const tbody = document.getElementById('tabelRiwayatSetoran');
+                tbody.innerHTML = '';
+                if (data.pemasukan_tabungan_qurban.length > 0) {
+                    data.pemasukan_tabungan_qurban.forEach(p => {
+                        tbody.innerHTML += `<tr>
+                            <td>${formatDate(p.tanggal)}</td>
+                            <td class="text-end fw-bold text-success">+ ${fmtMoney(p.nominal)}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-danger py-0" onclick="deleteSetoran('${p.id_pemasukan_tabungan_qurban}')">&times;</button>
+                            </td>
+                        </tr>`;
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Belum ada setoran.</td></tr>';
+                }
+            });
+    }
+
+    window.openModalSetor = function() {
+        document.getElementById('formTambahSetoran').reset();
+        document.querySelector('#formTambahSetoran input[name="tanggal"]').value = new Date().toISOString().split('T')[0];
+        if (modalSetor) modalSetor.show();
+    };
+
+    if (formSetoran) {
+        formSetoran.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch("/pengurus/pemasukan-qurban", {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    Swal.fire('Berhasil', 'Setoran tersimpan', 'success');
+                    modalSetor.hide();
+                    refreshDetailModal(currentDetailId);
+                    loadTable(state.currentPage);
+                } else {
+                    Swal.fire('Gagal', 'Gagal menyimpan', 'error');
+                }
+            });
+        });
+    }
+
+    window.deleteSetoran = function(idSetoran) {
+        Swal.fire({
+            title: 'Hapus Setoran?',
+            text: "Saldo akan berkurang.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Hapus'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/pengurus/pemasukan-qurban/${idSetoran}`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' }
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        refreshDetailModal(currentDetailId);
+                        loadTable(state.currentPage);
+                        Swal.fire('Terhapus', 'Setoran dihapus.', 'success');
+                    }
+                });
+            }
+        });
+    };
+
+    // ==========================================
+    // 5. MASTER HARGA HEWAN
+    // ==========================================
+    if (modalHargaEl) {
+        modalHargaEl.addEventListener('show.bs.modal', function (event) {
+            resetFormHarga();
+            document.getElementById('alertHargaContainer').innerHTML = ''; 
+        });
+    }
+
+    function resetFormHarga() {
+        if(formHarga) formHarga.reset();
+        document.getElementById('input_id_hewan_qurban').value = ''; 
+        const titleEl = document.getElementById('modalHargaTitle');
+        if(titleEl) titleEl.innerText = 'Kelola Harga Hewan Qurban'; 
+        const btnSimpan = document.getElementById('btnSimpanHarga');
+        if(btnSimpan) btnSimpan.innerText = 'Simpan'; 
+    }
+
+    function showHargaNotif(message) {
+        const container = document.getElementById('alertHargaContainer');
+        if(container) {
+            container.innerHTML = `<div class="alert alert-success py-2 mb-3 shadow-sm small fw-bold">${message}</div>`;
+            setTimeout(() => { container.innerHTML = ''; }, 2000);
+        }
+    }
+
+    window.loadListHarga = function() {
+        const tbody = document.getElementById('listHargaBody');
+        if (!tbody) return;
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center">Loading...</td></tr>';
+
+        fetch("/pengurus/hewan-qurban")
+            .then(res => res.json())
+            .then(data => {
+                tbody.innerHTML = '';
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center">Belum ada data.</td></tr>';
+                    return;
+                }
+                data.forEach(h => {
+                    const dataJson = encodeURIComponent(JSON.stringify(h));
+                    tbody.innerHTML += `<tr>
+                        <td class="text-capitalize">${h.nama_hewan}</td>
+                        <td class="text-capitalize">${h.kategori_hewan}</td>
+                        <td class="text-end">${fmtMoney(h.harga_hewan)}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-warning py-0 me-1" onclick="editHarga('${dataJson}')"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-danger py-0" onclick="deleteHarga('${h.id_hewan_qurban}')">&times;</button>
+                        </td>
+                    </tr>`;
+                });
+            });
+    };
+
+    window.editHarga = function(jsonString) {
+        const data = JSON.parse(decodeURIComponent(jsonString));
+        document.getElementById('input_id_hewan_qurban').value = data.id_hewan_qurban;
+        document.querySelector('select[name="nama_hewan"]').value = data.nama_hewan;
+        document.querySelector('select[name="kategori_hewan"]').value = data.kategori_hewan;
+        document.querySelector('input[name="harga_hewan"]').value = data.harga_hewan;
+        document.getElementById('modalHargaTitle').innerText = 'Edit Harga Hewan';
+        document.getElementById('btnSimpanHarga').innerText = 'Update';
+    };
+
+    if (formHarga) {
+        formHarga.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const id = document.getElementById('input_id_hewan_qurban').value;
+            let url = "/pengurus/hewan-qurban";
+            if (id) {
+                url = `/pengurus/hewan-qurban/${id}`;
+                formData.append('_method', 'PUT'); 
+            }
+            fetch(url, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success || res.message) {
+                    showHargaNotif(res.message || 'Data disimpan');
+                    resetFormHarga(); 
+                    loadListHarga(); 
+                } else {
+                    Swal.fire('Gagal', 'Gagal menyimpan', 'error');
+                }
+            })
+            .catch(err => Swal.fire('Error', 'Kesalahan sistem', 'error'));
+        });
+    }
+
+    window.deleteHarga = function(id) {
+        Swal.fire({
+            title: 'Hapus?',
+            text: "Data akan hilang.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Hapus'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/pengurus/hewan-qurban/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token } })
+                .then(res => { loadListHarga(); showHargaNotif('Terhapus.'); })
+                .catch(err => Swal.fire('Gagal', 'Gagal menghapus', 'error'));
+            }
+        });
+    };
+
+    window.togglePdfFilter = function() {
+        const select = document.getElementById('filter-periode');
+        if (!select) return;
+        const val = select.value;
+        const bulanan = document.getElementById('filter-bulanan');
+        const tahunan = document.getElementById('filter-tahunan');
+        const rentang = document.getElementById('filter-rentang');
+        if (bulanan) bulanan.style.display = (val === 'per_bulan') ? 'block' : 'none';
+        if (tahunan) tahunan.style.display = (val === 'per_tahun') ? 'block' : 'none';
+        if (rentang) rentang.style.display = (val === 'rentang_waktu') ? 'block' : 'none';
+    };
+
+    // ==========================================
+    // 6. FUNGSI MODAL KONTAK JAMAAH
+    // ==========================================
+    window.openContactModal = function(jsonString) {
+        if (!modalContact) return;
+
+        // Decode Data
+        const jamaah = JSON.parse(decodeURIComponent(jsonString));
+
+        document.getElementById('contactName').innerText = jamaah.name;
+        document.getElementById('contactEmail').innerText = jamaah.email || '-';
+        document.getElementById('contactPhone').innerText = jamaah.no_hp || '-';
+
+        const avatarEl = document.getElementById('contactAvatar');
+        if (jamaah.avatar) {
+            avatarEl.src = `/storage/${jamaah.avatar}`; 
+        } else {
+            avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(jamaah.name)}&background=198754&color=fff&size=128`;
+        }
+        avatarEl.onerror = function() { this.src = 'https://via.placeholder.com/100?text=User'; };
+
+        const btnWa = document.getElementById('btnChatWA');
+        if (jamaah.no_hp) {
+            let phone = jamaah.no_hp.replace(/\D/g, ''); 
+            if (phone.startsWith('0')) phone = '62' + phone.substring(1);
+            const text = `Assalamu'alaikum ${jamaah.name}, saya pengurus Qurban ingin mendiskusikan tabungan Anda.`;
+            btnWa.href = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+            btnWa.classList.remove('disabled');
+        } else {
+            btnWa.href = '#';
+            btnWa.classList.add('disabled');
+        }
+
+        modalContact.show();
+    };
+
+    // Jalankan loadTable pertama kali
+    loadTable();
 });

@@ -28,9 +28,21 @@ class Jamaah extends Authenticatable // extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'no_hp',        // <-- Baru
         'password',
         'google_id', 
         'avatar',
+        'otp_code',     // <-- Baru
+        'otp_expires_at', // <-- Baru
+        'is_verified',  // <-- Baru
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'phone_verified_at' => 'datetime', // <-- Baru
+        'otp_expires_at' => 'datetime',    // <-- Baru
+        'is_verified' => 'boolean',        // <-- Baru
+        'password' => 'hashed',
     ];
 
     /**
@@ -43,18 +55,6 @@ class Jamaah extends Authenticatable // extends Authenticatable
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
 
     public function getAvatarUrlAttribute()
     {
@@ -62,5 +62,11 @@ class Jamaah extends Authenticatable // extends Authenticatable
             return asset('storage/' . $this->avatar);
         }
         return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=198754&color=fff';
+    }
+
+    public function pemasukanDonasi()
+    {
+        // hasMany(ModelTujuannya, 'foreign_key_di_tabel_tujuan', 'local_key_di_tabel_ini')
+        return $this->hasMany(PemasukanDonasi::class, 'id_jamaah', 'id');
     }
 }

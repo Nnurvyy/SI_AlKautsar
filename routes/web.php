@@ -7,13 +7,13 @@ use App\Http\Controllers\PemasukanController;
 use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\KhotibJumatController;
 use App\Http\Controllers\PublicController;
-use App\Http\Controllers\TabunganHewanQurbanController;
+use App\Http\Controllers\TabunganHewanQurbanController; // Controller Admin
 use App\Http\Controllers\PemasukanTabunganQurbanController;
 use App\Http\Controllers\InfaqJumatController;
 use App\Http\Controllers\BarangInventarisController;
 use App\Http\Controllers\GrafikController;
 use App\Http\Controllers\LapKeuController;
-use App\Http\Controllers\QurbanController;
+use App\Http\Controllers\QurbanController; // Controller Jamaah
 use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\DonasiController;
 use App\Http\Controllers\PemasukanDonasiController;
@@ -22,11 +22,9 @@ use App\Http\Controllers\ArtikelController;
 use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DonasiPaymentController;
-
-
+use App\Http\Controllers\HewanQurbanController;
 use App\Http\Controllers\KajianController; 
 use App\Http\Controllers\ProgramDonasiController;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -36,34 +34,38 @@ use App\Http\Controllers\ProgramDonasiController;
 
 Route::get('/', [PublicController::class, 'landingPage'])->name('public.landing');
 Route::get('/jadwal-adzan', [PublicController::class, 'jadwalAdzan'])->name('public.jadwal-adzan');
+Route::get('/api/jadwal-adzan', [PublicController::class, 'jadwalAdzanApi'])->name('public.jadwal-adzan.api');
+
 Route::get('/artikel', [PublicController::class, 'artikel'])->name('public.artikel');
 Route::get('/artikel/detail/{id}', [PublicController::class, 'getArtikelDetail'])->name('public.artikel.detail');
+
 Route::get('/donasi', [PublicController::class, 'donasi'])->name('public.donasi');
 Route::get('/donasi/detail/{id}', [PublicController::class, 'getDonasiDetail'])->name('public.donasi.detail');
-// Route Checkout (Untuk Ajax Form)
 Route::post('/donasi/checkout', [DonasiPaymentController::class, 'checkout'])->name('donasi.checkout');
-
-// Route Callback (Wajib POST)
 Route::post('/midtrans/callback', [DonasiPaymentController::class, 'callback']);
-
 
 Route::get('/program', [PublicController::class, 'program'])->name('public.program');
 Route::get('/program/detail/{id}', [PublicController::class, 'getProgramDetail'])->name('public.program.detail');
 
 Route::get('/khutbah-jumat', [PublicController::class, 'jadwalKhotib'])->name('public.jadwal-khotib');
 Route::get('/jadwal-kajian', [PublicController::class, 'jadwalKajian'])->name('public.jadwal-kajian');
-Route::get('/api/jadwal-adzan', [PublicController::class, 'jadwalAdzanApi'])->name('public.jadwal-adzan.api');
+Route::get('/tentang-kami', [App\Http\Controllers\PublicController::class, 'tentangKami'])->name('public.tentang-kami');
 
+// --- ROUTE SPESIAL TABUNGAN QURBAN (LOGIC GANDA) ---
+// Jika login -> Pakai Controller logic (data lengkap). Jika belum -> Tampil view saja (modal login).
 Route::get('/tabungan-qurban-saya', function() {
     if (Auth::guard('jamaah')->check()) {
-        // Jika sudah login, forward ke controller logic
+        // Render view menggunakan controller agar data tabungan terload
         return app(App\Http\Controllers\QurbanController::class)->index();
     }
-    // Jika belum login, tetap load view tapi view-nya akan menampilkan modal (karena kita handle di blade)
-    return view('public.tabungan-qurban-saya'); 
+    // Jika guest, load view kosong (nanti view handle modal login)
+    return view('public.tabungan-qurban-saya', [
+        'user' => null,
+        'tabungans' => collect([]),
+        'totalAset' => 0,
+        'masterHewan' => []
+    ]); 
 })->name('public.tabungan-qurban-saya');
-
-Route::get('/tentang-kami', [App\Http\Controllers\PublicController::class, 'tentangKami'])->name('public.tentang-kami');
 
 
 /*
@@ -71,139 +73,83 @@ Route::get('/tentang-kami', [App\Http\Controllers\PublicController::class, 'tent
 | Rute Autentikasi
 |--------------------------------------------------------------------------
 */
-// Halaman Welcome
 Route::get('/welcome', [AuthController::class, 'showWelcomeForm'])->name('auth.welcome');
-
-// Halaman Sign In (Form Login)
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-// Proses Login (Email/Pass)
-Route::post('/login', [AuthController::class, 'loginProcess']); // Sudah di-update di AuthController
-
-// Halaman Sign Up (Form Registrasi)
+Route::post('/login', [AuthController::class, 'loginProcess']);
 Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register');
-// Proses Registrasi
-Route::post('/register', [AuthController::class, 'registerProcess']); // Sudah di-update di AuthController
-
-// Rute Logout
-// Middleware 'auth' dihapus, controller akan menangani logout (jamaah atau pengurus)
+Route::post('/register', [AuthController::class, 'registerProcess']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// RUTE BARU: GOOGLE AUTH
+// Google Auth
 Route::get('/auth/google', [AuthController::class, 'redirectToGoogle'])->name('auth.google.redirect');
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback'])->name('auth.google.callback');
+Route::get('/verify-otp', [AuthController::class, 'showVerifyForm'])->name('auth.verify');
+Route::post('/verify-otp', [AuthController::class, 'verifyProcess'])->name('auth.verify.process');
+Route::post('/auth/otp/resend', [AuthController::class, 'resendOtp'])->name('auth.otp.resend');
+Route::get('/complete-data', [AuthController::class, 'showCompleteDataForm'])->name('auth.complete-data');
+Route::post('/complete-data', [AuthController::class, 'processCompleteData'])->name('auth.complete-data.process');
 
 
 /*
 |--------------------------------------------------------------------------
 | Rute PENGURUS (Dashboard Admin)
 |--------------------------------------------------------------------------
-|
-| Dilindungi oleh middleware 'auth:pengurus'.
-| Prefix 'pengurus' dan nama 'pengurus.'
-|
 */
-// GANTI: middleware(['auth', 'role:admin']) -> middleware('auth:pengurus')
-// GANTI: prefix('admin') -> prefix('pengurus')
-// GANTI: name('admin.') -> name('pengurus.')
 Route::middleware(['auth:pengurus'])->prefix('pengurus')->name('pengurus.')->group(function () {
 
-    // Dashboard (URL: /pengurus/dashboard)
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
-
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
+    // Keuangan & Inventaris
     Route::get('kategori-keuangan/data', [KategoriKeuanganController::class, 'data']);
     Route::resource('kategori-keuangan', KategoriKeuanganController::class);
-
-    // Route Pemasukan
     Route::get('pemasukan/data', [PemasukanController::class, 'data']);
     Route::resource('pemasukan', PemasukanController::class);
-
-    // Route Pengeluaran
     Route::get('pengeluaran/data', [PengeluaranController::class, 'data']);
     Route::resource('pengeluaran', PengeluaranController::class);
-
-    // Khotib Jumat
+    
+    // Masjid Activities
     Route::resource('khotib-jumat', KhotibJumatController::class);
     Route::get('khotib-jumat-data', [KhotibJumatController::class, 'data'])->name('khotib-jumat.data');
-
-    // Infaq Jumat
-    Route::resource('infaq-jumat', InfaqJumatController::class)->only([
-        'index','store', 'update', 'destroy', 'show'
-    ]);
+    Route::resource('infaq-jumat', InfaqJumatController::class)->only(['index','store', 'update', 'destroy', 'show']);
     Route::get('infaq-jumat-data', [InfaqJumatController::class, 'data'])->name('infaq-jumat.data');
-
-    // Inventaris
-    Route::resource('inventaris', BarangInventarisController::class)->only([
-        'index','store', 'update', 'destroy', 'show'
-    ]);
+    Route::resource('inventaris', BarangInventarisController::class)->only(['index','store', 'update', 'destroy', 'show']);
     Route::get('inventaris-data', [BarangInventarisController::class, 'data'])->name('inventaris.data');
-
-    // Laporan Keuangan
-    Route::get('/lapkeu', [LapKeuController::class, 'index'])->name('lapkeu.index');
-    Route::get('/lapkeu/export-pdf', [LapKeuController::class, 'exportPdf'])->name('lapkeu.export.pdf');
-
-    // Kajian
     Route::resource('kajian', KajianController::class);
     Route::get('kajian-data', [KajianController::class, 'data'])->name('kajian.data');
+    
+    // Laporan & Grafik
+    Route::get('/lapkeu', [LapKeuController::class, 'index'])->name('lapkeu.index');
+    Route::get('/lapkeu/export-pdf', [LapKeuController::class, 'exportPdf'])->name('lapkeu.export.pdf');
+    Route::get('grafik', [GrafikController::class, 'index'])->name('grafik.index');
+    Route::get('grafik/data', [GrafikController::class, 'dataUntukGrafik'])->name('grafik.data');
 
-
-    // ... (Tambahkan rute pengurus lainnya di sini) ...
-    // Program Donasi (Master Data)
-    Route::resource('program-donasi', ProgramDonasiController::class);
-    Route::get('program-donasi-data', [ProgramDonasiController::class, 'data'])->name('program-donasi.data');
-
-    // === TAMBAHAN BARU: TRANSAKSI DONASI (Input Donatur) ===
+    // Donasi
     Route::resource('transaksi-donasi', PemasukanDonasiController::class);
-
-    // Tabungan Qurban
-    Route::get('tabungan-qurban/cetak-pdf', [TabunganHewanQurbanController::class, 'cetakPdf'])
-        ->name('tabungan-qurban.cetakPdf');
-    Route::get('tabungan-qurban-data', [TabunganHewanQurbanController::class, 'data'])
-        ->name('tabungan-qurban.data');
-    Route::resource('tabungan-qurban', TabunganHewanQurbanController::class);
-
-    // Pemasukan Qurban
-    Route::resource('pemasukan-qurban', PemasukanTabunganQurbanController::class)
-        ->parameter('pemasukan-qurban', 'id');
-
-    // Donasi (Parent)
     Route::resource('donasi', DonasiController::class);
     Route::get('donasi-data', [DonasiController::class, 'data'])->name('donasi.data');
+    Route::resource('pemasukan-donasi', PemasukanDonasiController::class)->only(['store', 'destroy']);
 
-    // Pemasukan Donasi (Child - Transaksi)
-    Route::resource('pemasukan-donasi', PemasukanDonasiController::class)
-        ->only(['store', 'destroy']);
-    // Artikel
+    // --- TABUNGAN QURBAN (ADMIN) ---
+    Route::get('tabungan-qurban/cetak-pdf', [TabunganHewanQurbanController::class, 'cetakPdf'])->name('tabungan-qurban.cetakPdf');
+    Route::get('tabungan-qurban-data', [TabunganHewanQurbanController::class, 'data'])->name('tabungan-qurban.data');
+    Route::resource('tabungan-qurban', TabunganHewanQurbanController::class);
+    Route::put('tabungan-qurban/{id}/status', [TabunganHewanQurbanController::class, 'updateStatus'])->name('tabungan-qurban.status');
+    
+    // Hewan & Pemasukan Qurban
+    Route::resource('pemasukan-qurban', PemasukanTabunganQurbanController::class)->parameter('pemasukan-qurban', 'id');
+    Route::resource('hewan-qurban', HewanQurbanController::class)->parameters(['hewan-qurban' => 'id']); // Perbaiki resource name
+
+    // Content
     Route::get('artikel-data', [ArtikelController::class, 'artikelData'])->name('artikel.data');
-    Route::get('artikel-data/{id}', [ArtikelController::class, 'artikelData'])->name('artikel.detail');
-    Route::resource('artikel', ArtikelController::class)->names([
-        'store' => 'artikel.store', 
-        'index' => 'artikel.index', 
-        'update' => 'artikel.update',
-        'destroy' => 'artikel.destroy', // Tambahkan ini juga
-        // ...
-    ]);
-        
-
-    // Event
+    Route::resource('artikel', ArtikelController::class);
     Route::resource('program', ProgramController::class);
     Route::get('program-data', [ProgramController::class, 'data'])->name('program.data');
 
-    // Halaman grafik
-    Route::get('grafik', [GrafikController::class, 'index'])
-        ->name('grafik.index');
-
-    // API grafik dipindah ke prefix /api atau /pengurus/api
-    Route::get('grafik/data', [GrafikController::class, 'dataUntukGrafik'])
-        ->name('grafik.data');
-
-
-
+    // Settings
     Route::get('/settings', [PengaturanController::class, 'edit'])->name('settings.edit');
     Route::post('/settings', [PengaturanController::class, 'update'])->name('settings.update');
-
 });
 
 
@@ -211,20 +157,21 @@ Route::middleware(['auth:pengurus'])->prefix('pengurus')->name('pengurus.')->gro
 |--------------------------------------------------------------------------
 | Rute JAMAAH (Publik yang Sudah Login)
 |--------------------------------------------------------------------------
-|
-| Dilindungi oleh middleware 'auth:jamaah'.
-| GANTI: middleware(['auth', 'role:publik']) -> middleware('auth:jamaah')
-| GANTI: name('public.') -> name('jamaah.')
-|
 */
 Route::middleware(['auth:jamaah'])->name('jamaah.')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
-    // URL: /qurban-saya (Name: jamaah.qurban)
+    // Halaman Utama Tabungan (Milik Jamaah) - Route ini opsional karena sudah dihandle di public route atas
+    // Tapi kita simpan sebagai alias 'jamaah.qurban'
     Route::get('/qurban-saya', [QurbanController::class, 'index'])->name('qurban');
+    
+    // Proses Daftar Tabungan Baru
+    Route::post('/qurban-saya/store', [QurbanController::class, 'store'])->name('qurban.store'); // Sesuaikan nama route di JS
+    Route::post('/tabungan-qurban-saya/daftar', [PublicController::class, 'storeTabunganJamaah'])->name('tabungan-qurban.store'); // Backup route lama jika JS belum update
+
+    // Ambil Detail JSON (Untuk Modal Riwayat)
+    // Menggunakan PublicController::getTabunganDetail yang baru kita buat
+    Route::get('/qurban-saya/{id}', [PublicController::class, 'getTabunganDetail'])->name('qurban.show');
 });
-
-
-

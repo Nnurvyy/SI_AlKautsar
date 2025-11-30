@@ -10,7 +10,7 @@
     <div class="auth-screen" id="login-screen">
         <div class="auth-content">
             <h1>Sign In</h1>
-            <p class="subtitle">Login untuk dapat mengakses fitur tabungan hewan qurban</p>
+            <p class="subtitle">Sign In untuk dapat mengakses fitur tabungan hewan qurban</p>
 
             <form action="{{ route('login') }}" method="POST">
                 @csrf
@@ -38,7 +38,7 @@
                     <a href="#">Forgot Password?</a>
                 </div>
 
-                <button type="submit" class="btn btn-primary">LOGIN</button>
+                <button type="submit" class="btn btn-primary">SIGN IN</button>
             </form>
 
             <div class="divider">atau</div>

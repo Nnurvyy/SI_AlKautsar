@@ -22,16 +22,20 @@ return new class extends Migration
                   ->on('donasi')
                   ->onDelete('cascade');
             // Status: pending, success, failed, expire
+            $table->unsignedBigInteger('id_jamaah')->nullable(); // Foreign key ke tabel 'jamaah' kolom 'id'
 
             $table->date('tanggal');
             $table->string('nama_donatur');
             $table->enum('metode_pembayaran', ['tunai', 'transfer', 'whatsapp'])->default('tunai');
             $table->bigInteger('nominal');
             $table->string('status')->default('pending');
-            $table->string('snap_token')->nullable();
+            $table->string('tripay_reference')->nullable(); // Simpan Reference ID dari Tripay
+            $table->string('checkout_url')->nullable();
             $table->text('pesan')->nullable();
 
             $table->timestamps();
+
+             $table->foreign('id_jamaah')->references('id')->on('jamaah')->onDelete('cascade');
         });
     }
 

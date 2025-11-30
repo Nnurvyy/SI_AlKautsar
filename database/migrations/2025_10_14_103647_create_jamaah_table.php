@@ -15,6 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('no_hp');
+            $table->string('otp_code')->nullable();
+            $table->timestamp('otp_expires_at')->nullable(); // Waktu kadaluarsa OTP
+            $table->boolean('is_verified')->default(false); // Status verifikasi
+            $table->timestamp('phone_verified_at')->nullable();
             $table->string('avatar')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->nullable(); // Nullable untuk login Google
