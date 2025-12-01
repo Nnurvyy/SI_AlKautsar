@@ -13,7 +13,11 @@ class DonasiController extends Controller
 {
     public function index()
     {
-        return view('donasi'); // View utama
+        // Menghitung TOTAL SEMUA uang masuk dari tabel pemasukan_donasi
+        // Tanpa filter tanggal/status aktif
+        $totalDonasi = DB::table('pemasukan_donasi')->sum('nominal');
+
+        return view('donasi', compact('totalDonasi'));
     }
 
     // Data JSON untuk DataTables/Pagination

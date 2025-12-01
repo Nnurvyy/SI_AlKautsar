@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'Beranda Masjid Al-Kautsar 561')
+@section('title', 'Smart Masjid')
 
 @push('styles')
     {{-- HANYA CSS yang dibutuhkan oleh landing page --}}

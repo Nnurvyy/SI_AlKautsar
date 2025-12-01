@@ -52,17 +52,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 5. LOGIKA TOMBOL TAMBAH TRANSAKSI ---
     if (btnTambahTransaksi) {
         btnTambahTransaksi.addEventListener('click', function() {
-            // 1. Reset Form
             if(formTransaksi) formTransaksi.reset();
             
-            // 2. Reset ID Hidden
             const inputId = document.getElementById('id_keuangan');
             if (inputId) inputId.value = '';
 
-            // 3. Set Judul & Warna Modal
             const modalTitle = document.getElementById('modalTransaksiTitle');
-            
-            // Cek Tipe Halaman dari tombol yang ada
             if (btnTambahPemasukan) {
                 if(modalTitle) modalTitle.textContent = "Tambah Pemasukan";
                 setupModalColor('pemasukan');
@@ -71,49 +66,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 setupModalColor('pengeluaran');
             }
 
-            // 4. Tampilkan Modal
             if (modalTransaksiBS) modalTransaksiBS.show();
-
-            // 5. Load Kategori (Filter otomatis via TIPE_HALAMAN)
             loadDropdownKategori();
         });
     }
 
-    // --- FUNGSI GANTI WARNA (MERAH/HIJAU) ---
     function setupModalColor(tipe) {
         const btnSimpan = document.getElementById('btnSimpanTransaksi');
         const modalTitle = document.getElementById('modalTransaksiTitle');
-        const labelNominal = document.getElementById('labelNominal'); // Target Label Nominal
+        const labelNominal = document.getElementById('labelNominal');
         const spanRp = document.querySelector('#modalTransaksi .input-group-text');
         const btnSimpanKategori = document.getElementById('btnSimpanKategori');
 
         if (tipe === 'pengeluaran') {
-            // MODE PENGELUARAN (MERAH)
             if(btnSimpan) { btnSimpan.classList.remove('btn-success'); btnSimpan.classList.add('btn-danger'); }
             if(modalTitle) modalTitle.classList.add('text-danger');
-            
-            // Ubah Label Nominal jadi Merah
-            if(labelNominal) { 
-                labelNominal.classList.remove('text-success'); 
-                labelNominal.classList.add('text-danger'); 
-            }
-
-            if(spanRp) { 
-                spanRp.classList.remove('text-success', 'bg-success', 'text-white'); 
-                spanRp.classList.add('text-danger', 'fw-bold'); 
-            }
+            if(labelNominal) { labelNominal.classList.remove('text-success'); labelNominal.classList.add('text-danger'); }
+            if(spanRp) { spanRp.classList.remove('text-success', 'bg-success', 'text-white'); spanRp.classList.add('text-danger', 'fw-bold'); }
             if(btnSimpanKategori) { btnSimpanKategori.classList.remove('btn-primary', 'btn-success'); btnSimpanKategori.classList.add('btn-danger'); }
         } else {
-            // MODE PEMASUKAN (HIJAU)
             if(btnSimpan) { btnSimpan.classList.remove('btn-danger'); btnSimpan.classList.add('btn-success'); }
             if(modalTitle) modalTitle.classList.remove('text-danger');
-            
-            // Ubah Label Nominal jadi Hijau
-            if(labelNominal) { 
-                labelNominal.classList.remove('text-danger'); 
-                labelNominal.classList.add('text-success'); 
-            }
-
+            if(labelNominal) { labelNominal.classList.remove('text-danger'); labelNominal.classList.add('text-success'); }
             if(spanRp) { spanRp.classList.remove('text-danger'); spanRp.classList.add('text-success', 'fw-bold'); }
             if(btnSimpanKategori) { btnSimpanKategori.classList.remove('btn-primary', 'btn-danger'); btnSimpanKategori.classList.add('btn-success'); }
         }
@@ -123,7 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (formTransaksi) {
         formTransaksi.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const btnSimpan = document.getElementById('btnSimpanTransaksi');
             const originalText = btnSimpan.innerHTML;
             btnSimpan.disabled = true;
@@ -133,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const id = inputId ? inputId.value : '';
             const formData = new FormData(formTransaksi);
 
-            // Bersihkan format Rupiah
             const inputNominal = document.getElementById('inputNominal');
             if(inputNominal) {
                 const rawValue = inputNominal.value;
@@ -183,7 +155,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(`${URL_API_TRANSAKSI}/${id}`);
             const data = await res.json();
 
-            // Isi Data
             const inputId = document.getElementById('id_keuangan');
             if(inputId) inputId.value = data.id_keuangan;
             
@@ -202,7 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (err) {
             Swal.fire('Error', 'Gagal memuat data edit', 'error');
-            console.error(err);
         }
     };
 
@@ -228,12 +198,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- 9. FUNGSI LOAD KATEGORI (FILTER BERDASARKAN TIPE HALAMAN) ---
+    // --- 9. FUNGSI LOAD KATEGORI ---
     async function loadDropdownKategori() {
         const select = document.getElementById('selectKategori');
         if(!select) return;
         try {
-            // INI KUNCI FILTERNYA: Kirim parameter ?tipe=... ke Controller
             const res = await fetch(`${URL_API_KATEGORI}/data?tipe=${TIPE_HALAMAN}`);
             const data = await res.json();
             select.innerHTML = '<option value="">-- Pilih Kategori --</option>';
@@ -243,7 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { console.log("Gagal load dropdown", e); }
     }
 
-    // Kelola Kategori (Modal List)
     const btnKelolaKategori = document.getElementById('btnKelolaKategori');
     if(btnKelolaKategori) {
         btnKelolaKategori.addEventListener('click', () => {
@@ -260,7 +228,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!listContainer) return;
         listContainer.innerHTML = '<div class="text-center py-3"><span class="spinner-border spinner-border-sm"></span></div>';
         try {
-            // FILTER JUGA DI SINI
             const res = await fetch(`${URL_API_KATEGORI}/data?tipe=${TIPE_HALAMAN}`);
             const data = await res.json();
             renderListKategori(data);
@@ -304,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             let url = URL_API_KATEGORI;
             let method = 'POST';
-            let body = { nama_kategori_keuangan: nama, tipe: TIPE_HALAMAN }; // Kirim Tipe saat save
+            let body = { nama_kategori_keuangan: nama, tipe: TIPE_HALAMAN };
             if (id) { url += `/${id}`; method = 'PUT'; }
 
             try {
@@ -342,23 +309,20 @@ document.addEventListener('DOMContentLoaded', () => {
         try { const res = await fetch(`${URL_API_KATEGORI}/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token } }); if (res.ok) { loadListKategori(); loadDropdownKategori(); } } catch (err) { alert('Gagal'); }
     };
 
-    // --- 10. LOAD DATA TABEL UTAMA ---
+    // --- 10. LOAD DATA TABEL ---
     async function loadTransaksi() {
         if(!tbody) return;
         const searchInput = document.getElementById('searchInput');
         const search = searchInput ? searchInput.value : '';
 
-        // Tampilkan Loading
         tbody.innerHTML = `<tr><td colspan="5" class="text-center"><div class="spinner-border text-primary"></div></td></tr>`;
 
         try {
-            // Fetch Data
             const res = await fetch(`${URL_API_TRANSAKSI}/data?page=${currentPage}&search=${search}`);
             const response = await res.json();
 
-            // Render
             renderTable(response.data, response.from || 1);
-            renderPagination(response);
+            renderPagination(response); // Panggil fungsi pagination yang baru
         } catch (err) {
             console.error(err);
             tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Gagal memuat data</td></tr>`;
@@ -375,8 +339,6 @@ document.addEventListener('DOMContentLoaded', () => {
         data.forEach((item) => {
             const kategoriName = item.kategori ? item.kategori.nama_kategori_keuangan : '-';
             const nominalClass = TIPE_HALAMAN === 'pemasukan' ? 'text-success' : 'text-danger';
-
-            // Helper format Rupiah khusus tabel
             const formatRupiahTabel = (angka) => "Rp " + new Intl.NumberFormat('id-ID').format(angka);
             const tanggalIndo = new Date(item.tanggal).toLocaleDateString('id-ID', {day: '2-digit', month: 'long', year: 'numeric'});
 
@@ -387,35 +349,71 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${item.deskripsi || '-'}</td>
                     <td class="text-end fw-bold ${nominalClass}">${formatRupiahTabel(item.nominal)}</td>
                     <td class="text-center">
-                        <button class="btn btn-sm btn-light text-primary me-1 rounded-circle border"
-                            onclick="window.editTransaksi('${item.id_keuangan}')" title="Edit">
-                            <i class="bi bi-pencil-square"></i>
-                        </button>
-                        <button class="btn btn-sm btn-light text-danger rounded-circle border"
-                            onclick="window.hapusTransaksi('${item.id_keuangan}')" title="Hapus">
-                            <i class="bi bi-trash"></i>
-                        </button>
+                        <button class="btn btn-sm btn-light text-primary me-1 rounded-circle border" onclick="window.editTransaksi('${item.id_keuangan}')" title="Edit"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-sm btn-light text-danger rounded-circle border" onclick="window.hapusTransaksi('${item.id_keuangan}')" title="Hapus"><i class="bi bi-trash"></i></button>
                     </td>
-                </tr>
-            `;
+                </tr>`;
             tbody.insertAdjacentHTML('beforeend', row);
         });
     }
 
+   // --- FUNGSI PAGINATION (UPDATED) ---
     function renderPagination(response) {
+        // 1. Update Info Text
         const infoEl = document.getElementById('paginationInfo');
         if(infoEl) {
             infoEl.textContent = `Menampilkan ${response.from || 0} - ${response.to || 0} dari ${response.total} data`;
         }
+
+        // 2. Render Tombol
+        const linksContainer = document.getElementById('paginationLinks');
+        if (!linksContainer) return;
+
+        linksContainer.innerHTML = ''; // Reset tombol
+
+        // KITA HAPUS kondisi 'if (response.last_page > 1)' agar pagination tetap muncul
+        // meskipun hanya ada 1 halaman.
+
+        let ul = document.createElement('ul');
+        ul.className = 'pagination justify-content-end mb-0';
+
+        response.links.forEach(link => {
+            let li = document.createElement('li');
+            
+            // Logika Ganti Label Next/Prev jadi Simbol
+            let label = link.label;
+            if (label.includes('Previous')) {
+                label = '<';
+            } else if (label.includes('Next')) {
+                label = '>';
+            }
+
+            // Set kelas aktif dan disabled
+            li.className = `page-item ${link.active ? 'active' : ''} ${link.url ? '' : 'disabled'}`;
+
+            // Buat tombol (gunakan button agar tidak reload)
+            let btn = document.createElement('button');
+            btn.className = 'page-link';
+            btn.innerHTML = label; // Render simbol < atau >
+
+            // Jika ada URL (tidak disabled), tambahkan event click
+            if (link.url) {
+                btn.onclick = (e) => {
+                    e.preventDefault(); // Mencegah scroll ke atas
+                    // Ambil nomor halaman dari URL
+                    const urlObj = new URL(link.url);
+                    const page = urlObj.searchParams.get('page');
+                    currentPage = page;
+                    loadTransaksi(); // Reload data
+                };
+            }
+
+            li.appendChild(btn);
+            ul.appendChild(li);
+        });
+
+        linksContainer.appendChild(ul);
     }
 
-    // Search Listener
-    const searchInput = document.getElementById('searchInput');
-    if(searchInput) {
-        searchInput.addEventListener('keyup', () => { currentPage = 1; loadTransaksi(); });
-    }
-
-    // Panggil fungsi saat load pertama kali
     loadTransaksi();
-
 });

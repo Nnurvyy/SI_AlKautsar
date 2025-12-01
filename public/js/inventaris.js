@@ -1,349 +1,323 @@
-// Skrip ini mengimplementasikan logika CRUD, Search, dan Pagination untuk Barang Inventaris
-// Menggunakan fetch API ke backend Laravel.
-// Asumsi: SweetAlert2 (Swal) dan Bootstrap JS sudah dimuat di view.
-
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- 1. DEFINISI ELEMEN DAN STATE ---
-
-    // Elemen Formulir & Modal
+    // --- 1. DEFINISI ELEMEN ---
+    const tableBody = document.querySelector('#tabelInventaris tbody');
     const form = document.getElementById('formInventarisStock');
-    const modalInventarisElement = document.getElementById('modalInventaris');
-    // Pastikan ID ini sesuai dengan yang di HTML
-    const modalInventaris = new bootstrap.Modal(modalInventarisElement); 
+    const modalElement = document.getElementById('modalInventaris');
+    const modal = new bootstrap.Modal(modalElement);
     const modalTitle = document.getElementById('modalInventarisLabel');
-
-    // Elemen Tabel & Kontrol
-    // Menggunakan ID tabel yang benar (tabelKhotib hanya ID placeholder, tapi kita pakai)
-    const tbody = document.querySelector('#tabelKhotib tbody'); 
+    
+    // Filter & Search
     const searchInput = document.getElementById('searchInput');
+    const kondisiFilter = document.getElementById('kondisiFilter');
     const paginationContainer = document.getElementById('paginationLinks');
     const paginationInfo = document.getElementById('paginationInfo');
-    const tambahButton = document.querySelector('[data-bs-target="#modalInventaris"]'); // Sesuaikan selector
-    
-    // Ambil CSRF token
-    const token = document.querySelector('meta[name="csrf-token"]').content;
-    
-    // Tombol Modal
-    const submitButton = form ? form.querySelector('button[type="submit"]') : null;
-    const cancelButton = modalInventarisElement ? modalInventarisElement.querySelector('button[data-bs-dismiss="modal"]') : null;
-    const originalButtonText = submitButton ? submitButton.innerHTML : 'Simpan Data';
 
-    // State Management untuk request ke server
+    // Token CSRF
+    const token = document.querySelector('meta[name="csrf-token"]').content;
+
+    // State
     let state = {
-        currentPage: 1,
+        page: 1,
         search: '',
-        perPage: 10,
-        sortBy: 'nama_barang', // Diubah: Kolom sorting default
-        sortDir: 'asc', 
-        searchTimeout: null // Untuk debouncing search
+        kondisi: 'all' // Untuk filter kondisi
     };
 
-    // --- 2. HELPER FUNCTIONS ---
-
-    /**
-     * Fungsi untuk mengaktifkan/menonaktifkan loading tombol
-     */
-    function setLoading(isLoading) {
-        if (!submitButton || !cancelButton) return;
-
-        if (isLoading) {
-            submitButton.disabled = true;
-            cancelButton.disabled = true;
-            submitButton.innerHTML = `
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                Menyimpan...`;
-        } else {
-            submitButton.disabled = false;
-            cancelButton.disabled = false;
-            submitButton.innerHTML = originalButtonText;
-        }
-    }
-
-    /**
-     * Mengubah Kondisi menjadi badge warna Bootstrap
-     */
-    function getKondisiBadge(kondisi) {
-        let className = 'bg-success'; // Baik
-        if (kondisi === 'Perlu Perbaikan') {
-            className = 'bg-warning text-dark';
-        } else if (kondisi === 'Rusak Berat') {
-            className = 'bg-danger';
-        }
-        return `<span class="badge ${className}">${kondisi}</span>`;
-    }
-
-    // --- 3. OPERASI READ & RENDERING (SERVER-SIDE) ---
-
-    /**
-     * Memuat data Inventaris dari API Laravel.
-     */
+    // --- 2. LOAD DATA ---
     async function loadInventaris() {
-        if (!tbody) return;
-        
-        // 6 Kolom: No, Nama Barang, Satuan, Kondisi, Stock, Aksi
-        let colCount = 6; 
-        tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center"><div class="spinner-border text-primary"></div></td></tr>`;
+        if (!tableBody) return;
 
-        // Ganti endpoint API
-        const url = `/pengurus/inventaris-data?page=${state.currentPage}&search=${state.search}&perPage=${state.perPage}&sortBy=${state.sortBy}&sortDir=${state.sortDir}`;
+        // Tampilkan Loading Spinner
+        let colCount = 6;
+        tableBody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-5"><div class="spinner-border text-success" role="status"></div></td></tr>`;
+
+        // Ambil nilai dari inputan
+        state.search = searchInput ? searchInput.value : '';
+        state.kondisi = kondisiFilter ? kondisiFilter.value : 'all';
+
+        // URL Endpoint
+        const url = `/pengurus/inventaris-data?page=${state.page}&search=${state.search}&kondisi=${state.kondisi}`;
 
         try {
             const res = await fetch(url);
-            if (!res.ok) throw new Error('Gagal memuat data dari server');
+            if (!res.ok) throw new Error('Gagal mengambil data');
+            const response = await res.json();
             
-            const response = await res.json(); // Data pagination Laravel
-            
-            // Render: response.data berisi data array, dan response.from adalah nomor awal
-            renderTable(response.data, response.from || 1);
-            renderPagination(response); 
-            
+            renderTable(response);
         } catch (err) {
-            tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center text-danger">${err.message}</td></tr>`;
-            paginationInfo.textContent = 'Gagal memuat data';
-            paginationContainer.innerHTML = '';
+            console.error(err);
+            tableBody.innerHTML = `<tr><td colspan="${colCount}" class="text-center text-danger py-4">Gagal memuat data.</td></tr>`;
         }
     }
-    
-    /**
-     * Fungsi untuk me-render isi tabel
-     */
-    function renderTable(data, startingNumber) {
-        tbody.innerHTML = ''; // Kosongkan tabel
-        let colCount = 6; // Sesuaikan jumlah kolom: No, Nama Barang, Satuan, Kondisi, Stock, Aksi
-        
-        if (data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center">Belum ada data barang inventaris.</td></tr>`;
+
+    // --- 3. RENDER TABEL ---
+    function renderTable(res) {
+        tableBody.innerHTML = '';
+        let no = res.from;
+
+        if (res.data.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted">Belum ada data barang inventaris.</td></tr>`;
+            paginationInfo.textContent = 'Menampilkan 0 data';
+            paginationContainer.innerHTML = '';
             return;
         }
 
-        data.forEach((item, i) => {
+        res.data.forEach(item => {
+            // Logic Warna Badge Kondisi
+            let badgeClass = 'bg-secondary';
+            if (item.kondisi === 'Baik') badgeClass = 'bg-success';
+            if (item.kondisi === 'Perlu Perbaikan') badgeClass = 'bg-warning text-dark';
+            if (item.kondisi === 'Rusak Berat') badgeClass = 'bg-danger';
+
             const row = `
                 <tr>
-                    <td class="text-center">${startingNumber + i}</td>
-                    <td class="text-center">${item.nama_barang}</td>
-                    <td class="text-center">${item.satuan}</td>
-                    <td class="text-center">${getKondisiBadge(item.kondisi)}</td>
-                    <td class="text-center fw-bold">${item.stock}</td>  
-                    <td class="text-center">
-                        <button class="btn btn-warning btn-sm" onclick="editBarangInventaris('${item.id_barang}')">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-danger btn-sm" onclick="hapusBarangInventaris('${item.id_barang}')">
-                            <i class="bi bi-trash"></i>
-                        </button>
+                    <td class="text-center fw-bold text-muted">${no++}</td>
+                    <td>
+                        <div class="fw-bold text-dark">${item.nama_barang}</div>
                     </td>
-                </tr>`;
-            tbody.insertAdjacentHTML('beforeend', row);
+                    <td class="text-center">${item.satuan}</td>
+                    <td class="text-center">
+                        <span class="badge rounded-pill ${badgeClass} px-3">${item.kondisi}</span>
+                    </td>
+                    <td class="text-center fw-bold text-dark">${item.stock}</td>
+                    <td class="text-center">
+                        <div class="d-flex justify-content-center gap-2">
+                            
+                            <button onclick="editBarang('${item.id_barang}')" class="btn btn-sm btn-warning text-white rounded-3 shadow-sm" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+
+                            <button onclick="hapusBarang('${item.id_barang}')" class="btn btn-sm btn-danger rounded-3 shadow-sm" title="Hapus">
+                                <i class="bi bi-trash"></i>
+                            </button>
+
+                        </div>
+                    </td>
+                </tr>
+            `;
+            tableBody.insertAdjacentHTML('beforeend', row);
         });
+
+        // Info Pagination
+        paginationInfo.textContent = `Menampilkan ${res.from} - ${res.to} dari ${res.total} data`;
+        renderPagination(res);
     }
 
-    /**
-     * Fungsi untuk me-render link pagination (mengikuti struktur Laravel)
-     */
-    function renderPagination(response) {
-        const { from, to, total, links } = response;
-
-        if (total === 0) {
-            paginationInfo.textContent = 'Menampilkan 0 dari 0 data';
-            paginationContainer.innerHTML = '';
-            return;
-        }
-
-        paginationInfo.textContent = `Menampilkan ${from} - ${to} dari ${total} data`;
-
-        let linksHtml = '<ul class="pagination justify-content-center mb-0">';
+    // --- 4. RENDER PAGINATION ---
+    function renderPagination(res) {
+        // Kosongkan container
+        paginationContainer.innerHTML = '';
         
-        links.forEach(link => {
-            let label = link.label;
-            if (label.includes('Previous')) label = '<';
-            else if (label.includes('Next')) label = '>';
-            
-            const disabled = !link.url ? 'disabled' : '';
-            const active = link.active ? 'active' : '';
+        let html = '<ul class="pagination pagination-sm mb-0 justify-content-end">';
 
-            linksHtml += `
-                <li class="page-item ${disabled} ${active}">
-                    <a class="page-link" href="${link.url || '#'}" data-page-url="${link.url}">${label}</a>
+        res.links.forEach(link => {
+            let activeClass = link.active ? 'active' : '';
+            let disabledClass = link.url ? '' : 'disabled';
+            
+            // Rapikan label panah
+            let label = link.label;
+            label = label.replace('&laquo; Previous', '<i class="bi bi-chevron-left"></i>');
+            label = label.replace('Next &raquo;', '<i class="bi bi-chevron-right"></i>');
+
+            // LOGIC WARNA:
+            // Jika aktif: Pakai 'bg-primary' (Biru Solid)
+            // Jika tidak: Pakai 'text-primary' (Tulisan Biru)
+            let colorClass = link.active ? 'bg-primary border-primary text-white' : 'text-primary';
+
+            html += `
+                <li class="page-item ${activeClass} ${disabledClass}">
+                    <button class="page-link ${colorClass}" 
+                            data-url="${link.url}" 
+                            ${!link.url ? 'disabled' : ''}>
+                        ${label}
+                    </button>
                 </li>
             `;
         });
 
-        linksHtml += '</ul>';
-        paginationContainer.innerHTML = linksHtml;
-    }
+        html += '</ul>';
+        paginationContainer.innerHTML = html;
 
+        // Event Listener (Tetap sama)
+        paginationContainer.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const url = this.dataset.url;
+                if (!url || url === 'null') return;
 
-    // --- 4. EVENT LISTENERS UTAMA ---
-
-    // 1. Submit form (CREATE / UPDATE)
-    if (form) {
-        form.addEventListener('submit', async e => {
-            e.preventDefault();
-            setLoading(true);
-
-            // Ganti ID field
-            const id = document.getElementById('id_barang').value; 
-            const formData = new FormData(form);
-            
-            // Konfigurasi endpoint
-            // Ganti Endpoint
-            const url = id ? `/pengurus/inventaris/${id}` : '/pengurus/inventaris'; 
-            // Tambahkan _method=PUT untuk UPDATE
-            if (id) formData.append('_method', 'PUT');
-
-            try {
-                const res = await fetch(url, {
-                    method: 'POST', 
-                    headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
-                    body: formData
-                });
-
-                const data = await res.json();
-                if (res.ok) {
-                    Swal.fire('Berhasil!', data.message, 'success');
-                    modalInventaris.hide();
-                    loadInventaris(); // Muat ulang data
-                } else {
-                    if (res.status === 422 && data.errors) {
-                        let errorMessages = Object.values(data.errors).map(err => err[0]).join('<br>');
-                        throw new Error(errorMessages);
+                try {
+                    const urlObj = new URL(url);
+                    const pageNum = urlObj.searchParams.get('page');
+                    if (pageNum) {
+                        state.page = pageNum;
+                        loadInventaris();
                     }
-                    throw new Error(data.message || 'Terjadi kesalahan pada server');
+                } catch (e) {
+                    const tempUrl = new URL(url, window.location.origin);
+                    const pageNum = tempUrl.searchParams.get('page');
+                    if (pageNum) {
+                        state.page = pageNum;
+                        loadInventaris();
+                    }
                 }
-            } catch (err) {
-                Swal.fire('Gagal', err.message, 'error');
-            } finally {
-                setLoading(false);
-            }
+            });
         });
     }
 
-    // 2. Search Bar (DEBOUNCING)
-    if (searchInput) {
-        // PERUBAHAN: Mengubah placeholder untuk menginformasikan bahwa pencarian hanya berdasarkan Nama Barang
-        searchInput.placeholder = 'Cari berdasarkan Nama Barang...';
+    // --- 5. HANDLE SUBMIT FORM (CREATE / UPDATE) ---
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        searchInput.addEventListener('input', function() {
-            clearTimeout(state.searchTimeout);
+        const idBarang = document.getElementById('id_barang').value;
+        const formData = new FormData(form);
+        
+        // Tentukan URL & Method
+        let url = '/pengurus/inventaris';
+        let method = 'POST';
 
-            state.searchTimeout = setTimeout(() => {
-                state.search = searchInput.value;
-                state.currentPage = 1; // Reset ke halaman 1
-                loadInventaris();
-            }, 300); // Tunggu 300ms setelah user berhenti mengetik
-        });
-    }
+        if (idBarang) {
+            url = `/pengurus/inventaris/${idBarang}`;
+            formData.append('_method', 'PUT'); // Method spoofing Laravel
+        }
 
-    // 3. Listener untuk Klik Pagination
-    if (paginationContainer) {
-        paginationContainer.addEventListener('click', e => {
-            e.preventDefault();
-            const target = e.target.closest('a.page-link'); 
-            
-            if (!target || target.parentElement.classList.contains('disabled') || target.parentElement.classList.contains('active')) {
-                return;
-            }
-
-            const url = target.getAttribute('data-page-url'); 
-            if (url) {
-                // Ekstrak nomor halaman dari URL
-                const urlObj = new URL(url);
-                const page = urlObj.searchParams.get('page'); 
-                
-                if (page) {
-                    state.currentPage = parseInt(page);
-                    loadInventaris();
-                }
-            }
-        });
-    }
-
-    // 4. Reset Modal saat ditutup
-    if (modalInventarisElement) {
-        modalInventarisElement.addEventListener('hidden.bs.modal', function () {
-            form.reset();
-            // Ganti ID field
-            document.getElementById('id_barang').value = ''; 
-            modalTitle.textContent = 'Tambah/Ubah Data Inventaris';
-            setLoading(false); 
-        });
-    }
-    
-    // 5. Listener untuk tombol "Tambah Barang Inventaris"
-    if (tambahButton) {
-        tambahButton.addEventListener('click', () => {
-            form.reset();
-            // Ganti ID field
-            document.getElementById('id_barang').value = ''; 
-            modalTitle.textContent = 'Tambah Barang Inventaris';
-        });
-    }
-
-    // --- 5. FUNGSI GLOBAL (EDIT/HAPUS) ---
-    
-    // Fungsi untuk memuat data edit ke modal
-    // Ganti nama fungsi
-    window.editBarangInventaris = async function(id_barang) {
         try {
-            // Ganti endpoint
-            const res = await fetch(`/pengurus/inventaris/${id_barang}`); 
-            if (!res.ok) throw new Error('Data barang inventaris tidak ditemukan');
+            const res = await fetch(url, {
+                method: method,
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+
             const data = await res.json();
 
-            // Isi form sesuai dengan kolom di Model BarangInventaris
+            if (res.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: data.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                modal.hide();
+                loadInventaris(); // Reload tabel
+            } else {
+                // Handle Validasi Error Laravel
+                if (res.status === 422) {
+                    let errorMessages = Object.values(data.errors).flat().join('\n');
+                    Swal.fire('Validasi Gagal', errorMessages, 'error');
+                } else {
+                    throw new Error(data.message || 'Terjadi kesalahan');
+                }
+            }
+        } catch (err) {
+            Swal.fire('Error', err.message, 'error');
+        }
+    });
+
+    // --- 6. GLOBAL FUNCTIONS (Untuk onclick di HTML) ---
+    
+    // Edit Barang
+    window.editBarang = async function(id) {
+        try {
+            const res = await fetch(`/pengurus/inventaris/${id}`);
+            if (!res.ok) throw new Error('Gagal mengambil data');
+            const data = await res.json();
+
+            // Isi Form
             document.getElementById('id_barang').value = data.id_barang;
             document.getElementById('nama_barang').value = data.nama_barang;
             document.getElementById('satuan').value = data.satuan;
             document.getElementById('kondisi').value = data.kondisi;
             document.getElementById('stock').value = data.stock;
-            
-            modalTitle.textContent = 'Ubah Data Inventaris';
-            modalInventaris.show();
-        } catch (err) {
-            Swal.fire('Gagal', err.message, 'error');
-        }
-    }
 
-    // Fungsi untuk menghapus data
-    // Ganti nama fungsi
-    window.hapusBarangInventaris = async function(id_barang) {
-        const confirmResult = await Swal.fire({
-            title: 'Yakin ingin menghapus?',
-            text: 'Data barang inventaris akan dihapus permanen!',
+            // Ubah Judul Modal
+            modalTitle.textContent = 'Ubah Barang Inventaris';
+            modal.show();
+
+        } catch (err) {
+            Swal.fire('Error', err.message, 'error');
+        }
+    };
+
+    // Hapus Barang
+    window.hapusBarang = async function(id) {
+        const confirm = await Swal.fire({
+            title: 'Hapus Barang?',
+            text: "Data yang dihapus tidak dapat dikembalikan!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
+            confirmButtonColor: '#dc3545',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Ya, hapus',
+            confirmButtonText: 'Ya, Hapus!',
             cancelButtonText: 'Batal'
         });
 
-        if (!confirmResult.isConfirmed) return;
+        if (!confirm.isConfirmed) return;
 
         try {
             const formData = new FormData();
             formData.append('_method', 'DELETE');
 
-            // Ganti endpoint
-            const res = await fetch(`/pengurus/inventaris/${id_barang}`, {
+            const res = await fetch(`/pengurus/inventaris/${id}`, {
                 method: 'POST',
-                headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json'
+                },
                 body: formData
             });
 
             const data = await res.json();
+
             if (res.ok) {
-                Swal.fire('Terhapus!', data.message, 'success');
-                loadInventaris(); // Muat ulang data
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: data.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                loadInventaris();
             } else {
-                throw new Error(data.message || 'Terjadi kesalahan saat menghapus');
+                throw new Error(data.message);
             }
         } catch (err) {
-            Swal.fire('Gagal', err.message, 'error');
+            Swal.fire('Error', err.message, 'error');
         }
-    }
+    };
 
-    // --- 6. INISIALISASI ---
-    loadInventaris(); // Muat data pertama kali
+    // --- 7. EVENT LISTENERS LAINNYA ---
+    
+    // Reset Modal saat ditutup
+    modalElement.addEventListener('hidden.bs.modal', function () {
+        form.reset();
+        document.getElementById('id_barang').value = '';
+        modalTitle.textContent = 'Barang Inventaris';
+    });
+
+    // Search & Filter
+    let searchTimeout; // Variabel untuk menampung timer
+
+    if(searchInput) {
+        searchInput.addEventListener('keyup', () => {
+            // Hapus timer sebelumnya jika user masih mengetik
+            clearTimeout(searchTimeout);
+
+            // Buat timer baru, tunggu 500ms (setengah detik) baru request
+            searchTimeout = setTimeout(() => {
+                state.page = 1; // Reset ke halaman 1
+                loadInventaris();
+            }, 500);
+        });
+    }
+    
+    if(kondisiFilter) {
+        kondisiFilter.addEventListener('change', () => {
+            state.page = 1;
+            loadInventaris();
+        });
+    }
+    // Load Pertama Kali
+    loadInventaris();
 });

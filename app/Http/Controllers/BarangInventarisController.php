@@ -13,30 +13,44 @@ class BarangInventarisController extends Controller
     // Dipanggil oleh: GET /inventaris
     public function index()
     {
-        // Pastikan nama view Blade ini sesuai dengan yang Anda gunakan
-        return view('barang-inventaris'); 
+        // Menghitung jumlah jenis barang yang terdaftar
+        $totalBarang = BarangInventaris::count();
+        
+        // Jika ingin menghitung total stok fisik, gunakan: 
+        // $totalStok = BarangInventaris::sum('stock');
+
+        return view('barang-inventaris', compact('totalBarang'));
     }
 
     // Dipanggil oleh: GET /inventaris-data (untuk tabel, search, sort, pagination)
     public function data(Request $request)
     {
         $search = $request->get('search');
+        $kondisi = $request->get('kondisi'); // <--- 1. Tangkap parameter kondisi
+        
         $sortBy = $request->get('sortBy', 'nama_barang'); 
         $sortDir = $request->get('sortDir', 'asc'); 
         $perPage = $request->get('perPage', 10);
         
         $query = BarangInventaris::query();
 
-        // Logika Pencarian (Search)
-        if ($search) {
-            // HANYA MENCARI BERDASARKAN KOLOM NAMA BARANG SAJA
-            $query->where('nama_barang', 'LIKE', "%{$search}%");
+        // --- A. Logika Filter Kondisi (INI YANG SEBELUMNYA HILANG) ---
+        // Jika ada filter kondisi DAN nilainya bukan 'all'
+        if ($kondisi && $kondisi !== 'all') {
+            $query->where('kondisi', $kondisi);
         }
 
-        // Logika Pengurutan (Sort)
+        // --- B. Logika Pencarian (Search) ---
+        if ($search) {
+            // Menggunakan whereRaw dengan LOWER() agar 'AC' == 'ac'
+            // Kita ubah nama_barang jadi huruf kecil, dan input search juga jadi huruf kecil
+            $query->whereRaw('LOWER(nama_barang) LIKE ?', ['%' . strtolower($search) . '%']);
+        }
+
+        // --- C. Logika Pengurutan (Sort) ---
         $query->orderBy($sortBy, $sortDir);
 
-        // Lakukan Pagination dan kembalikan data dalam format JSON
+        // --- D. Pagination ---
         $data = $query->paginate($perPage);
 
         return response()->json($data);

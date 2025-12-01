@@ -1,8 +1,11 @@
 document.addEventListener("DOMContentLoaded", function () {
+    // Cek apakah elemen ada sebelum dijalankan (karena JS ini diload di index)
+    const tableBody = document.querySelector("#tabelartikel tbody");
+    if (!tableBody) return; // Stop jika tidak ada tabel (misal di halaman lain)
+
     const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     const statusFilter = document.getElementById("statusFilter");
     const searchInput = document.getElementById("searchInput");
-    const tableBody = document.querySelector("#tabelartikel tbody");
     const paginationLinks = document.getElementById("paginationLinks");
     const paginationInfo = document.getElementById("paginationInfo");
 
@@ -11,32 +14,24 @@ document.addEventListener("DOMContentLoaded", function () {
 
     loadArtikel();
 
-    // --- FUNGSI FORMATTER TANGGAL (BARU) ---
-    // Mengubah "2025-11-30" menjadi "30 Nov 2025" atau "06 Des 2025"
+    // --- FORMATTER TANGGAL ---
     function formatTanggalIndo(dateString) {
         if (!dateString) return '-';
-        
         const date = new Date(dateString);
-        
-        // Cek validitas tanggal
         if (isNaN(date.getTime())) return '-'; 
-
-        // Format ke Indonesia: dd MMM yyyy (contoh: 06 Des 2025)
         return new Intl.DateTimeFormat('id-ID', {
-            day: '2-digit',
-            month: 'short', // short = Des, long = Desember
-            year: 'numeric'
+            day: '2-digit', month: 'short', year: 'numeric'
         }).format(date);
     }
 
+    // --- LOAD DATA ---
     function loadArtikel(page = 1) {
         const status = statusFilter ? statusFilter.value : 'all';
         const search = searchInput ? searchInput.value : '';
 
-        if(tableBody) {
-             let colCount = tableBody.closest('table').querySelector('thead tr').cells.length;
-             tableBody.innerHTML = `<tr><td colspan="${colCount}" class="text-center"><div class="spinner-border text-primary"></div></td></tr>`;
-        }
+        // Loading State
+        let colCount = tableBody.closest('table').querySelector('thead tr').cells.length;
+        tableBody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-5"><div class="spinner-border text-success" role="status"></div></td></tr>`;
 
         fetch(`/pengurus/artikel-data?page=${page}&status=${status}&search=${search}`)
             .then(res => res.json())
@@ -44,45 +39,67 @@ document.addEventListener("DOMContentLoaded", function () {
             .catch(err => console.error(err));
     }
 
+    // --- RENDER TABEL ---
     function renderData(res) {
+        const tableBody = document.querySelector("#tabelartikel tbody"); // Pastikan selector ini
+        const paginationInfo = document.getElementById("paginationInfo");
+        const paginationLinks = document.getElementById("paginationLinks");
+
         tableBody.innerHTML = "";
         let no = res.from;
 
         if (res.data.length === 0) {
             let colCount = tableBody.closest('table').querySelector('thead tr').cells.length;
-            tableBody.innerHTML = `<tr><td colspan="${colCount}" class="text-center">Data tidak ditemukan.</td></tr>`;
-            paginationInfo.textContent = "Menampilkan 0 data";
+            tableBody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-5 text-muted">Belum ada data artikel.</td></tr>`;
+            paginationInfo.textContent = "";
             paginationLinks.innerHTML = "";
             return;
         }
 
         res.data.forEach(item => {
+            // Badge Status
             let statusBadge = item.status_artikel === 'published' 
-                ? '<span class="badge bg-success">Published</span>' 
-                : '<span class="badge bg-secondary">Draft</span>';
+                ? '<span class="badge rounded-pill bg-success px-3">Published</span>' 
+                : '<span class="badge rounded-pill bg-secondary px-3">Draft</span>';
+            
+            // Foto Default
+            let foto = item.foto_url 
+                ? `<img src="${item.foto_url}" class="rounded-3 shadow-sm border" style="width:50px; height:50px; object-fit: cover;">`
+                : `<div class="rounded-3 bg-light d-flex align-items-center justify-content-center border" style="width:50px; height:50px;"><i class="bi bi-image text-muted"></i></div>`;
 
+            // --- PERUBAHAN DI SINI (STYLE BUTTON) ---
             tableBody.innerHTML += `
                 <tr>
-                    <td class="text-center">${no++}</td>
-                    <td class="text-center">
-                        <img src="${item.foto_url}" class="rounded shadow-sm" style="width:50px; height:50px; object-fit: cover;" alt="Foto">
+                    <td class="text-center fw-bold text-muted">${no++}</td>
+                    <td class="text-center">${foto}</td>
+                    <td>
+                        <div class="fw-bold text-dark">${item.judul_artikel}</div>
+                        <small class="text-muted d-block text-truncate" style="max-width: 200px;">${item.penulis_artikel}</small>
                     </td>
-                    <td class="text-center">${item.judul_artikel}</td>
-                    <td class="text-center">${item.penulis_artikel}</td>
+                    <td>${item.penulis_artikel}</td>
                     <td class="text-center">${statusBadge}</td>
+                    <td class="text-center small">${formatTanggalIndo(item.tanggal_terbit_artikel)}</td>
                     
-                    <td class="text-center">${formatTanggalIndo(item.tanggal_terbit_artikel)}</td>
-                    
-                    <td class="text-center aksi-col">            
-                        <button onclick="lihatDetailArtikel('${item.id_artikel}')" class="btn btn-info btn-sm text-white me-1">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                        <a href="/pengurus/artikel/${item.id_artikel}/edit" class="btn btn-warning btn-sm me-1">
-                            <i class="bi bi-pencil-square"></i>
-                        </a>
-                        <button onclick="hapusArtikel('${item.id_artikel}')" class="btn btn-danger btn-sm">
-                            <i class="bi bi-trash"></i>
-                        </button>
+                    <td class="text-center">            
+                        <div class="d-flex justify-content-center gap-2"> <button onclick="lihatDetailArtikel('${item.id_artikel}')" 
+                                class="btn btn-sm btn-info text-white rounded-3 shadow-sm" 
+                                title="Lihat Detail">
+                                <i class="bi bi-eye"></i>
+                            </button>
+
+                            <a href="/pengurus/artikel/${item.id_artikel}/edit" 
+                                class="btn btn-sm btn-warning text-white rounded-3 shadow-sm" 
+                                title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+
+                            <button onclick="hapusArtikel('${item.id_artikel}')" 
+                                class="btn btn-sm btn-danger rounded-3 shadow-sm" 
+                                title="Hapus">
+                                <i class="bi bi-trash"></i>
+                            </button>
+
+                        </div>
                     </td>
                 </tr>`;
         });
@@ -91,14 +108,14 @@ document.addEventListener("DOMContentLoaded", function () {
         renderPagination(res);
     }
 
-    // ... (fungsi renderPagination tetap sama) ...
+    // --- RENDER PAGINATION ---
     function renderPagination(res) {
-        let html = `<ul class="pagination mb-0">`;
+        let html = `<ul class="pagination pagination-sm mb-0">`;
         if (res.prev_page_url) {
-            html += `<li class="page-item"><button class="page-link" data-page="${res.current_page - 1}">Sebelumnya</button></li>`;
+            html += `<li class="page-item"><button class="page-link text-success" data-page="${res.current_page - 1}"><i class="bi bi-chevron-left"></i></button></li>`;
         }
         if (res.next_page_url) {
-            html += `<li class="page-item"><button class="page-link" data-page="${res.current_page + 1}">Berikutnya</button></li>`;
+            html += `<li class="page-item"><button class="page-link text-success" data-page="${res.current_page + 1}"><i class="bi bi-chevron-right"></i></button></li>`;
         }
         html += `</ul>`;
         paginationLinks.innerHTML = html;
@@ -110,8 +127,9 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // --- Window Functions ---
+    // --- FUNGSI GLOBAL (window) ---
 
+    // 1. Lihat Detail
     window.lihatDetailArtikel = function(id) {
         fetch(`/pengurus/artikel-data/${id}`)
             .then(res => {
@@ -121,29 +139,34 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(data => {
                 document.getElementById("detailJudulArtikel").innerText = data.judul_artikel;
                 document.getElementById("d_penulis").innerText = data.penulis_artikel;
-                document.getElementById("d_status_artikel").innerText = data.status_artikel;
-                
-                // MENGGUNAKAN FORMATTER BARU DI MODAL JUGA
+                document.getElementById("d_status_artikel").innerText = data.status_artikel === 'published' ? 'Published' : 'Draft';
                 document.getElementById("d_tanggal_terbit").innerText = formatTanggalIndo(data.tanggal_terbit_artikel);
+                document.getElementById("d_isi").innerHTML = data.isi_artikel; // Render HTML dari Quill
                 
-                document.getElementById("d_isi").innerHTML = data.isi_artikel;
-                document.getElementById("detailFotoArtikel").src = data.foto_url;
+                // Handle Foto Detail
+                const imgEl = document.getElementById("detailFotoArtikel");
+                if(data.foto_url) {
+                    imgEl.src = data.foto_url;
+                    imgEl.classList.remove('d-none');
+                } else {
+                    imgEl.classList.add('d-none');
+                }
 
                 modalDetail.show();
             })
             .catch(err => Swal.fire('Error', err.message, 'error'));
     }
 
+    // 2. Hapus Artikel
     window.hapusArtikel = async function(id_artikel) {
-        // ... (Logika hapus tetap sama) ...
         const confirm = await Swal.fire({
-            title: 'Yakin ingin menghapus?',
-            text: 'Data artikel akan dihapus permanen!',
+            title: 'Hapus Artikel?',
+            text: "Data yang dihapus tidak dapat dikembalikan!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
+            confirmButtonColor: '#dc3545',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Ya, hapus',
+            confirmButtonText: 'Ya, Hapus!',
             cancelButtonText: 'Batal'
         });
 
@@ -164,7 +187,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const data = await res.json();
             if (res.ok) {
-                Swal.fire('Terhapus!', data.message, 'success');
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: data.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
                 loadArtikel(); 
             } else {
                 throw new Error(data.message || 'Terjadi kesalahan.');
@@ -174,6 +203,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     };
 
+    // Event Listeners
     if(statusFilter) statusFilter.addEventListener("change", () => loadArtikel());
     if(searchInput) searchInput.addEventListener("keyup", () => loadArtikel());
 });

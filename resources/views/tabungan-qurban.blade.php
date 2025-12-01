@@ -1,66 +1,78 @@
 @extends('layouts.app')
 
-@section('title', 'Data Tabungan Qurban')
-
-@push('styles')
-    <style>
-        /* Custom Badge Colors */
-        .badge.bg-danger { background-color: #dc3545 !important; }
-        .badge.bg-success { background-color: #198754 !important; }
-        .badge.bg-warning { background-color: #ffc107 !important; color: #000 !important; }
-        .badge.bg-primary { background-color: #0d6efd !important; }
-        .badge.bg-secondary { background-color: #6c757d !important; }
-        .badge.bg-info { background-color: #0dcaf0 !important; color: #000 !important; }
-        
-        /* Modal Scroll & Z-Index Fixes */
-        #modalTabungan .modal-dialog, #modalDetailTabungan .modal-dialog { max-height: 90vh; }
-        #modalTabungan .modal-body, #modalDetailTabungan .modal-body { overflow-y: auto; max-height: 75vh; }
-        
-        /* Ensure modals stack correctly */
-        #modalTambahSetoran { z-index: 2060; }
-        #modalDetailTabungan { z-index: 2050; }
-        #modalTabungan { z-index: 2050; }
-        #modalHargaHewan { z-index: 2050; }
-        #modalContactJamaah { z-index: 2060; }
-
-        /* --- PERBAIKAN DI SINI --- */
-        /* Paksa SweetAlert agar selalu muncul di atas Modal Bootstrap yang z-index nya tinggi */
-        div:where(.swal2-container) {
-            z-index: 9999 !important;
-        }
-
-        /* Dashboard-like Cards inside Modal */
-        .card-stat { background-color: #f8f9fa; border-radius: .5rem; padding: 1rem; text-align: center; border: 1px solid #dee2e6; }
-        .card-stat h5 { font-size: 0.9rem; color: #6c757d; margin-bottom: .5rem; }
-        .card-stat .amount { font-size: 1.3rem; font-weight: 700; }
-        
-        /* Styling for Dynamic Rows */
-        .hewan-row { background: #fdfdfd; padding: 10px; border: 1px solid #eee; border-radius: 6px; margin-bottom: 8px; }
-        .hewan-row:nth-child(even) { background: #f9f9f9; }
-    </style>
-@endpush
+@section('title', 'Tabungan Qurban')
 
 @section('content')
+<meta name="csrf-token" content="{{ csrf_token() }}">
 
-    {{-- Data Helper untuk JS (Hidden) --}}
-    <textarea id="jamaahListJson" style="display:none;">@json($jamaahList)</textarea>
-    <textarea id="hewanListJson" style="display:none;">@json($hewanList)</textarea>
+{{-- Data Helper untuk JS (Hidden) --}}
+<textarea id="jamaahListJson" style="display:none;">@json($jamaahList)</textarea>
+<textarea id="hewanListJson" style="display:none;">@json($hewanList)</textarea>
 
-    <div class="container-fluid p-4">
+<div class="container-fluid p-4">
 
-        {{-- ========================================== --}}
-        {{-- SECTION 1: FILTER & EXPORT PDF --}}
-        {{-- ========================================== --}}
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-file-earmark-pdf me-2"></i>Laporan & Filter</h5>
+    {{-- ========================================== --}}
+    {{-- SECTION: HEADER & TOOLBAR --}}
+    {{-- ========================================== --}}
+    <div class="row g-3 mb-4 align-items-center">
+        
+        {{-- KIRI: Search & Filter --}}
+        <div class="col-12 col-xl-8">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                {{-- Search Bar --}}
+                <div class="input-group" style="width: 280px;">
+                    <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-3"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="searchNama" class="form-control border-start-0 rounded-end-pill" placeholder="Cari jamaah..." onkeyup="loadTableDelay()">
+                </div>
+
+                {{-- Filter Status --}}
+                <select class="form-select rounded-pill ps-3 shadow-sm border-0" id="filterStatusTabungan" onchange="loadTable()" style="width: auto; min-width: 160px; background-color: #fff;">
+                    <option value="semua">Status: Semua</option>
+                    <option value="menunggu">⏳ Menunggu</option>
+                    <option value="disetujui">✅ Disetujui</option>
+                    <option value="ditolak">❌ Ditolak</option>
+                </select>
+                
+                {{-- Filter Keuangan --}}
+                <select class="form-select rounded-pill ps-3 shadow-sm border-0" id="filterStatusSetoran" onchange="loadTable()" style="width: auto; min-width: 190px; background-color: #fff;">
+                    <option value="semua">Keuangan: Semua</option>
+                    <option value="lunas">🟢 Lunas</option>
+                    <option value="aktif">🔵 Aktif / Lancar</option>
+                    <option value="menunggak">🔴 Menunggak</option>
+                </select>
+
+                {{-- Tombol Laporan --}}
+                <button class="btn btn-white border rounded-pill shadow-sm px-3 text-secondary bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapsePdf">
+                    <i class="bi bi-file-earmark-pdf"></i> Laporan
+                </button>
             </div>
-            <div class="card-body">
+        </div>
+
+        {{-- KANAN: Tombol Aksi (Harga & Tambah) --}}
+        <div class="col-12 col-xl-4 text-xl-end text-start">
+            <div class="d-flex gap-2 justify-content-xl-end justify-content-start">
+                <button class="btn btn-warning text-white rounded-pill px-4 shadow-sm fw-bold" data-bs-toggle="modal" data-bs-target="#modalHargaHewan" onclick="loadListHarga()">
+                    <i class="bi bi-tag-fill me-2"></i> Harga Hewan
+                </button>
+                <button class="btn btn-gradient-green rounded-pill px-4 shadow-sm" onclick="openModalCreate()">
+                    <i class="bi bi-plus-lg me-2"></i> Buka Tabungan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ========================================== --}}
+    {{-- SECTION: PANEL EXPORT PDF (Collapsible) --}}
+    {{-- ========================================== --}}
+    <div class="collapse mb-4" id="collapsePdf">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-success mb-3"><i class="bi bi-printer me-2"></i>Cetak Laporan</h6>
                 <form action="{{ route('pengurus.tabungan-qurban.cetakPdf') }}" method="GET" target="_blank">
-                    <div class="row g-3 align-items-end mb-3">
+                    <div class="row g-3 align-items-end">
                         <div class="col-md-3">
-                            <label for="filter-periode" class="form-label small fw-bold">Periode Laporan</label>
-                            <select id="filter-periode" name="periode" class="form-select" onchange="togglePdfFilter()">
+                            <label class="form-label small fw-bold text-muted">Periode</label>
+                            <select id="filter-periode" name="periode" class="form-select rounded-pill-input" onchange="togglePdfFilter()">
                                 <option value="semua" selected>Semua Data</option>
                                 <option value="per_bulan">Per Bulan</option>
                                 <option value="per_tahun">Per Tahun</option>
@@ -68,22 +80,20 @@
                             </select>
                         </div>
 
-                        {{-- Filter Bulanan --}}
+                        {{-- Filter Options (Hidden by default) --}}
                         <div class="col-md-4" id="filter-bulanan" style="display: none;">
                             <div class="row g-2">
                                 <div class="col-6">
-                                    <label class="form-label small">Bulan</label>
-                                    <select name="bulan" class="form-select">
+                                    <label class="form-label small fw-bold text-muted">Bulan</label>
+                                    <select name="bulan" class="form-select rounded-pill-input">
                                         @for ($i = 1; $i <= 12; $i++)
-                                            <option value="{{ $i }}" {{ $i == date('m') ? 'selected' : '' }}>
-                                                {{ \Carbon\Carbon::create(null, $i)->translatedFormat('F') }}
-                                            </option>
+                                            <option value="{{ $i }}" {{ $i == date('m') ? 'selected' : '' }}>{{ \Carbon\Carbon::create(null, $i)->translatedFormat('F') }}</option>
                                         @endfor
                                     </select>
                                 </div>
                                 <div class="col-6">
-                                    <label class="form-label small">Tahun</label>
-                                    <select name="tahun_bulanan" class="form-select">
+                                    <label class="form-label small fw-bold text-muted">Tahun</label>
+                                    <select name="tahun_bulanan" class="form-select rounded-pill-input">
                                         @for ($i = date('Y'); $i >= date('Y') - 5; $i--)
                                             <option value="{{ $i }}">{{ $i }}</option>
                                         @endfor
@@ -92,430 +102,445 @@
                             </div>
                         </div>
 
-                        {{-- Filter Tahunan --}}
                         <div class="col-md-3" id="filter-tahunan" style="display: none;">
-                            <label class="form-label small">Tahun</label>
-                            <select name="tahun_tahunan" class="form-select">
+                            <label class="form-label small fw-bold text-muted">Tahun</label>
+                            <select name="tahun_tahunan" class="form-select rounded-pill-input">
                                 @for ($i = date('Y'); $i >= date('Y') - 5; $i--)
                                     <option value="{{ $i }}">{{ $i }}</option>
                                 @endfor
                             </select>
                         </div>
 
-                        {{-- Filter Rentang --}}
                         <div class="col-md-4" id="filter-rentang" style="display: none;">
                             <div class="row g-2">
                                 <div class="col-6">
-                                    <label class="form-label small">Mulai</label>
-                                    <input type="date" class="form-control" name="tanggal_mulai" value="{{ date('Y-m-01') }}">
+                                    <label class="form-label small fw-bold text-muted">Mulai</label>
+                                    <input type="date" class="form-control rounded-pill-input" name="tanggal_mulai" value="{{ date('Y-m-01') }}">
                                 </div>
                                 <div class="col-6">
-                                    <label class="form-label small">Akhir</label>
-                                    <input type="date" class="form-control" name="tanggal_akhir" value="{{ date('Y-m-d') }}">
+                                    <label class="form-label small fw-bold text-muted">Akhir</label>
+                                    <input type="date" class="form-control rounded-pill-input" name="tanggal_akhir" value="{{ date('Y-m-d') }}">
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-md-2">
-                            <button type="submit" class="btn btn-danger w-100 fw-bold">
-                                <i class="bi bi-download me-1"></i> Export PDF
+                            <button type="submit" class="btn btn-danger w-100 rounded-pill shadow-sm fw-bold">
+                                <i class="bi bi-file-pdf me-1"></i> Download PDF
                             </button>
                         </div>
                     </div>
                 </form>
             </div>
         </div>
+    </div>
 
-        {{-- ========================================== --}}
-        {{-- SECTION 2: TOOLBAR & SEARCH --}}
-        {{-- ========================================== --}}
-        <div class="row g-3 mb-4">
-            {{-- Search & Action Buttons --}}
-            <div class="col-12">
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                    
-                    {{-- Search Input --}}
-                    <div class="input-group shadow-sm" style="max-width: 400px; min-width: 250px; flex-grow: 1;">
-                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
-                        <input type="text" id="searchNama" class="form-control border-start-0 ps-0" placeholder="Cari nama jamaah..." onkeyup="loadTableDelay()">
-                    </div>
-
-                    {{-- Action Buttons --}}
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-warning shadow-sm fw-bold text-dark" data-bs-toggle="modal" data-bs-target="#modalHargaHewan" onclick="loadListHarga()">
-                            <i class="bi bi-tag-fill me-1"></i> Harga Hewan
-                        </button>
-                        <button class="btn btn-primary shadow-sm fw-bold" onclick="openModalCreate()">
-                            <i class="bi bi-plus-circle me-1"></i> Buka Tabungan
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Filter Bar --}}
-            <div class="col-12">
-                <div class="card border-0 shadow-sm bg-light">
-                    <div class="card-body p-2 d-flex flex-wrap align-items-center gap-2">
-                        <span class="text-muted small fw-bold text-uppercase ms-1 me-2">
-                            <i class="bi bi-funnel-fill me-1"></i>Filter Data:
-                        </span>
-
-                        {{-- Filter Status Tabungan --}}
-                        <select class="form-select form-select-sm shadow-sm border-0" id="filterStatusTabungan" onchange="loadTable()" style="width: auto; cursor: pointer;">
-                            <option value="semua">Status Tabungan (Semua)</option>
-                            <option value="menunggu">⏳ Menunggu Approval</option>
-                            <option value="disetujui">✅ Disetujui</option>
-                            <option value="ditolak">❌ Ditolak</option>
-                        </select>
-
-                        {{-- Filter Status Setoran --}}
-                        <select class="form-select form-select-sm shadow-sm border-0" id="filterStatusSetoran" onchange="loadTable()" style="width: auto; cursor: pointer;">
-                            <option value="semua">Status Keuangan (Semua)</option>
-                            <option value="lunas">🟢 Lunas</option>
-                            <option value="aktif">🔵 Aktif / Lancar</option>
-                            <option value="menunggak">🔴 Menunggak</option>
-                        </select>
-
-                        {{-- Filter Tipe Tabungan --}}
-                        <select class="form-select form-select-sm shadow-sm border-0" id="filterTipeTabungan" onchange="loadTable()" style="width: auto; cursor: pointer;">
-                            <option value="semua">Tipe (Semua)</option>
-                            <option value="cicilan">📅 Cicilan Rutin</option>
-                            <option value="bebas">💰 Tabungan Bebas</option>
-                        </select>
-                        
-                        <button class="btn btn-sm btn-link text-decoration-none text-muted" onclick="location.reload()" title="Reset Semua Filter">
-                            <i class="bi bi-arrow-counterclockwise"></i> Reset
-                        </button>
-                    </div>
-                </div>
+    {{-- ========================================== --}}
+    {{-- SECTION: TABLE --}}
+    {{-- ========================================== --}}
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="tabelTabungan">
+                    <thead class="bg-light">
+                        <tr style="height: 50px;">
+                            <th class="text-center ps-4 rounded-top-left" width="5%">No</th>
+                            <th width="20%">Jamaah</th>
+                            <th width="25%">Rincian Hewan</th>
+                            <th class="text-end" width="15%">Target dan Terkumpul</th>
+                            <th class="text-center" width="10%">Tipe</th>
+                            <th class="text-center" width="10%">Approval</th>
+                            <th class="text-center" width="10%">Status Bayar</th>
+                            <th class="text-center pe-4 rounded-top-right" width="15%">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white" id="tableBody">
+                        {{-- Data Loaded via JS --}}
+                    </tbody>
+                </table>
             </div>
         </div>
-
-        {{-- ========================================== --}}
-        {{-- SECTION 3: TABEL UTAMA --}}
-        {{-- ========================================== --}}
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" id="tabelTabungan">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="text-center" width="5%">No</th>
-                                <th width="20%">Jamaah</th>
-                                <th width="25%">Rincian Hewan</th>
-                                <th class="text-end" width="15%">Keuangan</th>
-                                <th class="text-center" width="10%">Tipe</th>
-                                <th class="text-center" width="10%">Approval</th>
-                                <th class="text-center" width="10%">Status Bayar</th>
-                                <th class="text-center" width="15%">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody">
-                            {{-- Data loaded via JS --}}
-                        </tbody>
-                    </table>
-                </div>
-                <div class="d-flex justify-content-between align-items-center p-3 border-top">
-                    <span id="paginationInfo" class="text-muted small"></span>
-                    <nav id="paginationLinks"></nav>
-                </div>
+        <div class="card-footer bg-white border-0 py-3">
+            <div id="paginationContainer" class="d-flex justify-content-between align-items-center">
+                <span id="paginationInfo" class="text-muted small ms-2"></span>
+                <nav id="paginationLinks" class="me-2"></nav>
             </div>
         </div>
     </div>
 
-    {{-- ========================================== --}}
-    {{-- MODAL 1: KELOLA HARGA HEWAN --}}
-    {{-- ========================================== --}}
-    <div class="modal fade" id="modalHargaHewan" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title fw-bold" id="modalHargaTitle"><i class="bi bi-tag-fill"></i> Kelola Harga Hewan Qurban</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="alertHargaContainer"></div>
-                    <form id="formHargaHewan" class="row g-2 mb-4 p-3 bg-light rounded border">
-                        <input type="hidden" name="id_hewan_qurban" id="input_id_hewan_qurban">
-                        
-                        <div class="col-md-3">
-                            <label class="small fw-bold">Jenis</label>
-                            <select name="nama_hewan" class="form-select" required>
-                                <option value="sapi">Sapi</option>
-                                <option value="kambing">Kambing</option>
-                                <option value="domba">Domba</option>
-                                <option value="kerbau">Kerbau</option>
-                                <option value="unta">Unta</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="small fw-bold">Kategori</label>
-                            <select name="kategori_hewan" class="form-select" required>
-                                <option value="premium">Premium</option>
-                                <option value="reguler">Reguler</option>
-                                <option value="basic">Basic</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="small fw-bold">Harga (Rp)</label>
-                            <input type="number" name="harga_hewan" class="form-control" placeholder="0" required>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary w-100" id="btnSimpanHarga">Simpan</button>
-                        </div>
-                    </form>
-                    
-                    <h6 class="fw-bold">Daftar Harga Saat Ini</h6>
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered table-striped">
-                            <thead class="table-light"><tr><th>Jenis</th><th>Kategori</th><th>Harga</th><th class="text-center">Aksi</th></tr></thead>
-                            <tbody id="listHargaBody">
-                                {{-- Loaded via AJAX --}}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+</div>
 
-    {{-- ========================================== --}}
-    {{-- MODAL 2: TAMBAH / EDIT TABUNGAN --}}
-    {{-- ========================================== --}}
-    <div class="modal fade" id="modalTabungan" tabindex="-1" data-bs-backdrop="static">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
+{{-- ============================================================== --}}
+{{-- MODAL 1: CREATE / EDIT TABUNGAN (Style Public / Green) --}}
+{{-- ============================================================== --}}
+<div class="modal fade" id="modalTabungan" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg modal-rounded">
+            
+            <div class="modal-header border-0 pb-0 pt-4 px-4 bg-white">
+                <div>
+                    <h5 class="modal-title fw-bold text-dark" id="modalTabunganTitle">Form Tabungan Qurban</h5>
+                    <p class="text-muted small mb-0">Atur kesepakatan hewan dan metode pembayaran</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body p-4 bg-white">
                 <form id="formTabungan">
-                    <div class="modal-header">
-                        <h5 class="modal-title fw-bold" id="modalTabunganTitle">Form Tabungan Qurban</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" id="id_tabungan_hewan_qurban" name="id_tabungan_hewan_qurban">
+                    <input type="hidden" id="id_tabungan_hewan_qurban" name="id_tabungan_hewan_qurban">
+                    
+                    {{-- WRAPPER HIJAU --}}
+                    <div class="donation-card-wrapper">
+                        
+                        {{-- Pilih Jamaah --}}
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Nama Jamaah <span class="text-danger">*</span></label>
-                            <select id="id_jamaah" name="id_jamaah" class="form-select" required>
+                            <label class="form-label fw-bold text-success small text-uppercase ls-1">Data Jamaah</label>
+                            <select id="id_jamaah" name="id_jamaah" class="form-select rounded-pill-input" required>
                                 <option value="">-- Pilih Jamaah --</option>
                                 @foreach ($jamaahList as $j)
                                     <option value="{{ $j->id }}">{{ $j->name }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <hr>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label fw-bold mb-0">Rincian Hewan Qurban</label>
-                            <button type="button" class="btn btn-sm btn-outline-success" onclick="addHewanRow()">
-                                <i class="bi bi-plus-lg"></i> Tambah Hewan
-                            </button>
-                        </div>
-                        <div id="hewanContainer" class="mb-3"></div>
-                        <div class="row mb-3">
-                            <div class="col-md-12 text-end">
-                                <h6 class="fw-bold mb-1">Total Harga Kesepakatan (Deal):</h6>
-                                <div class="input-group">
-                                    <span class="input-group-text">Rp</span>
-                                    <input type="number" name="total_harga_hewan_qurban" id="total_harga_input" class="form-control text-end fw-bold" required>
-                                </div>
-                                <small class="text-muted" id="displayTotalTarget">Estimasi Sistem: Rp 0</small>
+
+                        {{-- Rincian Hewan (Dynamic Rows) --}}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label fw-bold text-success small text-uppercase ls-1 mb-0">Rincian Hewan</label>
+                                <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="addHewanRow()">
+                                    <i class="bi bi-plus-lg me-1"></i> Tambah
+                                </button>
                             </div>
+                            <div id="hewanContainer"></div>
                         </div>
-                        <hr>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Metode Tabungan</label>
-                                <select id="saving_type" name="saving_type" class="form-select" onchange="toggleDuration()">
+
+                        {{-- Total Harga --}}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-success small text-uppercase ls-1">Total Harga Kesepakatan (Deal)</label>
+                            <div class="input-group rounded-pill-group">
+                                <span class="input-group-text bg-white border-end-0 text-success fw-bold ps-3">Rp</span>
+                                {{-- Input Visual --}}
+                                <input type="text" id="display_total_harga" class="form-control border-start-0 ps-1 fw-bold text-dark text-end pe-3" placeholder="0" required>
+                                {{-- Input Real --}}
+                                <input type="hidden" name="total_harga_hewan_qurban" id="total_harga_input">
+                            </div>
+                            <small class="text-muted text-end d-block mt-1 fst-italic" id="displayTotalTarget">Estimasi: Rp 0</small>
+                        </div>
+
+                        <hr class="border-success opacity-25">
+
+                        {{-- Metode Tabungan --}}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-success small text-uppercase ls-1">Metode</label>
+                                <select id="saving_type" name="saving_type" class="form-select rounded-pill-input" onchange="toggleDuration()">
                                     <option value="cicilan">Cicilan Rutin</option>
                                     <option value="bebas">Tabungan Bebas</option>
                                 </select>
                             </div>
-                            <div class="col-md-6 mb-3" id="divDuration">
-                                <label class="form-label fw-bold">Durasi (Bulan)</label>
-                                <input type="number" id="duration_months" name="duration_months" class="form-control" value="12" min="1">
-                                <small class="text-muted">Estimasi/bulan: <span id="estBulan" class="fw-bold">-</span></small>
+                            <div class="col-md-6" id="divDuration">
+                                <label class="form-label fw-bold text-success small text-uppercase ls-1">Durasi (Bulan)</label>
+                                <input type="number" id="duration_months" name="duration_months" class="form-control rounded-pill-input" value="12" min="1">
+                                <small class="text-muted ms-2 mt-1 d-block" style="font-size:0.75rem;">Estimasi/bulan: <span id="estBulan" class="fw-bold text-success">-</span></small>
                             </div>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary" id="btnSimpanTabungan">Simpan Data</button>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-gradient-green rounded-pill py-2 fw-bold shadow-sm">
+                                <i class="bi bi-save me-2"></i> Simpan Data
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+</div>
 
-    {{-- ========================================== --}}
-    {{-- MODAL 3: DETAIL & RIWAYAT (UPDATED) --}}
-    {{-- ========================================== --}}
-    <div class="modal fade" id="modalDetailTabungan" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title fw-bold" id="detailModalTitle">Detail Tabungan</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    {{-- Info Header --}}
-                    <div class="alert alert-light border d-flex justify-content-between align-items-center">
-                        <div>
-                            <small class="text-muted d-block">Tipe Tabungan</small>
-                            <strong id="detailSavingType" class="fs-5 text-capitalize">-</strong>
-                        </div>
-                        <div class="text-end">
-                            <small class="text-muted d-block">Status Approval</small>
-                            <span id="detailStatusBadge" class="badge bg-secondary">-</span>
-                        </div>
-                    </div>
-
-                    {{-- Card Stats --}}
-                    <div class="row mb-4 g-3">
-                        <div class="col-md-4">
-                            <div class="card-stat">
-                                <h5>Target Total</h5>
-                                <span class="amount text-dark" id="detailTotalHarga">Rp 0</span>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card-stat">
-                                <h5>Terkumpul (Success)</h5>
-                                <span class="amount text-success" id="detailTerkumpul">Rp 0</span>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card-stat">
-                                <h5>Sisa / Kekurangan</h5>
-                                <span class="amount text-danger" id="detailSisa">Rp 0</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- List Hewan --}}
-                    <h6 class="fw-bold border-bottom pb-2">Item Qurban</h6>
-                    <ul id="detailListHewan" class="list-group mb-4"></ul>
-
-                    {{-- Tabel Riwayat Setoran --}}
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="fw-bold mb-0">Riwayat Setoran</h6>
-                        <button class="btn btn-sm btn-success" onclick="openModalSetor()">
-                            <i class="bi bi-plus-lg"></i> Input Manual
-                        </button>
-                    </div>
-                    
-                    {{-- UPDATE HEADER TABEL DI SINI --}}
-                    <div class="table-responsive border rounded" style="max-height: 300px;">
-                        <table class="table table-sm table-striped mb-0">
-                            <thead class="table-light sticky-top">
-                                <tr>
-                                    <th>Tanggal / Ref</th>
-                                    <th class="text-center">Metode</th>
-                                    <th class="text-center">Status</th>
-                                    <th class="text-end">Nominal</th>
-                                    <th class="text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabelRiwayatSetoran">
-                                {{-- Loaded via JS --}}
-                            </tbody>
-                        </table>
+{{-- ============================================================== --}}
+{{-- MODAL 2: DETAIL TABUNGAN --}}
+{{-- ============================================================== --}}
+<div class="modal fade" id="modalDetailTabungan" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg modal-rounded">
+            
+            <div class="modal-header border-0 pb-0 pt-4 px-4 bg-white">
+                <div>
+                    <h5 class="modal-title fw-bold text-dark" id="detailModalTitle">Detail Tabungan</h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <span id="detailSavingType" class="badge bg-light text-secondary border rounded-pill text-capitalize">-</span>
+                        <span id="detailStatusBadge">-</span>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                {{-- Statistik Cards --}}
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="stat-card bg-light-green">
+                            <small class="text-success fw-bold text-uppercase ls-1" style="font-size: 0.7rem;">Target Total</small>
+                            <h5 class="fw-bold text-dark mt-1 mb-0" id="detailTotalHarga">Rp 0</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card bg-gradient-green text-white shadow-sm">
+                            <small class="text-white-50 fw-bold text-uppercase ls-1" style="font-size: 0.7rem;">Terkumpul</small>
+                            <h5 class="fw-bold mt-1 mb-0" id="detailTerkumpul">Rp 0</h5>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card bg-light-red">
+                            <small class="text-danger fw-bold text-uppercase ls-1" style="font-size: 0.7rem;">Kekurangan</small>
+                            <h5 class="fw-bold text-dark mt-1 mb-0" id="detailSisa">Rp 0</h5>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- List Hewan --}}
+                <h6 class="fw-bold text-success mb-2 small text-uppercase ls-1">Item Hewan Qurban</h6>
+                <ul id="detailListHewan" class="list-group mb-4 border-0"></ul>
+
+                {{-- Tabel Riwayat --}}
+                <div class="d-flex justify-content-between align-items-center mb-3 px-1">
+                    <h6 class="fw-bold m-0"><i class="bi bi-clock-history me-2 text-muted"></i>Riwayat Setoran</h6>
+                    <button class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold" onclick="openModalSetor()">
+                        <i class="bi bi-plus-lg me-1"></i> Input Manual
+                    </button>
+                </div>
+
+                <div class="table-responsive rounded-3 border">
+                    <table class="table table-striped mb-0 align-middle">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-3 py-2 small text-muted text-uppercase">Tanggal</th>
+                                <th class="py-2 small text-muted text-uppercase text-center">Metode</th>
+                                <th class="py-2 small text-muted text-uppercase text-center">Status</th>
+                                <th class="py-2 small text-muted text-uppercase text-end">Nominal</th>
+                                <th class="pe-3 py-2 small text-muted text-uppercase text-center">#</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelRiwayatSetoran" class="small"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    {{-- ========================================== --}}
-    {{-- MODAL 4: FORM SETORAN MANUAL --}}
-    {{-- ========================================== --}}
-    <div class="modal fade" id="modalTambahSetoran" tabindex="-1" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow-lg">
+{{-- ============================================================== --}}
+{{-- MODAL 3: INPUT SETORAN MANUAL --}}
+{{-- ============================================================== --}}
+<div class="modal fade" id="modalTambahSetoran" tabindex="-1" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg modal-rounded">
+            <div class="modal-header border-0 pb-0 pt-3 px-3 bg-white">
+                <h6 class="modal-title fw-bold text-dark">Catat Setoran Manual</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-3 bg-white">
                 <form id="formTambahSetoran">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Input Setoran Manual</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" id="setoran_id_tabungan" name="id_tabungan_hewan_qurban">
-                        <div class="alert alert-info py-2 small">
-                            <i class="bi bi-info-circle me-1"></i> Gunakan ini untuk input setoran Tunai/Transfer Manual.
+                    <input type="hidden" id="setoran_id_tabungan" name="id_tabungan_hewan_qurban">
+                    
+                    {{-- Hidden defaults --}}
+                    <input type="hidden" name="metode_pembayaran" value="tunai">
+                    <input type="hidden" name="status" value="success">
+
+                    <div class="donation-card-wrapper p-3">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-success small">Nominal (Rp)</label>
+                            <input type="text" class="form-control rounded-pill-input text-center fw-bold text-success" 
+                                style="font-size: 1.1rem;" id="display_nominal_setor" placeholder="0" required>
+                            <input type="hidden" name="nominal" id="real_nominal_setor">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Tanggal</label>
-                            <input type="date" name="tanggal" class="form-control" value="{{ date('Y-m-d') }}" required>
+                            <label class="form-label fw-bold text-success small">Tanggal</label>
+                            <input type="date" name="tanggal" class="form-control rounded-pill-input form-control-sm" value="{{ date('Y-m-d') }}" required>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Nominal (Rp)</label>
-                            <input type="number" name="nominal" class="form-control" placeholder="Contoh: 500000" min="1" required>
-                        </div>
-                        {{-- Hidden Default Fields --}}
-                        <input type="hidden" name="metode_pembayaran" value="tunai">
-                        <input type="hidden" name="status" value="success"> 
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary">Simpan</button>
+                        <button type="submit" class="btn btn-gradient-green w-100 rounded-pill fw-bold shadow-sm py-2">Simpan</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+</div>
 
-    {{-- ========================================== --}}
-    {{-- MODAL 5: INFO KONTAK JAMAAH --}}
-    {{-- ========================================== --}}
-    <div class="modal fade" id="modalContactJamaah" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
-                <div class="modal-header bg-success text-white border-0">
-                    <h6 class="modal-title fw-bold"><i class="bi bi-person-lines-fill me-2"></i>Info Jamaah</h6>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body text-center pt-4 pb-4">
-                    <div class="mb-3 position-relative d-inline-block">
-                        <img id="contactAvatar" src="" alt="Foto Profil" 
-                             class="rounded-circle shadow-sm border border-3 border-white" 
-                             style="width: 100px; height: 100px; object-fit: cover; background-color: #f0f0f0;">
+{{-- ============================================================== --}}
+{{-- MODAL 4: KELOLA HARGA HEWAN --}}
+{{-- ============================================================== --}}
+<div class="modal fade" id="modalHargaHewan" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg modal-rounded">
+            <div class="modal-header bg-warning bg-opacity-10 border-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-tag-fill text-warning me-2"></i>Kelola Harga Hewan</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="alertHargaContainer"></div>
+                <form id="formHargaHewan" class="row g-2 mb-4 p-3 bg-light rounded-3 border">
+                    <input type="hidden" name="id_hewan_qurban" id="input_id_hewan_qurban">
+                    <div class="col-md-3">
+                        <label class="small fw-bold text-muted">Jenis</label>
+                        <select name="nama_hewan" class="form-select rounded-pill-input">
+                            <option value="sapi">Sapi</option>
+                            <option value="kambing">Kambing</option>
+                            <option value="domba">Domba</option>
+                            <option value="kerbau">Kerbau</option>
+                        </select>
                     </div>
-
-                    <h5 id="contactName" class="fw-bold text-dark mb-1">Nama Jamaah</h5>
-                    <p class="text-muted small mb-3">Jamaah Terdaftar</p>
-
-                    <div class="card bg-light border-0 p-3 text-start mb-3">
-                        <div class="d-flex align-items-center mb-2">
-                            <i class="bi bi-envelope text-secondary fs-5 me-3"></i>
-                            <div style="overflow: hidden; text-overflow: ellipsis;">
-                                <small class="d-block text-muted" style="font-size: 10px;">EMAIL</small>
-                                <span id="contactEmail" class="fw-bold text-dark" style="font-size: 13px;">-</span>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-whatsapp text-success fs-5 me-3"></i>
-                            <div>
-                                <small class="d-block text-muted" style="font-size: 10px;">WHATSAPP / HP</small>
-                                <span id="contactPhone" class="fw-bold text-dark" style="font-size: 13px;">-</span>
-                            </div>
-                        </div>
+                    <div class="col-md-3">
+                        <label class="small fw-bold text-muted">Kategori</label>
+                        <select name="kategori_hewan" class="form-select rounded-pill-input">
+                            <option value="premium">Premium</option>
+                            <option value="reguler">Reguler</option>
+                            <option value="basic">Basic</option>
+                        </select>
                     </div>
-
-                    <div class="d-grid">
-                        <a id="btnChatWA" href="#" target="_blank" class="btn btn-success fw-bold">
-                            <i class="bi bi-whatsapp me-2"></i> Hubungi via WhatsApp
-                        </a>
+                    <div class="col-md-4">
+                        <label class="small fw-bold text-muted">Harga (Rp)</label>
+                        {{-- Input Visual (Text dengan Format Rupiah) --}}
+                        <input type="text" id="display_harga_hewan" class="form-control rounded-pill-input" placeholder="0" required>
+                        
+                        {{-- Input Asli (Hidden untuk dikirim ke Database) --}}
+                        <input type="hidden" name="harga_hewan" id="real_harga_hewan">
                     </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-dark w-100 rounded-pill shadow-sm" id="btnSimpanHarga">Simpan</button>
+                    </div>
+                </form>
+                
+                <h6 class="fw-bold mb-3">Daftar Harga</h6>
+                <div class="table-responsive rounded-3 border">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="bg-light"><tr><th class="ps-3">Jenis</th><th>Kategori</th><th>Harga</th><th class="text-center">Aksi</th></tr></thead>
+                        <tbody id="listHargaBody"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
+</div>
+
+{{-- ============================================================== --}}
+{{-- MODAL 5: CONTACT JAMAAH (Style Card FIX) --}}
+{{-- ============================================================== --}}
+<div class="modal fade" id="modalContactJamaah" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg modal-rounded overflow-hidden">
+            
+            {{-- Header Hijau (Dipertinggi pb-5 agar judul tidak ketabrak avatar) --}}
+            <div class="modal-header bg-gradient-green text-white border-0 flex-column align-items-center justify-content-center pt-3 pb-5 position-relative">
+                <h6 class="modal-title fw-bold fs-6">Kontak Jamaah</h6>
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"></button>
+            </div>
+
+            {{-- Body (Avatar ditarik ke atas negatif margin) --}}
+            <div class="modal-body text-center pt-0 pb-4">
+                <div class="position-relative d-inline-block mb-3" style="margin-top: -50px;">
+                    <img id="contactAvatar" src="" class="rounded-circle shadow border border-4 border-white" style="width: 90px; height: 90px; object-fit: cover; background: #fff;">
+                </div>
+                
+                <h6 id="contactName" class="fw-bold text-dark mb-1 fs-5">Nama Jamaah</h6>
+                <p class="text-muted small mb-3">Jamaah Terdaftar</p>
+                
+                <div class="bg-light rounded-3 p-3 text-start mb-3 border">
+                    <div class="mb-2">
+                        <small class="d-block text-success fw-bold" style="font-size:10px; letter-spacing:0.5px;">WHATSAPP</small>
+                        <span id="contactPhone" class="fw-bold text-dark fs-6">-</span>
+                    </div>
+                    <div>
+                        <small class="d-block text-success fw-bold" style="font-size:10px; letter-spacing:0.5px;">EMAIL</small>
+                        <span id="contactEmail" class="fw-bold text-dark text-break small">-</span>
+                    </div>
+                </div>
+
+                <a id="btnChatWA" href="#" target="_blank" class="btn btn-gradient-green w-100 rounded-pill fw-bold shadow-sm py-2">
+                    <i class="bi bi-whatsapp me-2"></i> Chat WhatsApp
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- CSS KHUSUS HALAMAN INI --}}
+<style>
+    /* Import Font Poppins */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+    /* Scope Font */
+    #tabelTabungan, .card, .modal-content, .donation-card-wrapper, h1, h2, h3, h4, h5, h6, .btn, .form-control, .form-select { 
+        font-family: 'Poppins', sans-serif; 
+    }
+
+    /* GLOBAL STYLES */
+    .modal-rounded { border-radius: 20px !important; overflow: hidden; }
+    .ls-1 { letter-spacing: 0.5px; }
+
+    /* Button Gradient Green */
+    .btn-gradient-green {
+        background: linear-gradient(135deg, #198754, #20c997);
+        border: none; color: white; transition: all 0.3s;
+    }
+    .btn-gradient-green:hover {
+        background: linear-gradient(135deg, #157347, #198754);
+        transform: translateY(-1px); color: white;
+    }
+
+    /* DONATION CARD WRAPPER (HIJAU MUDA) */
+    .donation-card-wrapper {
+        background-color: #f0fdf4;
+        border: 1px solid #dcfce7;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: inset 0 0 15px rgba(34, 197, 94, 0.03);
+    }
+
+    /* INPUT STYLES */
+    .rounded-pill-input {
+        border-radius: 50px !important;
+        border: 1px solid #d1d5db;
+        padding-left: 15px; font-size: 0.9rem;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #22c55e;
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+    }
+    .rounded-pill-group .input-group-text {
+        border-top-left-radius: 50px; border-bottom-left-radius: 50px;
+        border: 1px solid #d1d5db; background: white;
+    }
+    .rounded-pill-group .form-control {
+        border-top-right-radius: 50px; border-bottom-right-radius: 50px;
+        border: 1px solid #d1d5db;
+    }
+
+    /* STAT CARDS (MODAL DETAIL) */
+    .stat-card {
+        padding: 15px; border-radius: 16px; text-align: center;
+    }
+    .bg-light-green { background-color: #ecfdf5; color: #065f46; }
+    .bg-light-red { background-color: #fef2f2; color: #991b1b; }
+    .bg-gradient-green { background: linear-gradient(135deg, #10b981, #059669); }
+
+    /* TABLE */
+    .rounded-top-left { border-top-left-radius: 10px; }
+    .rounded-top-right { border-top-right-radius: 10px; }
+    
+    /* Hewan Row Style */
+    .hewan-row {
+        background: white; border: 1px solid #e5e7eb;
+        border-radius: 12px; padding: 10px; margin-bottom: 8px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    
+    /* SweetAlert Z-Index Fix */
+    div:where(.swal2-container) { z-index: 9999 !important; }
+</style>
 
 @endsection
 
 @push('scripts')
-    {{-- Load SweetAlert --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    {{-- Pastikan path ini sesuai dengan tempat kamu menyimpan file JS tadi --}}
     <script src="{{ asset('js/tabungan_qurban.js') }}"></script>
 @endpush

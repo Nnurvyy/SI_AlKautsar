@@ -110,7 +110,6 @@ Route::middleware(['auth:pengurus'])->prefix('pengurus')->name('pengurus.')->gro
     // Laporan & Grafik
     Route::get('/lapkeu', [LapKeuController::class, 'index'])->name('lapkeu.index');
     Route::get('/lapkeu/export-pdf', [LapKeuController::class, 'exportPdf'])->name('lapkeu.export.pdf');
-    Route::get('grafik', [GrafikController::class, 'index'])->name('grafik.index');
     Route::get('grafik/data', [GrafikController::class, 'dataUntukGrafik'])->name('grafik.data');
 
     // Donasi

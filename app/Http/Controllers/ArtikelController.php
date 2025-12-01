@@ -15,7 +15,10 @@ class ArtikelController extends Controller
      */
     public function index()
     {
-        return view('artikel');
+        // Hitung total artikel
+        $totalArtikel = Artikel::count();
+        
+        return view('artikel', compact('totalArtikel'));
     }
 
     /**

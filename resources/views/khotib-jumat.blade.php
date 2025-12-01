@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Khotib Jumat')
+@section('title', 'Khutbah Jumat')
 
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -75,90 +75,197 @@
 
 <!-- Modal Form -->
 <div class="modal fade" id="modalKhotib" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form id="formKhotib" enctype="multipart/form-data">
-        
-        <input type="hidden" id="id_khutbah" name="id_khutbah">
-
-        <div class="modal-header">
-          <h5 class="modal-title">Tambah Khutbah Jumat</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-
-        <div class="modal-body">
-          
-          <div class="mb-3">
-            <label for="foto_khotib" class="form-label">Foto</label>
-            <input type="file" class="d-none" id="foto_khotib" name="foto_khotib" accept="image/*">
-            <div class="position-relative">
-                <label for="foto_khotib" id="foto_khotib_label" class="form-control d-block text-truncate" style="cursor: pointer;">
-                    <span class="text-muted">Choose file...</span>
-                </label>
-                <button type="button" class="btn position-absolute d-none" id="clearFile" title="Hapus foto" 
-                        style="top: 50%; right: 0.3rem; transform: translateY(-50%); z-index: 5; padding: 0 0.5rem; font-size: 1.2rem; color: #6c757d; line-height: 1; background: transparent; border: 0;">
-                    <i class="bi bi-x-lg"></i>
-                </button>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title">Jadwal Khutbah</h5>
+                    <p class="text-muted mb-0 small" style="line-height: 1;">Kelola data petugas jumat</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div id="previewContainer" class="position-relative d-none mt-2">
-                <img id="previewFoto"
-                    class="rounded mt-2 mx-auto d-block"
-                    style="width: 200px; height: 200px; object-fit: cover;">
-            </div>
-          </div>
-          <div class="mb-3">
-            <label for="nama_khotib" class="form-label">Nama Khotib <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="nama_khotib" name="nama_khotib">
-          </div>
-          <div class="mb-3">
-            <label for="nama_imam" class="form-label">Nama Imam <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="nama_imam" name="nama_imam">
-          </div>
-          <div class="mb-3">
-            <label for="tema_khutbah" class="form-label">Tema Khutbah <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="tema_khutbah" name="tema_khutbah">
-          </div>    
-          <div class="mb-3">
-            <label for="tanggal" class="form-label">Tanggal <span class="text-danger">*</span></label>
-            <input type="date" class="form-control" id="tanggal" name="tanggal">
-          </div>
-        </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-          <button type="submit" class="btn btn-success">Simpan</button>
+            <form id="formKhotib" enctype="multipart/form-data" style="display: flex; flex-direction: column; flex-grow: 1; overflow: hidden;">
+                <input type="hidden" id="id_khutbah" name="id_khutbah">
+
+                <div class="modal-body">
+                    <div class="form-wrapper">
+                        <div class="form-section-title">
+                            Isi Data Lengkap
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="foto_khotib" class="form-label">Foto Khotib (Max 2 Mb)</label>
+                            <input type="file" class="d-none" id="foto_khotib" name="foto_khotib" accept="image/*">
+                            
+                            <div class="position-relative custom-file-wrapper mb-2">
+                                <label for="foto_khotib" id="foto_khotib_label" class="form-control d-block text-truncate border cursor-pointer m-0" style="cursor: pointer;">
+                                    <span class="text-muted"><i class="bi bi-cloud-upload me-2"></i>Pilih foto...</span>
+                                </label>
+                                <button type="button" class="btn position-absolute d-none" id="clearFile" title="Hapus foto" 
+                                        style="top: 50%; right: 0.5rem; transform: translateY(-50%); z-index: 5; color: #dc3545; background: transparent; border: 0;">
+                                    <i class="bi bi-x-circle-fill fs-5"></i>
+                                </button>
+                            </div>
+                            
+                            <div id="previewContainer" class="position-relative d-none mt-3">
+                                <img id="previewFoto" class="img-fluid" alt="Preview">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="nama_khotib" class="form-label">Nama Khotib <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nama_khotib" name="nama_khotib" placeholder="Contoh: Ust. Fulan">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="nama_imam" class="form-label">Nama Imam <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nama_imam" name="nama_imam" placeholder="Nama Imam Sholat">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tema_khutbah" class="form-label">Tema Khutbah <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="tema_khutbah" name="tema_khutbah" placeholder="Judul/Tema materi">
+                        </div>    
+
+                        <div class="mb-3">
+                            <label for="tanggal" class="form-label">Tanggal Pelaksanaan <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="tanggal" name="tanggal">
+                        </div>
+
+                        <div>
+                            <button type="submit" class="btn-action-primary shadow-sm">
+                                Simpan Data <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div> 
+                    </div>
+            </form>
         </div>
-      </form>
     </div>
-  </div>
 </div>
 
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
 
-/* CSS Modal Scroll */
-#modalKhotib .modal-dialog { max-height: 80vh; display: flex; flex-direction: column; }
-#modalKhotib .modal-content { height: 100%; display: flex; flex-direction: column; }
-#modalKhotib .modal-body { overflow-y: auto; max-height: 70vh; }
-#modalKhotib .modal-footer { position: sticky; bottom: 0; background: white; z-index: 2; border-top: 1px solid #dee2e6; }
+    #modalKhotib {
+        font-family: 'Poppins', sans-serif;
+    }
 
-/* CSS Tombol 'x' di field */
-#clearFile:hover { color: #212529; }
-#clearFile:focus { box-shadow: none; }
+    /* Modal Content: Menggunakan Flex Column agar header tetap diam saat body discroll */
+    #modalKhotib .modal-content {
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        height: 90vh; /* Tinggi fix agar scroll main di dalam */
+        display: flex;
+        flex-direction: column;
+        overflow: hidden; /* Mencegah scroll ganda */
+    }
 
-/* CSS untuk Pagination */
-#paginationLinks .pagination {
-    margin-bottom: 0;
-}
-#paginationLinks .page-item.disabled .page-link {
-    background-color: #e9ecef;
-}
-#paginationLinks .page-item.active .page-link {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-}
-#paginationLinks .page-link {
-    cursor: pointer;
-}
+    /* PERBAIKAN: Header dibuat Sticky & Tidak Boleh Mengecil */
+    #modalKhotib .modal-header {
+        border-bottom: 1px solid #f0f0f0;
+        padding: 15px 25px;
+        background: white;
+        z-index: 10;
+        flex-shrink: 0; /* PENTING: Mencegah header hilang/tergencet saat konten penuh */
+    }
+
+    #modalKhotib .modal-title {
+        font-weight: 700;
+        font-size: 1.3rem;
+        color: #333;
+    }
+
+    /* PERBAIKAN: Body dibuat scrollable */
+    #modalKhotib .modal-body {
+        overflow-y: auto;
+        padding: 20px 25px;
+        flex-grow: 1; /* Mengisi sisa ruang */
+    }
+
+    /* Wrapper Hijau */
+    .form-wrapper {
+        background-color: #f0fdf4;
+        border: 1px solid #dcfce7;
+        border-radius: 15px;
+        padding: 20px;
+    }
+
+    .form-section-title {
+        color: #166534;
+        font-weight: 700;
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+    }
+
+    /* Form Inputs */
+    #modalKhotib .form-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+
+    #modalKhotib .form-control {
+        border-radius: 12px;
+        padding: 12px 15px;
+        border: 1px solid #e5e7eb;
+        font-size: 0.95rem;
+    }
+
+    #modalKhotib .form-control:focus {
+        border-color: #22c55e;
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+    }
+
+    /* Custom File Input */
+    .custom-file-wrapper label {
+        border-radius: 12px !important;
+        padding: 12px 15px;
+        background: white;
+    }
+
+    /* PERBAIKAN: Preview Image Lebih Besar */
+    #previewFoto {
+        width: 100%;          /* Lebar penuh mengikuti container */
+        height: auto;         /* Tinggi menyesuaikan rasio */
+        max-height: 350px;    /* Batas tinggi agar tidak kepanjangan */
+        object-fit: cover;    /* Gambar di-crop rapi */
+        border-radius: 12px;
+        display: block;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Tombol Simpan */
+    .btn-action-primary {
+        background-color: #198754;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 14px;
+        width: 100%;
+        font-weight: 700;
+        font-size: 1rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin-top: 20px;
+    }
+    
+    .btn-action-primary:hover {
+        background-color: #157347;
+        color: white;
+    }
+
+    /* Pagination (Tetap) */
+    #paginationLinks .pagination { margin-bottom: 0; }
+    #paginationLinks .page-item.disabled .page-link { background-color: #e9ecef; }
+    #paginationLinks .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; }
+    #paginationLinks .page-link { cursor: pointer; }
 </style>
 
 

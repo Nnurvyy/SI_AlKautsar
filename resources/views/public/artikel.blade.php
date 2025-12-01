@@ -183,7 +183,7 @@
                 <div class="card artikel-card">
                     <div class="card-body artikel-card-body">
                         {{-- Foto --}}
-                        <img src="{{ $item->foto_artikel }}" class="artikel-card-img" alt="{{ $item->judul_artikel }}">
+                        <img src="{{ $item->foto_url }}" class="artikel-card-img" alt="{{ $item->judul_artikel }}">
                         
                         {{-- Judul --}}
                         <h5 class="artikel-card-title">{{ $item->judul_artikel }}</h5>
@@ -286,7 +286,8 @@
             .then(data => {
                 // 4. Isi Data ke Modal
                 document.getElementById('modalArtikelTitle').innerText = data.judul_artikel;
-                document.getElementById('modalArtikelImg').src = data.foto_url_lengkap; // Menggunakan properti yg ditambahkan controller
+                // SESUAI MODEL ANDA SEKARANG
+                document.getElementById('modalArtikelImg').src = data.foto_url;
                 document.getElementById('modalArtikelDate').innerHTML = '<i class="bi bi-calendar-event me-2"></i>' + data.formatted_date;
                 document.getElementById('modalArtikelAuthor').innerHTML = '<i class="bi bi-person-circle me-2"></i>' + data.penulis_artikel;
                 document.getElementById('modalArtikelBody').innerHTML = data.isi_artikel;

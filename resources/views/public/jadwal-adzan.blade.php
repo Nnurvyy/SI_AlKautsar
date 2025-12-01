@@ -167,7 +167,7 @@
         <div class="card card-no-border">
             <div class="card-header card-header-flex">
                 <div>
-                    <h4 class="card-title mb-0 fw-bold jadwal-sholat-title">Jadwal Sholat</h4>
+                    <h4 class="card-title mb-0 fw-bold jadwal-sholat-title">Jadwal Adzan</h4>
                     <p class="card-subtitle text-muted mb-0" id="card-subtitle">
                         {{-- Ini akan di-update oleh JS --}}
                         {{ $lokasi }} - {{ $namaBulan[(int)$bulan] }} {{ $tahun }}

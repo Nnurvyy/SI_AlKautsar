@@ -19,7 +19,12 @@ class InfaqJumatController extends Controller
 
     public function index()
     {
-        return view('infaq-jumat');
+        // 1. Hitung Total Infaq Jumat
+        $kategori = $this->getKategoriInfaq();
+        $totalInfaq = Keuangan::where('id_kategori_keuangan', $kategori->id_kategori_keuangan)->sum('nominal');
+
+        // 2. Kirim ke view
+        return view('infaq-jumat', compact('totalInfaq'));
     }
 
     // ========== DATA TABLE ==========

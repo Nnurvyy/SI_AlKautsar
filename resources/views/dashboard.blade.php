@@ -5,16 +5,16 @@
 @section('content')
 <div class="container-fluid p-4">
 
-    {{-- Kartu Statistik --}}
+    {{-- 1. Kartu Statistik --}}
     <div class="row g-4 mb-4">
-
-        {{-- Total Pemasukan --}}
+        {{-- Total Pemasukan (HIJAU) --}}
         <div class="col-md-6 col-xl-3">
-            <div class="card stat-card">
+            <div class="card stat-card h-100">
                 <div class="card-body">
                     <div>
                         <p class="text-muted mb-1">Total Pemasukan</p>
-                        <h5 class="fw-bold mb-0">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</h5>
+                        {{-- WARNA HIJAU (text-success) --}}
+                        <h5 class="fw-bold mb-0 text-success">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</h5>
                     </div>
                     <div class="stat-card-icon bg-success bg-opacity-10 text-success">
                         <i class="bi bi-graph-up-arrow"></i>
@@ -23,13 +23,14 @@
             </div>
         </div>
 
-        {{-- Total Pengeluaran --}}
+        {{-- Total Pengeluaran (MERAH) --}}
         <div class="col-md-6 col-xl-3">
-            <div class="card stat-card">
+            <div class="card stat-card h-100">
                 <div class="card-body">
                     <div>
                         <p class="text-muted mb-1">Total Pengeluaran</p>
-                        <h5 class="fw-bold mb-0">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</h5>
+                        {{-- WARNA MERAH (text-danger) --}}
+                        <h5 class="fw-bold mb-0 text-danger">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</h5>
                     </div>
                     <div class="stat-card-icon bg-danger bg-opacity-10 text-danger">
                         <i class="bi bi-graph-down-arrow"></i>
@@ -40,7 +41,7 @@
 
         {{-- Total Penabung Qurban --}}
         <div class="col-md-6 col-xl-3">
-            <div class="card stat-card">
+            <div class="card stat-card h-100">
                 <div class="card-body">
                     <div>
                         <p class="text-muted mb-1">Total Tabungan Qurban</p>
@@ -55,7 +56,7 @@
 
         {{-- Saldo Akhir --}}
         <div class="col-md-6 col-xl-3">
-            <div class="card stat-card">
+            <div class="card stat-card h-100">
                 <div class="card-body">
                     <div>
                         <p class="text-muted mb-1">Saldo Saat Ini</p>
@@ -71,67 +72,115 @@
         </div>
     </div>
 
-    {{-- Tabel Transaksi Terbaru --}}
-    <div class="card transaction-table dashboard-table border-0 shadow-sm">
-        <div class="card-header bg-white py-3">
-            <h5 class="mb-0 fw-bold">Transaksi Terbaru</h5>
+    {{-- 2. GRAFIK KEUANGAN --}}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0 fw-bold">Analisis Keuangan</h5>
+                    <div class="col-12 col-md-auto">
+                        {{-- Filter ini akan mengupdate CHART dan ALOKASI --}}
+                        <select class="form-select form-select-sm" id="filterRange">
+                            <option value="7_days">7 Hari Terakhir</option>
+                            <option value="30_days">30 Hari Terakhir</option>
+                            <option value="12_months" selected>12 Bulan Terakhir</option>
+                            <option value="current_year">Tahun Ini</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 300px; width: 100%; overflow: hidden;">
+                        <canvas id="GrafikKeuangan"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th scope="col">Tanggal</th>
-                            <th scope="col">Tipe</th>
-                            <th scope="col">Kategori</th>
-                            <th scope="col">Deskripsi</th>
-                            <th scope="col" class="text-end">Jumlah</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($recentTransactions as $item)
-                            @php
-                                $isPemasukan = $item->tipe == 'pemasukan';
-                                
-                                // Logika Warna Badge (Label Tipe)
-                                $badgeClass = $isPemasukan ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger';
-                                
-                                // Logika Warna Teks Nominal (Hijau/Merah)
-                                $textClass = $isPemasukan ? 'text-success' : 'text-danger';
-                                
-                                $symbol = $isPemasukan ? '+' : '-';
-                                $kategori = $item->kategori ? $item->kategori->nama_kategori_keuangan : '-';
-                            @endphp
-                            <tr>
-                                <td>
-                                    {{ \Carbon\Carbon::parse($item->tanggal)->translatedFormat('d M Y') }}
-                                </td>
-                                <td>
-                                    <span class="badge {{ $badgeClass }}">
-                                        {{ ucfirst($item->tipe) }}
-                                    </span>
-                                </td>
-                                <td>{{ $kategori }}</td>
-                                <td>
-                                    <span class="d-inline-block text-truncate" style="max-width: 250px;">
-                                        {{ $item->deskripsi ?? '-' }}
-                                    </span>
-                                </td>
-                                <td class="text-end {{ $textClass }} fw-bold">
-                                    {{ $symbol }} Rp {{ number_format($item->nominal, 0, ',', '.') }}
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="text-center text-muted py-4">
-                                    Belum ada transaksi.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+    </div>
+
+    {{-- 3. LAYOUT SPLIT: ALOKASI (KIRI) & TABEL (KANAN) --}}
+    <div class="row g-4">
+        
+        {{-- KOLOM KIRI: ALOKASI KATEGORI (Progress Bar) --}}
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold">Ikhtisar Keuangan</h5>
+                    <small class="text-muted" id="labelAlokasi">Sesuai filter grafik</small>
+                </div>
+                <div class="card-body">
+                    {{-- Container Pemasukan --}}
+                    <h6 class="fw-bold text-success mb-3"><i class="bi bi-arrow-down-circle me-1"></i> Top Pemasukan</h6>
+                    <div id="containerAlokasiPemasukan" class="mb-4">
+                        {{-- Bar akan diinject via JS --}}
+                        <p class="text-muted small">Memuat data...</p>
+                    </div>
+
+                    <hr>
+
+                    {{-- Container Pengeluaran --}}
+                    <h6 class="fw-bold text-danger mb-3 mt-4"><i class="bi bi-arrow-up-circle me-1"></i> Top Pengeluaran</h6>
+                    <div id="containerAlokasiPengeluaran">
+                        {{-- Bar akan diinject via JS --}}
+                        <p class="text-muted small">Memuat data...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- KOLOM KANAN: TABEL TRANSAKSI TERBARU --}}
+        <div class="col-lg-8">
+            <div class="card transaction-table dashboard-table border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold">Transaksi Terbaru</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Tanggal</th>
+                                    <th scope="col">Tipe</th>
+                                    <th scope="col">Kategori</th>
+                                    <th scope="col">Deskripsi</th>
+                                    <th scope="col" class="text-end">Jumlah</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($recentTransactions as $item)
+                                    @php
+                                        $isPemasukan = $item->tipe == 'pemasukan';
+                                        $badgeClass = $isPemasukan ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger';
+                                        $textClass = $isPemasukan ? 'text-success' : 'text-danger';
+                                        $symbol = $isPemasukan ? '+' : '-';
+                                        $kategori = $item->kategori ? $item->kategori->nama_kategori_keuangan : '-';
+                                    @endphp
+                                    <tr>
+                                        <td>{{ \Carbon\Carbon::parse($item->tanggal)->translatedFormat('d M Y') }}</td>
+                                        <td><span class="badge {{ $badgeClass }}">{{ ucfirst($item->tipe) }}</span></td>
+                                        <td>{{ $kategori }}</td>
+                                        <td>
+                                            <span class="d-inline-block text-truncate" style="max-width: 200px;">
+                                                {{ $item->deskripsi ?? '-' }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end {{ $textClass }} fw-bold">
+                                            {{ $symbol }} Rp {{ number_format($item->nominal, 0, ',', '.') }}
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">Belum ada transaksi.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{{ asset('js/grafikkeuangan.js') }}"></script> 
 @endsection

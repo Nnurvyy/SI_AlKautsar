@@ -1,166 +1,121 @@
-// =================================================================
-// 1. UTILITY FUNCTION: FORMAT RUPIAH
-// =================================================================
-
-/**
- * Fungsi pembantu untuk memformat angka menjadi format Rupiah.
- * @param {number} amount - Nilai numerik.
- * @returns {string} String yang diformat menjadi mata uang IDR.
- */
-function formatRupiah(amount) {
-    const value = amount || 0; 
-    return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0
-    }).format(value);
-}
-
-// =================================================================
-// 2. LOGIKA UTAMA CHART.JS DAN INTEGRASI API
-// =================================================================
-
 document.addEventListener('DOMContentLoaded', function() {
-    // Ambil elemen HTML
+    // === 1. CONFIG & UTILS ===
     const filterRangeSelect = document.getElementById('filterRange');
     const ctx = document.getElementById('GrafikKeuangan');
-    
-    // **Elemen 'customDateRange', 'startDate', dan 'endDate' Dihapus**
-    
-    let myChart = null; // Variabel untuk menyimpan instance chart
+    let myChart = null;
 
-    // -----------------------------------------------------------
-    // A. Fungsi Mengambil Data dari API Laravel
-    // -----------------------------------------------------------
-    /**
-     * Mengambil data keuangan dari endpoint API Laravel.
-     * @param {string} range - Nilai filter waktu (misalnya '12_months', '7_days').
-     * @returns {object} Data grafik yang sudah diformat dari server.
-     */
-    async function fetchChartData(range) {
-        // URL API hanya menggunakan parameter range
-    const url = `/pengurus/grafik/data?range=${range}`;
-        
+    // Format Rupiah
+    function formatRupiah(amount) {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency', currency: 'IDR', minimumFractionDigits: 0
+        }).format(amount || 0);
+    }
+
+    // === 2. FETCH DATA ===
+    async function updateDashboardData(range) {
+        // Tampilkan loading di section alokasi
+        document.getElementById('containerAlokasiPemasukan').innerHTML = '<small class="text-muted">Loading...</small>';
+        document.getElementById('containerAlokasiPengeluaran').innerHTML = '<small class="text-muted">Loading...</small>';
+
         try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Gagal mengambil data: HTTP status ${response.status}`);
-            }
+            const response = await fetch(`/pengurus/grafik/data?range=${range}`);
             const result = await response.json();
-            
-            // Asumsi Controller Laravel mengembalikan format { data: {...} }
-            const dataGrafik = result.data || result;
-            
-            // **Pastikan data.datasets memiliki properti yang diperlukan Chart.js**
-            if (!dataGrafik.datasets || dataGrafik.datasets.length === 0) {
-                throw new Error('Data API tidak valid atau kosong.');
+
+            if (result.status === 'success') {
+                // A. Update Chart
+                renderChart(result.chart, range);
+                
+                // B. Update Progress Bar Alokasi
+                renderAllocationBars(result.allocation);
+                
+                // Update Label Text
+                const labelText = filterRangeSelect.options[filterRangeSelect.selectedIndex].text;
+                document.getElementById('labelAlokasi').textContent = labelText;
             }
-            
-            return dataGrafik;
-            
         } catch (error) {
-            console.error('Error saat fetch data grafik:', error);
-            // Kembalikan struktur kosong agar chart tidak error
-            return {
-                labels: [],
-                datasets: [
-                    { label: 'Pemasukan (Rp)', data: [], backgroundColor: '#28A745' },
-                    { label: 'Pengeluaran (Rp)', data: [], backgroundColor: '#DC3545' }
-                ]
-            };
+            console.error('Error fetching data:', error);
         }
     }
 
-
-    // -----------------------------------------------------------
-    // B. Konfigurasi Options Chart.js
-    // -----------------------------------------------------------
-    const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: { display: true, text: 'Jumlah (Rupiah)' },
-                ticks: {
-                    callback: function(value, index, values) {
-                        return formatRupiah(value).replace('Rp', '').trim();
-                    }
-                }
-            }
-        },
-        plugins: {
-            legend: {
-                position: 'top',
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        let label = context.dataset.label || '';
-                        if (context.parsed.y !== null) {
-                            label = formatRupiah(context.parsed.y);
+    // === 3. RENDER CHART JS ===
+    function renderChart(chartData, range) {
+        // Opsi Chart
+        const options = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + formatRupiah(context.parsed.y);
                         }
-                        return label;
                     }
                 }
             },
-            title: {
-                display: true,
-                text: 'Laporan Keuangan' 
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: (val) => formatRupiah(val).replace('Rp', '').trim() }
+                }
             }
-        }
-    };
+        };
 
-
-    // -----------------------------------------------------------
-    // C. Fungsi Utama: Mengupdate atau Membuat Chart
-    // -----------------------------------------------------------
-    async function updateChart(range) {
-        // Ambil data dari API
-        const data = await fetchChartData(range);
-        
-        // Update Judul Chart
-        const titleText = `Laporan Keuangan: ${range.toUpperCase().replace(/_/g, ' ')}`;
-        chartOptions.plugins.title.text = titleText;
-
-        // Inisialisasi atau Update Chart
         if (myChart) {
-            // Update Data yang Ada
-            myChart.data.labels = data.labels;
-            myChart.data.datasets = data.datasets.map(d => ({
-                ...d,
-                borderWidth: 1,
-                borderRadius: 4,
-            }));
-            myChart.options = chartOptions; 
+            myChart.data.labels = chartData.labels;
+            myChart.data.datasets = chartData.datasets;
             myChart.update();
         } else {
-            // Buat Chart Baru
             myChart = new Chart(ctx, {
-                type: 'bar', 
-                data: {
-                    labels: data.labels, 
-                    datasets: data.datasets.map(d => ({
-                        ...d,
-                        borderWidth: 1,
-                        borderRadius: 4,
-                    }))
-                },
-                options: chartOptions
+                type: 'bar',
+                data: chartData,
+                options: options
             });
         }
     }
 
-    // -----------------------------------------------------------
-    // D. Event Listener Setup
-    // -----------------------------------------------------------
-    
-    // 1. Inisiasi awal
-    updateChart(filterRangeSelect.value); 
+    // === 4. RENDER ALOKASI (PROGRESS BARS) ===
+    function renderAllocationBars(allocationData) {
+        const containerIn = document.getElementById('containerAlokasiPemasukan');
+        const containerOut = document.getElementById('containerAlokasiPengeluaran');
 
-    // 2. Event Listener untuk perubahan filter utama
+        containerIn.innerHTML = generateBarHTML(allocationData.pemasukan, 'success');
+        containerOut.innerHTML = generateBarHTML(allocationData.pengeluaran, 'danger');
+    }
+
+    function generateBarHTML(items, colorClass) {
+        if (!items || items.length === 0) {
+            return '<small class="text-muted fst-italic">Tidak ada data untuk periode ini.</small>';
+        }
+
+        let html = '';
+        items.forEach(item => {
+            html += `
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small fw-bold text-dark">${item.kategori}</span>
+                        <span class="small text-${colorClass} fw-bold">${item.persentase}%</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-${colorClass}" role="progressbar" 
+                             style="width: ${item.persentase}%" 
+                             aria-valuenow="${item.persentase}" aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                    <div class="text-end mt-1">
+                        <small class="text-muted" style="font-size: 0.75rem;">${formatRupiah(item.total)}</small>
+                    </div>
+                </div>
+            `;
+        });
+        return html;
+    }
+
+    // === 5. EVENT LISTENERS ===
+    // Load pertama kali
+    updateDashboardData(filterRangeSelect.value);
+
+    // Saat filter berubah
     filterRangeSelect.addEventListener('change', function() {
-        const selectedRange = filterRangeSelect.value;
-        updateChart(selectedRange);
+        updateDashboardData(this.value);
     });
 });

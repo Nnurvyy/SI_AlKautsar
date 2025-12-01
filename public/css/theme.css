@@ -28,3 +28,17 @@
     font-size: 1.5rem; width: 48px; height: 48px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
 }
+
+/* === THEME UTILS === */
+.bg-gradient-green {
+    background: linear-gradient(135deg, #198754, #20c997) !important;
+}
+.text-gradient-green {
+    background: -webkit-linear-gradient(135deg, #198754, #20c997);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.shadow-soft {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+}
+.ls-1 { letter-spacing: 1px; }

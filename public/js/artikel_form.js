@@ -1,111 +1,106 @@
-// File: public/js/artikel_form.js
+document.addEventListener('DOMContentLoaded', function() {
 
-document.addEventListener('DOMContentLoaded', function () {
-    
-    // --- 1. Definisi Variabel DOM ---
-    const editorContainer = document.getElementById('editor-container');
-    const isiArtikelInput = document.getElementById('isiArtikelInput'); 
-    const form = document.getElementById('artikelForm');
-    
-    // Variabel Foto
-    const fotoInput = document.getElementById('foto_artikel');
-    const fotoLabelSpan = document.querySelector('#foto_artikel_label span');
-    const clearFileBtn = document.getElementById('clearFile');
-    const previewContainer = document.getElementById('previewContainer');
-    const fotoPreview = document.getElementById('fotoPreview');
-    const hapusFotoInput = document.getElementById('hapus_foto_input'); // Input hidden baru
-    
-    // --- 2. Inisialisasi Quill ---
-    if (editorContainer && isiArtikelInput && form) {
-        // ... (kode inisialisasi Quill sama seperti sebelumnya, tidak perlu diubah) ...
-        var quill = new Quill(editorContainer, {
+    // ==========================================
+    // 1. SETUP QUILL EDITOR (WYSIWYG)
+    // ==========================================
+    // Cek apakah elemen editor ada (untuk menghindari error di halaman lain)
+    if (document.getElementById('editor-container')) {
+        
+        var toolbarOptions = [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            [{ 'align': [] }],
+            ['link', 'clean'] // 'image' kita hapus dari toolbar karena upload foto terpisah
+        ];
+
+        var quill = new Quill('#editor-container', {
             theme: 'snow',
-            placeholder: 'Tulis konten artikel di sini...',
             modules: {
-                toolbar: [
-                    ['bold', 'italic', 'underline', 'strike'], 
-                    [{ 'header': [1, 2, 3, 4, false] }],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    [{ 'align': [] }],
-                    ['link', 'image', 'code-block'],
-                    ['clean']
-                ]
-            }
+                toolbar: toolbarOptions
+            },
+            placeholder: 'Tulis konten artikel yang menarik di sini...'
         });
 
-        // Logika Submit untuk validasi isi quill
-        form.addEventListener('submit', function (e) {
-            const htmlContent = editorContainer.querySelector('.ql-editor').innerHTML;
-            // Cek apakah hanya berisi tag kosong atau spasi
-            const isReallyEmpty = htmlContent.replace(/<(.|\n)*?>/g, '').trim().length === 0 && !htmlContent.includes('<img');
-
-            if (isReallyEmpty) {
-                 alert('Isi artikel tidak boleh kosong.');
-                 e.preventDefault(); 
-                 return;
+        // Tangkap Form saat Submit
+        var form = document.getElementById('artikelForm');
+        form.onsubmit = function(e) {
+            // Salin HTML dari Quill ke Input Hidden
+            var isiInput = document.getElementById('isiArtikelInput');
+            isiInput.value = quill.root.innerHTML;
+            
+            // Validasi Sederhana: Cek jika cuma tag kosong
+            // (Mengatasi isu user cuma tekan spasi/enter)
+            var textOnly = quill.getText().trim();
+            if (textOnly.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Konten Kosong',
+                    text: 'Silakan tulis isi artikel terlebih dahulu!'
+                });
+                e.preventDefault(); // Batalkan submit
+                return false;
             }
-            isiArtikelInput.value = htmlContent;
-        });
+        };
     }
 
-    // --- 3. Logika Preview Foto & Tombol X (DIPERBARUI) ---
-    if (fotoInput && fotoPreview && clearFileBtn) {
-        
-        // Fungsi untuk update UI berdasarkan state
-        function updateFotoUI(filename, imgSrc, showPreview, showClearBtn) {
-            fotoLabelSpan.textContent = filename;
-            fotoLabelSpan.className = filename === 'Pilih foto...' ? 'text-muted' : 'text-dark fw-bold';
-            
-            if (imgSrc) fotoPreview.src = imgSrc;
-            
-            showPreview ? previewContainer.classList.remove('d-none') : previewContainer.classList.add('d-none');
-            showClearBtn ? clearFileBtn.classList.remove('d-none') : clearFileBtn.classList.add('d-none');
-        }
+    // ==========================================
+    // 2. LOGIC UPLOAD FOTO (Preview & Delete)
+    // ==========================================
+    const fotoInput = document.getElementById('foto_artikel');
+    const previewContainer = document.getElementById('previewContainer');
+    const fotoPreview = document.getElementById('fotoPreview');
+    const btnClear = document.getElementById('clearFile');
+    const inputHapus = document.getElementById('hapus_foto_input');
 
-        // Cek kondisi awal (Mode Edit dengan gambar existing)
-        const hasExistingImage = previewContainer.dataset.hasImage === 'true';
-        const originalSrc = previewContainer.dataset.originalSrc;
+    // Pastikan elemen ada sebelum menjalankan logic
+    if (fotoInput && previewContainer && fotoPreview) {
 
-        if (hasExistingImage) {
-            updateFotoUI("Foto tersimpan (Klik X untuk hapus)", originalSrc, true, true);
-        }
-
-        // Event saat file dipilih dari komputer
+        // A. SAAT FILE DIPILIH (CHANGE)
         fotoInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                // Reset flag hapus foto jika user memilih file baru
-                hapusFotoInput.value = "0"; 
+            const file = this.files[0];
 
+            if (file) {
+                // 1. Validasi Ukuran (Max 2MB)
+                if(file.size > 2 * 1024 * 1024) {
+                    Swal.fire('File Terlalu Besar', 'Ukuran maksimal foto adalah 2MB', 'error');
+                    this.value = ''; // Reset input
+                    return;
+                }
+
+                // 2. Validasi Tipe File (Optional, untuk keamanan extra di frontend)
+                if(!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)){
+                    Swal.fire('Format Salah', 'Harap upload file gambar (JPG/PNG)', 'warning');
+                    this.value = '';
+                    return;
+                }
+
+                // 3. Tampilkan Preview
                 const reader = new FileReader();
-                reader.onload = function(event) {
-                    updateFotoUI(file.name, event.target.result, true, true);
+                reader.onload = function(e) {
+                    fotoPreview.src = e.target.result;
+                    previewContainer.classList.remove('d-none'); // Munculkan gambar
+                    
+                    // Pastikan flag hapus dimatikan (karena user upload baru)
+                    inputHapus.value = '0'; 
                 }
                 reader.readAsDataURL(file);
             }
         });
 
-        // Event saat tombol X diklik
-        clearFileBtn.addEventListener('click', function(e) {
-            e.preventDefault(); 
-            e.stopPropagation(); 
-            
-            // 1. Kosongkan input file
-            fotoInput.value = ""; 
-            
-            // 2. Cek apakah kita sedang menghapus gambar existing di mode edit
-            if (hasExistingImage) {
-                // Set flag agar controller tahu untuk menghapus gambar di DB
-                hapusFotoInput.value = "1";
-                updateFotoUI("Pilih foto...", "", false, false); // Sembunyikan preview
-                // Opsional: Beri feedback visual
-                 fotoLabelSpan.textContent = "Foto akan dihapus saat disimpan.";
-                 fotoLabelSpan.classList.add('text-danger');
-            } else {
-                // Hanya mereset upload file baru yg belum disimpan
-                hapusFotoInput.value = "0";
-                updateFotoUI("Pilih foto...", "", false, false);
-            }
-        });
+        // B. SAAT TOMBOL SILANG (X) DIKLIK
+        if(btnClear) {
+            btnClear.addEventListener('click', function() {
+                // 1. Reset Input File (agar user bisa pilih file yg sama lagi jika mau)
+                fotoInput.value = '';
+                
+                // 2. Sembunyikan Preview
+                previewContainer.classList.add('d-none');
+                fotoPreview.src = '';
+
+                // 3. Nyalakan Flag Hapus (agar Controller tahu foto lama harus dihapus)
+                inputHapus.value = '1';
+            });
+        }
     }
 });

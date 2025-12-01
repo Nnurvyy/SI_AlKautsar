@@ -15,7 +15,11 @@ class ProgramController extends Controller
      */
     public function index()
     {
-        return view('program'); 
+        // Menghitung jumlah total program yang ada di database
+        $totalProgram = Program::count();
+
+        // Kirim variabel $totalProgram ke view
+        return view('program', compact('totalProgram'));
     }
 
     /**
