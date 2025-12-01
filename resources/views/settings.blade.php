@@ -3,12 +3,12 @@
 @section('title', 'Pengaturan Masjid')
 
 @push('styles')
+{{-- CSS Select2 --}}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
-{{-- 1. CSS LEAFLET (PETA) --}}
+{{-- CSS Leaflet (Peta) --}}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-{{-- 2. CSS LEAFLET GEOCODER (PENCARIAN) --}}
 <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 
 <style>
@@ -29,12 +29,48 @@
 <div class="container-fluid p-4"> 
     <h1>Pengaturan Masjid</h1>
 
-    <form id="formSettings" enctype="multipart/form-data">
+    <form id="formSettings" enctype="multipart/form-data" action="{{ route('pengurus.settings.update') }}">
         @csrf
         <div class="card">
             <div class="card-body">
                 
-                {{-- Nama Masjid & Kota (Kode Lama) --}}
+                {{-- ================================================= --}}
+                {{-- BAGIAN FOTO MASJID (BARU) --}}
+                {{-- ================================================= --}}
+                <div class="row mb-4">
+                    <div class="col-md-12 text-center">
+                        <label class="form-label fw-bold mb-3">Foto Masjid</label>
+                        
+                        {{-- Container Preview --}}
+                        <div id="previewFotoMasjidContainer" class="mb-3 {{ $settings->foto_masjid ? '' : 'd-none' }}">
+                            <img id="previewFotoMasjid" 
+                                 src="{{ $settings->foto_masjid ? Storage::url($settings->foto_masjid) : '' }}" 
+                                 alt="Preview Foto" 
+                                 class="img-thumbnail shadow-sm" 
+                                 style="max-width: 300px; max-height: 250px; object-fit: cover;">
+                        </div>
+
+                        {{-- Input & Tombol --}}
+                        <div class="d-flex justify-content-center align-items-center gap-2">
+                            <div class="d-inline-block">
+                                <input class="form-control" type="file" id="foto_masjid" name="foto_masjid" accept="image/*">
+                            </div>
+                            
+                            {{-- Tombol Hapus (Muncul jika ada foto) --}}
+                            <button type="button" id="clearFotoMasjid" class="btn btn-outline-danger {{ $settings->foto_masjid ? '' : 'd-none' }}" title="Hapus Foto">
+                                <i class="bi bi-trash"></i> Hapus
+                            </button>
+                        </div>
+                        <div class="form-text">Format: JPG, PNG, WEBP. Maksimal 2MB.</div>
+                        
+                        {{-- Label dummy untuk logic JS Anda --}}
+                        <div id="foto_masjid_label" class="d-none"><span></span></div>
+                    </div>
+                </div>
+
+                <hr>
+
+                {{-- Nama Masjid & Kota --}}
                 <div class="mb-3">
                     <label class="form-label">Nama Masjid</label>
                     <input type="text" class="form-control" name="nama_masjid" value="{{ $settings->nama_masjid }}">
@@ -46,7 +82,7 @@
                 </div>
 
                 {{-- ================================================= --}}
-                {{-- BAGIAN PETA / LOKASI (SHOPEE STYLE) --}}
+                {{-- BAGIAN PETA / LOKASI --}}
                 {{-- ================================================= --}}
                 <div class="mb-3">
                     <label class="form-label fw-bold">Lokasi Masjid (Peta)</label>
@@ -85,31 +121,32 @@
                     <textarea class="form-control" name="deskripsi_masjid" rows="3">{{ $settings->deskripsi_masjid }}</textarea>
                 </div>
 
+                {{-- Social Media --}}
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label"><i class="bi bi-whatsapp text-success me-1"></i> WhatsApp (No. HP)</label>
                         <input type="text" class="form-control" name="social_whatsapp" value="{{ $settings->social_whatsapp }}" placeholder="Contoh: 6281234567890">
-                        <div class="form-text small">Gunakan format 62... tanpa spasi atau tanda strip.</div>
+                        <div class="form-text small">Gunakan format 62... tanpa spasi/strip.</div>
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label class="form-label"><i class="bi bi-instagram text-danger me-1"></i> Instagram (Link Profil)</label>
-                        <input type="text" class="form-control" name="social_instagram" value="{{ $settings->social_instagram }}" placeholder="Contoh: https://instagram.com/masjid_alkautsar">
+                        <input type="text" class="form-control" name="social_instagram" value="{{ $settings->social_instagram }}" placeholder="https://instagram.com/...">
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label class="form-label"><i class="bi bi-facebook text-primary me-1"></i> Facebook (Link Halaman)</label>
-                        <input type="text" class="form-control" name="social_facebook" value="{{ $settings->social_facebook }}" placeholder="Contoh: https://facebook.com/masjidalkautsar">
+                        <input type="text" class="form-control" name="social_facebook" value="{{ $settings->social_facebook }}" placeholder="https://facebook.com/...">
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label class="form-label"><i class="bi bi-youtube text-danger me-1"></i> YouTube (Link Channel)</label>
-                        <input type="text" class="form-control" name="social_youtube" value="{{ $settings->social_youtube }}" placeholder="Contoh: https://youtube.com/@masjidalkautsar">
+                        <input type="text" class="form-control" name="social_youtube" value="{{ $settings->social_youtube }}" placeholder="https://youtube.com/...">
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label class="form-label"><i class="bi bi-twitter text-info me-1"></i> Twitter / X (Link Profil)</label>
-                        <input type="text" class="form-control" name="social_twitter" value="{{ $settings->social_twitter }}" placeholder="Contoh: https://twitter.com/masjidalkautsar">
+                        <input type="text" class="form-control" name="social_twitter" value="{{ $settings->social_twitter }}" placeholder="https://twitter.com/...">
                     </div>
                 </div>
                 
@@ -127,123 +164,75 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-{{-- 3. JS LEAFLET --}}
+{{-- JS LEAFLET --}}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-    // --- SETUP MAPS ---
     document.addEventListener('DOMContentLoaded', function () {
         
-        // 1. Ambil Koordinat Awal (Dari DB atau Default ke Monas Jakarta)
+        // ==========================================================
+        // 1. LOGIC PETA (LEAFLET)
+        // ==========================================================
         let lat = "{{ $settings->latitude ?? -6.1753924 }}"; 
         let lng = "{{ $settings->longitude ?? 106.8271528 }}";
-        
-        // Konversi ke float
         lat = parseFloat(lat);
         lng = parseFloat(lng);
 
-        // 2. Inisialisasi Map
-        const map = L.map('map').setView([lat, lng], 15); // Zoom level 15
-
-        // 3. Pasang Tile Layer (OpenStreetMap - Gratis)
+        const map = L.map('map').setView([lat, lng], 15);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // 4. Buat Marker (Pin Merah) yang bisa digeser (draggable)
         const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
 
-        // Fungsi update input saat pin digeser
         function updateInputs(lat, lng) {
             document.getElementById('latitude').value = lat;
             document.getElementById('longitude').value = lng;
         }
 
-        // Event: Saat marker selesai digeser
         marker.on('dragend', function (e) {
             const position = marker.getLatLng();
             updateInputs(position.lat, position.lng);
-            map.panTo(position); // Geser map ke tengah pin
+            map.panTo(position);
         });
 
-        // Event: Saat peta diklik (Pindah pin ke lokasi klik)
         map.on('click', function(e) {
             marker.setLatLng(e.latlng);
             updateInputs(e.latlng.lat, e.latlng.lng);
             map.panTo(e.latlng);
         });
 
-        // 5. Tambahkan Fitur Pencarian (Geocoder)
-        L.Control.geocoder({
-            defaultMarkGeocode: false
-        })
+        L.Control.geocoder({ defaultMarkGeocode: false })
         .on('markgeocode', function(e) {
-            const bbox = e.geocode.bbox;
-            const poly = L.polygon([
-                bbox.getSouthEast(),
-                bbox.getNorthEast(),
-                bbox.getNorthWest(),
-                bbox.getSouthWest()
-            ]);
-            map.fitBounds(poly.getBounds());
-            
-            // Pindahkan marker ke hasil pencarian
             const center = e.geocode.center;
             marker.setLatLng(center);
             updateInputs(center.lat, center.lng);
+            map.setView(center, 16);
         })
         .addTo(map);
 
-        // 6. Fitur "Ambil Lokasi Saya"
         document.getElementById('btnCurrentLocation').addEventListener('click', function() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(position) {
                     const userLat = position.coords.latitude;
                     const userLng = position.coords.longitude;
-                    
                     const newLatLng = new L.LatLng(userLat, userLng);
                     marker.setLatLng(newLatLng);
                     map.setView(newLatLng, 16);
                     updateInputs(userLat, userLng);
-                    
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Lokasi Ditemukan',
-                        text: 'Pin dipindahkan ke lokasi Anda saat ini.',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
+                    Swal.fire({ icon: 'success', title: 'Lokasi Ditemukan', timer: 1000, showConfirmButton: false });
                 }, function() {
-                    Swal.fire('Error', 'Gagal mengambil lokasi GPS. Pastikan izin lokasi aktif.', 'error');
+                    Swal.fire('Error', 'Gagal mengambil lokasi GPS.', 'error');
                 });
             } else {
-                Swal.fire('Error', 'Browser Anda tidak mendukung Geolocation.', 'error');
+                Swal.fire('Error', 'Browser tidak mendukung Geolocation.', 'error');
             }
         });
 
-        // --- SUBMIT FORM (AJAX) ---
-        $('#formSettings').on('submit', function(e){
-            e.preventDefault();
-            const formData = new FormData(this);
-            
-            $.ajax({
-                url: "{{ route('pengurus.settings.update') }}",
-                method: "POST",
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(res) {
-                    Swal.fire('Berhasil', res.message, 'success');
-                },
-                error: function(err) {
-                    Swal.fire('Gagal', 'Terjadi kesalahan validasi.', 'error');
-                }
-            });
-        });
-
-        // --- Logic Select2 Kota (Kode Lama Anda) ---
-        // (Paste kode JS Select2 yang lama di sini agar fitur kota tetap jalan)
+        // ==========================================================
+        // 2. LOGIC SELECT2 (KOTA) - JQUERY
+        // ==========================================================
         const lokasiSelect = $('#lokasi-select');
         const lokasiNamaApiInput = $('#lokasi-nama-api');
         const defaultLokasiId = @json($selectedLokasiId);
@@ -270,6 +259,137 @@
         lokasiSelect.on('select2:select', function (e) {
             lokasiNamaApiInput.val(e.params.data.text);
         });
+
+        // ==========================================================
+        // 3. LOGIC SUBMIT FORM & UPLOAD GAMBAR (VANILLA JS)
+        // ==========================================================
+        const form = document.getElementById('formSettings');
+        const submitButton = form.querySelector('button[type="submit"]');
+        const originalButtonText = submitButton.innerHTML;
+        const token = document.querySelector('meta[name="csrf-token"]').content;
+
+        // Elemen Gambar
+        const fotoInput = document.getElementById('foto_masjid');
+        const clearFileBtn = document.getElementById('clearFotoMasjid');
+        const preview = document.getElementById('previewFotoMasjid');
+        const previewContainer = document.getElementById('previewFotoMasjidContainer');
+        const fotoLabelSpan = document.querySelector('#foto_masjid_label span'); // Dummy wrapper
+
+        // --- SUBMIT FORM ---
+        form.addEventListener('submit', async e => {
+            e.preventDefault();
+            setLoading(true);
+
+            const formData = new FormData(form);
+            const url = form.getAttribute('action');
+
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 
+                        'X-CSRF-TOKEN': token,
+                        'Accept': 'application/json' // Agar Laravel mengembalikan JSON jika validasi gagal
+                    },
+                    body: formData
+                });
+
+                const data = await res.json();
+                
+                if (res.ok) {
+                    Swal.fire('Berhasil!', data.message, 'success');
+                    
+                    if (data.foto_url) {
+                         preview.src = data.foto_url;
+                         previewContainer.classList.remove('d-none');
+                         clearFileBtn.classList.remove('d-none');
+                         fotoInput.value = ""; // Reset input file agar bisa pilih file yg sama lagi jika perlu
+                    } else {
+                        // Jika response tidak ada URL (berarti dihapus atau memang null)
+                        if (!preview.src || preview.src.includes(window.location.origin)) {
+                            // Cek apakah user meminta hapus
+                            if(document.getElementById('hapus_foto_masjid')) {
+                                clearFileVisuals();
+                            }
+                        }
+                    }
+                    
+                    // Hapus hidden input 'hapus_foto_masjid' setelah sukses
+                    const deleteInput = document.getElementById('hapus_foto_masjid');
+                    if (deleteInput) deleteInput.remove();
+                    
+                } else {
+                    if (res.status === 422 && data.errors) {
+                        let errorMessages = Object.values(data.errors).map(err => err[0]).join('<br>');
+                        throw new Error(errorMessages);
+                    }
+                    throw new Error(data.message || 'Terjadi kesalahan');
+                }
+            } catch (err) {
+                Swal.fire('Gagal', err.message, 'error');
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        function setLoading(isLoading) {
+            if (isLoading) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Menyimpan...`;
+            } else {
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonText;
+            }
+        }
+
+        // --- PREVIEW GAMBAR ---
+        if (fotoInput) {
+            fotoInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Tampilkan tombol hapus
+                    clearFileBtn.classList.remove('d-none');
+                    
+                    // Baca file untuk preview
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        preview.src = event.target.result;
+                        previewContainer.classList.remove('d-none');
+                    }
+                    reader.readAsDataURL(file);
+                    
+                    // Jika user pilih file baru, batalkan status hapus (jika sebelumnya diklik hapus)
+                    const deleteInput = document.getElementById('hapus_foto_masjid');
+                    if (deleteInput) deleteInput.remove();
+                }
+            });
+        }
+
+        // --- HAPUS GAMBAR ---
+        function clearFileVisuals() {
+            clearFileBtn.classList.add('d-none');
+            preview.src = "";
+            previewContainer.classList.add('d-none');
+        }
+
+        if (clearFileBtn) {
+            clearFileBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                fotoInput.value = ""; // Kosongkan input file
+                clearFileVisuals();   // Sembunyikan preview
+                
+                // Buat hidden input untuk memberitahu server agar menghapus file di DB
+                let deleteInput = document.getElementById('hapus_foto_masjid');
+                if (!deleteInput) {
+                    deleteInput = document.createElement('input');
+                    deleteInput.type = 'hidden';
+                    deleteInput.name = 'hapus_foto_masjid';
+                    deleteInput.id = 'hapus_foto_masjid';
+                    form.appendChild(deleteInput);
+                }
+                deleteInput.value = '1';
+            });
+        }
     });
 </script>
 @endpush
