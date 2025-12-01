@@ -250,21 +250,23 @@ public function registerProcess(Request $request)
         ]);
 
         $jamaah = Jamaah::where('email', $request->email)->first();
-        $otp = rand(100000, 999999);
 
-        // Update No HP dan set OTP
+        // Update No HP dan Langsung Verifikasi
         $jamaah->update([
             'no_hp' => $request->no_hp,
-            'otp_code' => $otp,
-            'otp_expires_at' => Carbon::now()->addMinutes(10),
-            'is_verified' => false, 
+            'is_verified' => true, // Langsung dianggap verified
+            'email_verified_at' => now(), // Email Google pasti valid
+            'phone_verified_at' => now(), // HP dianggap valid tanpa OTP
+            'otp_code' => null,
+            'otp_expires_at' => null,
         ]);
 
-        // Kirim OTP
-        $this->sendOtp($jamaah, $otp);
+        // Login Otomatis
+        Auth::guard('jamaah')->login($jamaah);
 
-        return redirect()->route('auth.verify', ['email' => $jamaah->email])
-            ->with('success', 'Kode OTP verifikasi telah dikirim.');
+        // Redirect ke Halaman Utama
+        return redirect()->intended(route('public.landing'))
+            ->with('success', 'Data berhasil dilengkapi. Selamat datang!');
     }
 
     // 5. Helper Kirim OTP (Email & WA)
