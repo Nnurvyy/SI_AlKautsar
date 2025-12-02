@@ -4,42 +4,53 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\PemasukanTabunganQurban;
+use App\Models\PemasukanDonasi; // <--- Tambahkan Model Donasi
 use Carbon\Carbon;
 
 class HapusTransaksiPending extends Command
 {
     /**
-     * Nama command yang akan dipanggil nanti.
+     * Nama command sama seperti sebelumnya agar cron job tetap jalan
      */
     protected $signature = 'transaksi:bersihkan-pending';
 
-    /**
-     * Deskripsi command.
-     */
-    protected $description = 'Menghapus transaksi qurban yang statusnya pending lebih dari 1 jam';
+    protected $description = 'Menghapus transaksi (Qurban & Donasi) yang statusnya pending lebih dari 1 jam';
 
-    /**
-     * Eksekusi logic penghapusan.
-     */
     public function handle()
     {
-        // Cari data yang statusnya 'pending' DAN dibuat lebih dari 1 jam yang lalu
-        $batasWaktu = Carbon::now()->subHour(); // Waktu saat ini dikurangi 1 jam
+        $batasWaktu = Carbon::now()->subHour(); // 1 Jam yang lalu
 
-        $transaksiExpired = PemasukanTabunganQurban::where('status', 'pending')
+        // 1. Hapus Pending Qurban
+        $qurbanExpired = PemasukanTabunganQurban::where('status', 'pending')
+                            ->where('created_at', '<', $batasWaktu)
+                            ->get();
+        
+        $countQurban = 0;
+        if ($qurbanExpired->count() > 0) {
+            foreach ($qurbanExpired as $t) {
+                $t->delete();
+                $countQurban++;
+            }
+        }
+
+        // 2. Hapus Pending Donasi (BARU)
+        $donasiExpired = PemasukanDonasi::where('status', 'pending')
                             ->where('created_at', '<', $batasWaktu)
                             ->get();
 
-        $jumlah = $transaksiExpired->count();
-
-        if ($jumlah > 0) {
-            foreach ($transaksiExpired as $transaksi) {
-                // Opsional: Hapus file bukti bayar jika ada, sebelum delete record
-                $transaksi->delete();
+        $countDonasi = 0;
+        if ($donasiExpired->count() > 0) {
+            foreach ($donasiExpired as $d) {
+                $d->delete();
+                $countDonasi++;
             }
-            $this->info("Berhasil menghapus {$jumlah} transaksi pending yang kadaluarsa.");
+        }
+
+        // Info ke Log Console
+        if ($countQurban > 0 || $countDonasi > 0) {
+            $this->info("Pembersihan Selesai: {$countQurban} Qurban dihapus, {$countDonasi} Donasi dihapus.");
         } else {
-            $this->info("Tidak ada transaksi pending yang perlu dihapus.");
+            $this->info("Tidak ada transaksi pending lama (Aman).");
         }
     }
 }

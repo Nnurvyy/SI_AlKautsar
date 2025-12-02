@@ -135,32 +135,31 @@ class PublicController extends Controller
 
     public function donasi()
     {
-        // Gunakan Carbon startOfDay agar akurat membandingkan tanggal (jam 00:00:00)
         $today = Carbon::now()->startOfDay();
 
         // Ambil donasi yang BELUM berakhir atau UNLIMITED
-        $programDonasi = Donasi::withSum('pemasukan', 'nominal')
+        // Eager Load 'pemasukan' dengan filter status = 'success'
+        $programDonasi = Donasi::withSum(['pemasukan' => function($query) {
+                $query->where('status', 'success'); // <--- FILTER PENTING
+            }], 'nominal')
             ->where(function($query) use ($today) {
                 $query->whereDate('tanggal_selesai', '>=', $today)
-                      ->orWhereNull('tanggal_selesai');
+                    ->orWhereNull('tanggal_selesai');
             })
-            ->orderBy('created_at', 'desc') // Tampilkan yang terbaru dibuat di atas
+            ->orderBy('created_at', 'desc')
             ->get();
 
-        // Transformasi data untuk mempermudah View
         $programDonasi->transform(function($item) {
             $target = $item->target_dana;
+            // Ambil hasil sum yang sudah difilter
             $terkumpul = $item->pemasukan_sum_nominal ?? 0;
             
-            // Hitung Persentase
             $persentase = ($target > 0) ? round(($terkumpul / $target) * 100) : 0;
             
-            // Inject property baru ke object model
             $item->dana_terkumpul = $terkumpul;
-            $item->persentase = min($persentase, 100); // Max 100% (Visual Bar)
-            $item->persentase_asli = $persentase;      // Text asli (bisa > 100%)
+            $item->persentase = min($persentase, 100);
+            $item->persentase_asli = $persentase;
             
-            // URL Gambar
             $item->gambar_url = $item->foto_donasi 
                 ? asset('storage/' . $item->foto_donasi) 
                 : asset('images/donasi/default.jpg'); 
@@ -168,25 +167,28 @@ class PublicController extends Controller
             return $item;
         });
 
-        // Jika $programDonasi kosong, View akan otomatis menampilkan alert Biru (Sesuai kode blade sebelumnya)
         return view('public.donasi', compact('programDonasi'));
     }
 
     public function getDonasiDetail(Request $request, $id)
     {
-        $donasi = Donasi::withSum('pemasukan', 'nominal')->findOrFail($id);
+        // 1. Ambil Detail Donasi & Sum Nominal (Hanya Success)
+        $donasi = Donasi::withSum(['pemasukan' => function($query) {
+            $query->where('status', 'success'); // <--- FILTER PENTING
+        }], 'nominal')->findOrFail($id);
         
-        // Ambil pesan donatur
+        // 2. Ambil List Donatur / Pesan (Hanya Success)
         $donatur = $donasi->pemasukan()
+                        ->where('status', 'success') // <--- FILTER PENTING: Hanya tampilkan yang lunas
                         ->whereNotNull('pesan')
                         ->where('pesan', '!=', '')
+                        ->where('pesan', '!=', '-') // Filter pesan default dummy
                         ->orderBy('created_at', 'desc')
                         ->paginate(4);
 
-        // TRANSFORMASI DATA DONATUR
-        // Agar accessor 'avatar_url' (dari Model PemasukanDonasi) masuk ke JSON
+        // Transformasi Data Donatur (Avatar)
         $donatur->getCollection()->transform(function ($item) {
-            $item->avatar_url = $item->avatar_url; // Memanggil Accessor
+            $item->avatar_url = $item->avatar_url; 
             return $item;
         });
 
@@ -198,152 +200,12 @@ class PublicController extends Controller
             'deskripsi' => $donasi->deskripsi,
             'foto_url' => $donasi->foto_donasi ? asset('storage/' . $donasi->foto_donasi) : asset('images/donasi/default.jpg'),
             'target_dana' => $donasi->target_dana,
-            'terkumpul' => $donasi->pemasukan_sum_nominal ?? 0,
+            'terkumpul' => $donasi->pemasukan_sum_nominal ?? 0, // Ini sekarang hanya menghitung yang sukses
             'persentase' => ($donasi->target_dana > 0) ? min(100, round(($donasi->pemasukan_sum_nominal / $donasi->target_dana) * 100)) : 0,
             'sisa_hari' => $sisaHari,
             'tanggal_selesai_fmt' => $donasi->tanggal_selesai ? Carbon::parse($donasi->tanggal_selesai)->translatedFormat('d F Y') : 'Tanpa Batas Waktu',
-            'donatur' => $donatur // JSON ini sekarang berisi avatar_url
+            'donatur' => $donatur 
         ]);
-    }
-
-    public function tabunganQurbanSaya()
-    {
-        // 1. AMBIL PROFIL MASJID (Define di paling atas agar aman)
-        $masjidSettings = MasjidProfil::first(); 
-
-        // Fallback jika data kosong agar tidak error
-        if (!$masjidSettings) {
-            $masjidSettings = new MasjidProfil();
-            $masjidSettings->social_whatsapp = ''; 
-        }
-
-        // 2. KONDISI BELUM LOGIN
-        if (!Auth::guard('jamaah')->check()) {
-            return view('public.tabungan-qurban-saya', [
-                'user' => null,
-                'tabungans' => collect([]),
-                'totalAset' => 0,
-                'masterHewan' => [],
-                'masjidSettings' => $masjidSettings 
-            ]);
-        }
-
-        // 3. KONDISI SUDAH LOGIN
-        $user = Auth::guard('jamaah')->user();
-    
-        $tabungans = TabunganHewanQurban::with(['pemasukanTabunganQurban', 'details.hewan'])
-            ->where('id_jamaah', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-        
-        $masterHewan = HewanQurban::where('is_active', true)->orderBy('nama_hewan')->get();
-
-        $totalAset = 0;
-        foreach ($tabungans as $tabungan) {
-            $totalAset += $tabungan->pemasukanTabunganQurban->sum('nominal');
-        }
-
-        // Kirim ke view (Pastikan 'masjidSettings' ada di compact)
-        return view('public.tabungan-qurban-saya', compact('user', 'tabungans', 'totalAset', 'masterHewan', 'masjidSettings'));
-    }
-    /**
-     * Proses Jamaah Mendaftar Tabungan Baru (Logic Multi Item)
-     */
-    public function storeTabunganJamaah(Request $request)
-    {
-        if (!Auth::guard('jamaah')->check()) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-        $user = Auth::guard('jamaah')->user();
-
-        // 1. Cek Limit Max 2
-        $activeCount = TabunganHewanQurban::where('id_jamaah', $user->id)
-            ->whereIn('status', ['menunggu', 'disetujui']) // Hanya hitung yang aktif/pending
-            ->count();
-        
-        if ($activeCount >= 2) {
-            return response()->json(['message' => 'Anda maksimal hanya boleh memiliki 2 tabungan qurban aktif.'], 422);
-        }
-
-        // 2. Validasi Array Items
-        $request->validate([
-            'items' => 'required|array|min:1',
-            'items.*.id_hewan' => 'required|exists:hewan_qurban,id_hewan_qurban',
-            'items.*.qty' => 'required|numeric|min:1',
-            'saving_type' => 'required|in:bebas,cicilan',
-            'duration_months' => 'nullable|numeric|min:1',
-        ]);
-
-        DB::beginTransaction();
-        try {
-            $uuid = (string) Str::uuid();
-            $grandTotal = 0;
-            $itemsToInsert = [];
-
-            // Loop items untuk hitung total dan prepare data
-            foreach ($request->items as $item) {
-                $hewan = HewanQurban::find($item['id_hewan']);
-                if(!$hewan) continue;
-                
-                $subtotal = $hewan->harga_hewan * $item['qty'];
-                $grandTotal += $subtotal;
-
-                $itemsToInsert[] = [
-                    'hewan' => $hewan,
-                    'qty' => $item['qty'],
-                    'subtotal' => $subtotal
-                ];
-            }
-
-            // Buat Header (Status: MENUNGGU)
-            TabunganHewanQurban::create([
-                'id_tabungan_hewan_qurban' => $uuid,
-                'id_jamaah' => $user->id,
-                'status' => 'menunggu', 
-                'saving_type' => $request->saving_type,
-                'duration_months' => $request->saving_type == 'cicilan' ? $request->duration_months : null,
-                'total_tabungan' => 0,
-                'total_harga_hewan_qurban' => $grandTotal
-            ]);
-
-            // Simpan Detail
-            foreach ($itemsToInsert as $data) {
-                DetailTabunganHewanQurban::create([
-                    'id_tabungan_hewan_qurban' => $uuid,
-                    'id_hewan_qurban' => $data['hewan']->id_hewan_qurban,
-                    'jumlah_hewan' => $data['qty'],
-                    'harga_per_ekor' => $data['hewan']->harga_hewan, // Simpan harga saat deal
-                    'subtotal' => $data['subtotal']
-                ]);
-            }
-
-            DB::commit();
-            return response()->json(['success' => true, 'message' => 'Permintaan tabungan dikirim, menunggu persetujuan pengurus.']);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * [BARU] Mengambil Detail Tabungan (Untuk Modal Riwayat di View Jamaah)
-     * Method ini WAJIB ADA agar tombol "Lihat Riwayat" berfungsi.
-     */
-    public function getTabunganDetail($id)
-    {
-        if (!Auth::guard('jamaah')->check()) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-        $user = Auth::guard('jamaah')->user();
-
-        $tabungan = TabunganHewanQurban::with(['details.hewan', 'pemasukanTabunganQurban' => function($q){
-            $q->orderBy('tanggal', 'desc');
-        }])
-        ->where('id_jamaah', $user->id) // Security check: Pastikan milik user login
-        ->findOrFail($id);
-
-        return response()->json($tabungan);
     }
 
     public function jadwalAdzan(Request $request)

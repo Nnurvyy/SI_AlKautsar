@@ -276,18 +276,45 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const tbodyRiwayat = document.getElementById('tabelRiwayat');
         tbodyRiwayat.innerHTML = '';
+        
         if (data.pemasukan.length === 0) { 
-            tbodyRiwayat.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Belum ada donasi masuk.</td></tr>`; 
+            // Ubah colspan jadi 6 karena kolom bertambah
+            tbodyRiwayat.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Belum ada donasi masuk.</td></tr>`; 
         } else {
             data.pemasukan.forEach(p => {
-                let badge = p.metode_pembayaran === 'tunai' ? '<span class="badge bg-secondary">Tunai</span>' : '<span class="badge bg-primary">Transfer</span>';
+                // 1. Badge Metode Pembayaran (Tunai/Transfer)
+                let badgeMetode = p.metode_pembayaran === 'tunai' 
+                    ? '<span class="badge bg-secondary">Tunai</span>' 
+                    : '<span class="badge bg-primary">Transfer</span>';
+
+                // 2. Badge Status (Pending/Success/Failed)
+                let badgeStatus = '';
+                if (p.status === 'success') {
+                    badgeStatus = '<span class="badge bg-success bg-opacity-10 text-success border border-success">Berhasil</span>';
+                } else if (p.status === 'pending') {
+                    badgeStatus = '<span class="badge bg-warning bg-opacity-10 text-warning border border-warning">Pending</span>';
+                } else {
+                    badgeStatus = '<span class="badge bg-danger">Gagal</span>';
+                }
+
+                // 3. Render Baris Tabel
                 tbodyRiwayat.insertAdjacentHTML('beforeend', `
                     <tr>
                         <td>${formatTanggal(p.tanggal)}</td>
-                        <td>${p.nama_donatur}<br><small class="text-muted">"${p.pesan||'-'}"</small></td>
-                        <td class="text-center">${badge}</td>
+                        <td>
+                            ${p.nama_donatur}
+                            <br><small class="text-muted">"${p.pesan || '-'}"</small>
+                        </td>
+                        <td class="text-center">${badgeMetode}</td>
+                        
+                        <td class="text-center">${badgeStatus}</td>
+
                         <td class="text-end fw-bold text-success">${formatRupiah(p.nominal)}</td>
-                        <td class="text-center"><button class="btn btn-sm btn-outline-danger" onclick="window.hapusPemasukan('${p.id_pemasukan_donasi}')"><i class="bi bi-trash"></i></button></td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-danger" onclick="window.hapusPemasukan('${p.id_pemasukan_donasi}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
                     </tr>
                 `);
             });

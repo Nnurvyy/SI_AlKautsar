@@ -221,6 +221,8 @@
                                 <th class="ps-3 py-2 small text-muted text-uppercase">Tgl</th>
                                 <th class="py-2 small text-muted text-uppercase">Donatur</th>
                                 <th class="py-2 small text-muted text-uppercase text-center">Metode</th>
+                                {{-- TAMBAHAN: Kolom Status --}}
+                                <th class="py-2 small text-muted text-uppercase text-center">Status</th> 
                                 <th class="py-2 small text-muted text-uppercase text-end">Nominal</th>
                                 <th class="pe-3 py-2 small text-muted text-uppercase text-center">#</th>
                             </tr>

@@ -13,9 +13,11 @@ class DonasiController extends Controller
 {
     public function index()
     {
-        // Menghitung TOTAL SEMUA uang masuk dari tabel pemasukan_donasi
-        // Tanpa filter tanggal/status aktif
-        $totalDonasi = DB::table('pemasukan_donasi')->sum('nominal');
+        // PERBAIKAN: Tambahkan where('status', 'success')
+        // Agar uang pending/gagal tidak ikut dijumlahkan di Header Halaman Admin
+        $totalDonasi = DB::table('pemasukan_donasi')
+                         ->where('status', 'success') 
+                         ->sum('nominal');
 
         return view('donasi', compact('totalDonasi'));
     }
@@ -24,15 +26,17 @@ class DonasiController extends Controller
     public function data(Request $request)
     {
         $search  = $request->query('search', '');
-        $status  = $request->query('status', 'aktif'); // Default 'aktif'
+        $status  = $request->query('status', 'aktif');
         $perPage = $request->query('perPage', 10);
         $sortBy  = $request->query('sortBy', 'created_at');
         $sortDir = $request->query('sortDir', 'desc');
 
-        // Subquery total terkumpul
+        // PERBAIKAN: Subquery total terkumpul per program
+        // Hanya hitung jika status = success
         $totalTerkumpulSubquery = DB::table('pemasukan_donasi')
             ->select(DB::raw('COALESCE(SUM(nominal), 0)'))
-            ->whereColumn('id_donasi', 'donasi.id_donasi');
+            ->whereColumn('id_donasi', 'donasi.id_donasi')
+            ->where('status', 'success'); // <--- PENTING: Filter status success
 
         $query = Donasi::select('donasi.*')
             ->selectSub($totalTerkumpulSubquery, 'total_terkumpul');
@@ -45,16 +49,13 @@ class DonasiController extends Controller
         // 2. Filter Status
         $today = Carbon::today();
         if ($status === 'aktif') {
-            // Aktif = Tanggal Selesai >= Hari Ini ATAU Tanggal Selesai NULL (Unlimited)
             $query->where(function($q) use ($today) {
                 $q->whereDate('tanggal_selesai', '>=', $today)
                   ->orWhereNull('tanggal_selesai');
             });
         } elseif ($status === 'lewat') {
-            // Lewat = Tanggal Selesai < Hari Ini
             $query->whereDate('tanggal_selesai', '<', $today);
         }
-        // Jika 'semua', tidak ada where tambahan
 
         // 3. Sorting
         $allowedSorts = ['nama_donasi', 'target_dana', 'tanggal_mulai', 'tanggal_selesai', 'created_at'];
@@ -78,13 +79,12 @@ class DonasiController extends Controller
             'nama_donasi' => 'required|string|max:255',
             'target_dana' => 'required|numeric|min:0',
             'tanggal_mulai' => 'required|date',
-            'foto_donasi' => 'nullable|image|max:2048', // Validasi foto
+            'foto_donasi' => 'nullable|image|max:2048',
         ]);
 
         $data = $request->all();
         $data['id_donasi'] = (string) Str::uuid();
 
-        // Upload Foto (Logic Khotib)
         if ($request->hasFile('foto_donasi')) {
             $data['foto_donasi'] = $request->file('foto_donasi')->store('donasi', 'public');
         }
@@ -96,20 +96,24 @@ class DonasiController extends Controller
 
     public function show($id)
     {
-        // Load donasi beserta history pemasukan, diurutkan tanggal terbaru
+        // Load donasi beserta history pemasukan
+        // Kita biarkan history memuat SEMUA status (pending/success) agar admin bisa melihat log transaksi
         $donasi = Donasi::with(['pemasukan' => function($q) {
             $q->orderBy('tanggal', 'desc');
         }])->findOrFail($id);
 
-        // Hitung total di sisi PHP untuk memastikan akurasi modal detail
-        $donasi->total_terkumpul = $donasi->pemasukan->sum('nominal');
+        // PERBAIKAN: Hitung total manual hanya yang success
+        // Ini untuk angka besar di Modal Detail Admin
+        $donasi->total_terkumpul = $donasi->pemasukan
+                                          ->where('status', 'success')
+                                          ->sum('nominal');
 
-        // Append URL foto full
         $donasi->foto_url = $donasi->foto_donasi ? Storage::url($donasi->foto_donasi) : null;
 
         return response()->json($donasi);
     }
 
+    // ... (Method update dan destroy sama seperti sebelumnya, tidak perlu diubah)
     public function update(Request $request, $id)
     {
         $donasi = Donasi::findOrFail($id);
@@ -123,7 +127,6 @@ class DonasiController extends Controller
 
         $data = $request->except(['foto_donasi']);
 
-        // Update Foto Logic
         if ($request->hasFile('foto_donasi')) {
             if ($donasi->foto_donasi && Storage::disk('public')->exists($donasi->foto_donasi)) {
                 Storage::disk('public')->delete($donasi->foto_donasi);
@@ -132,22 +135,16 @@ class DonasiController extends Controller
         }
 
         $donasi->update($data);
-
         return response()->json(['message' => 'Program donasi berhasil diperbarui.']);
     }
 
     public function destroy($id)
     {
         $donasi = Donasi::findOrFail($id);
-        
-        // Hapus foto fisik
         if ($donasi->foto_donasi && Storage::disk('public')->exists($donasi->foto_donasi)) {
             Storage::disk('public')->delete($donasi->foto_donasi);
         }
-        
-        // Pemasukan donasi akan terhapus otomatis karena cascade di migration
         $donasi->delete();
-
         return response()->json(['message' => 'Program donasi dihapus.']);
     }
 }
