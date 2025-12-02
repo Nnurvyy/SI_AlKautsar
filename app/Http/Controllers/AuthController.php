@@ -34,7 +34,8 @@ class AuthController extends Controller
         // 1. Cek Pengurus
         $pengurus = Pengurus::where('email', $credentials['email'])->first();
         if ($pengurus && Hash::check($credentials['password'], $pengurus->password)) {
-            Auth::guard('pengurus')->login($pengurus, $request->boolean('remember'));
+            // Ubah argumen kedua menjadi true (selalu ingat)
+            Auth::guard('pengurus')->login($pengurus, true);
             $request->session()->regenerate();
             return redirect()->intended(route('pengurus.dashboard'));
         }
@@ -50,7 +51,7 @@ class AuthController extends Controller
                     ->with('warning', 'Akun Anda belum terverifikasi. Silakan masukkan kode OTP.');
             }
 
-            Auth::guard('jamaah')->login($jamaah, $request->boolean('remember'));
+            Auth::guard('jamaah')->login($jamaah, true);
             $request->session()->regenerate();
             return redirect()->intended(route('public.landing'));
         }
