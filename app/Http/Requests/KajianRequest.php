@@ -14,13 +14,17 @@ class KajianRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // TAMBAHKAN INI AGAR TIPE TIDAK NULL
-            'tipe' => 'required|in:rutin,event', 
-            
+            'tipe' => 'required|in:rutin,event',
             'nama_penceramah' => 'required|string|max:100',
             'tema_kajian' => 'required|string|max:255',
-            'tanggal_kajian' => 'required|date',
-            'waktu_kajian' => 'nullable', // sesuaikan format time jika perlu
+            
+            // Jika tipe = event, tanggal wajib. Jika rutin, tanggal boleh kosong.
+            'tanggal_kajian' => 'required_if:tipe,event|nullable|date',
+            
+            // Jika tipe = rutin, hari wajib.
+            'hari' => 'required_if:tipe,rutin|nullable|string',
+            
+            'waktu_kajian' => 'nullable',
             'foto_penceramah' => 'nullable|image|max:2048',
         ];
     }

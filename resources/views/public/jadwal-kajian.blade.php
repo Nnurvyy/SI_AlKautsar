@@ -145,7 +145,14 @@
                         <div>
                             <span class="badge bg-light text-dark border">
                                 <i class="bi bi-calendar3 me-1"></i>
-                                {{ \Carbon\Carbon::parse($kajian->tanggal_kajian)->translatedFormat('d M Y') }}
+                                
+                                {{-- LOGIC BARU --}}
+                                @if($kajian->tipe == 'rutin')
+                                    Setiap Hari {{ $kajian->hari }}
+                                @else
+                                    {{ \Carbon\Carbon::parse($kajian->tanggal_kajian)->translatedFormat('d M Y') }}
+                                @endif
+                                
                                 @if($kajian->waktu_kajian)
                                     • {{ \Carbon\Carbon::parse($kajian->waktu_kajian)->format('H:i') }}
                                 @endif

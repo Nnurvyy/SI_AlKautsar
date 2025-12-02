@@ -77,6 +77,14 @@
 
 @media (max-width: 991.98px) {
 
+    .responsive-title {
+        font-size: 15px !important; /* Ubah angka ini sesuai keinginan (contoh: 0.9rem atau 14px) */
+        white-space: nowrap;        /* Opsional: agar teks tidak turun baris jika panjang */
+        overflow: hidden;           /* Opsional: memotong teks jika terlalu panjang */
+        text-overflow: ellipsis;    /* Opsional: memberi titik-titik (...) jika kepanjangan */
+        max-width: 200px;           /* Opsional: batasi lebar agar tidak menabrak icon user */
+    }
+
     /* --- NAVBAR MOBILE (POSISI JUDUL & FONT) --- */
     .top-navbar {
         display: flex;

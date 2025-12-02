@@ -53,19 +53,16 @@ class PublicController extends Controller
         // Ambil kajian yang tanggalnya >= hari ini
         $today = Carbon::today();
 
-        // 1. Ambil Kajian Event (Mendatang)
-        // TETAP: Menggunakan get() (Tanpa Pagination) untuk keperluan Slider
         $kajianEvent = Kajian::where('tipe', 'event')
-            ->where('tanggal_kajian', '>=', $today)
+            ->whereDate('tanggal_kajian', '>=', now())
             ->orderBy('tanggal_kajian', 'asc')
             ->get();
 
-        // 2. Ambil Kajian Rutin (Mendatang)
-        // UBAH: Menggunakan paginate(3) sesuai permintaan
+        // 2. Ambil Kajian Rutin (JANGAN Cek Tanggal, ambil semua)
         $kajianRutin = Kajian::where('tipe', 'rutin')
-            ->where('tanggal_kajian', '>=', $today)
-            ->orderBy('tanggal_kajian', 'asc')
-            ->paginate(3); // <--- Diubah jadi 3 item per halaman
+            // Bisa diurutkan berdasarkan hari atau created_at
+            ->orderBy('created_at', 'desc') 
+            ->paginate(3); // Sesuaikan pagination
 
         return view('public.jadwal-kajian', compact('kajianEvent', 'kajianRutin'));
     }

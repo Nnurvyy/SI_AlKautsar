@@ -146,9 +146,26 @@
 
                         <div class="row g-3">
                             <div class="col-7">
-                                <label for="tanggal_kajian" class="form-label">Tanggal <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="tanggal_kajian" name="tanggal_kajian" required>
+                                <div id="wrapperTanggal" class="d-none">
+                                    <label for="tanggal_kajian" class="form-label">Tanggal Event <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="tanggal_kajian" name="tanggal_kajian">
+                                </div>
+
+                                <div id="wrapperHari">
+                                    <label for="hari" class="form-label">Hari Rutin <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="hari" name="hari">
+                                        <option value="">Pilih Hari...</option>
+                                        <option value="Senin">Senin</option>
+                                        <option value="Selasa">Selasa</option>
+                                        <option value="Rabu">Rabu</option>
+                                        <option value="Kamis">Kamis</option>
+                                        <option value="Jumat">Jumat</option>
+                                        <option value="Sabtu">Sabtu</option>
+                                        <option value="Ahad">Ahad</option>
+                                    </select>
+                                </div>
                             </div>
+                            
                             <div class="col-5">
                                 <label for="waktu_kajian" class="form-label">Pukul (WIB)</label>
                                 <input type="time" class="form-control" id="waktu_kajian" name="waktu_kajian">

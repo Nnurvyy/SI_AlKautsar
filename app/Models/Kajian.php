@@ -29,6 +29,7 @@ class Kajian extends Model
         'nama_penceramah',
         'tema_kajian',
         'tanggal_kajian',
+        'hari',
         'waktu_kajian',
         'foto_penceramah',
     ];
@@ -75,10 +76,28 @@ class Kajian extends Model
      */
     public function getIsAktifAttribute()
     {
+        // 1. Jika tipe Rutin, selalu anggap Aktif
+        if ($this->tipe === 'rutin') {
+            return true;
+        }
+
+        // 2. Jika tipe Event, baru cek tanggalnya
         if (!$this->tanggal_kajian) {
             return false;
         }
+
         // Bandingkan 'tanggal_kajian' dengan hari ini
         return $this->tanggal_kajian->greaterThanOrEqualTo(Carbon::today());
     }
+
+    public function getJadwalLengkapAttribute()
+    {
+        if ($this->tipe == 'rutin') {
+            return "Setiap Hari " . ucfirst($this->hari);
+        }
+        
+        // Jika event, format tanggal
+        return \Carbon\Carbon::parse($this->tanggal_kajian)->translatedFormat('d F Y');
+    }
+
 }

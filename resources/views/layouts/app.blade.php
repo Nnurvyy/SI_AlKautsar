@@ -29,7 +29,7 @@
                     <i class="bi bi-list fs-5"></i>
                 </button>
                 <div>
-                    <h5 class="fw-bold mb-0 text-dark">@yield('title')</h5>
+                    <h5 class="fw-bold mb-0 text-dark responsive-title">@yield('title')</h5>
                     <small class="text-muted d-none d-sm-block">{{ now()->locale('id')->translatedFormat('l, d F Y') }}</small>
                 </div>
             </div>

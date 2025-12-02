@@ -20,43 +20,52 @@ class KajianController extends Controller
 
     public function data(Request $request)
     {
-        $status = $request->query('status', 'aktif');
-        $tipe = $request->query('tipe', '');
-        $search = $request->query('search', '');
-        $perPage = $request->query('perPage', 10);
-        // 3. Ganti kolom default
-        $sortBy = $request->query('sortBy', 'tanggal_kajian'); 
-        $sortDir = $request->query('sortDir', 'desc');  
-
-        // 4. Ganti Model
         $query = Kajian::query();
 
-        // 5. Ganti kolom tanggal
-        if ($status === 'aktif') {
-            $query->where('tanggal_kajian', '>=', Carbon::today());
-        } elseif ($status === 'tidak_aktif') {
-            $query->where('tanggal_kajian', '<', Carbon::today());
+        // --- Filter Status ---
+        if ($request->status == 'aktif') {
+            // Ambil yang (Tipe Rutin) ATAU (Tipe Event DAN Tanggal >= Hari Ini)
+            $query->where(function($q) {
+                $q->where('tipe', 'rutin')
+                  ->orWhere(function($subQ) {
+                      $subQ->where('tipe', 'event')
+                           ->whereDate('tanggal_kajian', '>=', now());
+                  });
+            });
+        } 
+        elseif ($request->status == 'tidak_aktif') {
+            // Ambil yang Tipe Event DAN Tanggal < Hari Ini
+            // (Kajian Rutin tidak pernah masuk sini, kecuali kamu mau logic lain)
+            $query->where('tipe', 'event')
+                  ->whereDate('tanggal_kajian', '<', now());
         }
 
-        // 6. Ganti kolom pencarian
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $searchLower = strtolower($search);
+        // --- Filter Tipe (Tambahan yang kamu buat tadi) ---
+        if ($request->has('tipe') && $request->tipe != '') {
+            $query->where('tipe', $request->tipe);
+        }
 
-                $q->whereRaw('LOWER(nama_penceramah) LIKE ?', ["%{$searchLower}%"])
-                ->orWhereRaw('LOWER(tema_kajian) LIKE ?', ["%{$searchLower}%"])
-                ->orWhereRaw("LOWER(to_char(tanggal_kajian, 'DD Mon YYYY')) LIKE ?", ["%{$searchLower}%"])
-                ->orWhereRaw("LOWER(to_char(tanggal_kajian, 'DD Month YYYY')) LIKE ?", ["%{$searchLower}%"])
-                ->orWhereRaw("LOWER(to_char(tanggal_kajian, 'YYYY-MM-DD')) LIKE ?", ["%{$searchLower}%"]);
+        // --- Filter Search ---
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('nama_penceramah', 'LIKE', "%$search%")
+                  ->orWhere('tema_kajian', 'LIKE', "%$search%");
             });
         }
 
-        // 7. Ganti kolom sort
-        $allowedSorts = ['tanggal_kajian', 'nama_penceramah', 'tema_kajian']; 
-        if (!in_array($sortBy, $allowedSorts)) $sortBy = 'tanggal_kajian';
-        $sortDir = $sortDir === 'asc' ? 'asc' : 'desc';
-
-        $data = $query->orderBy($sortBy, $sortDir)->paginate($perPage);
+        // ... sorting & pagination code ...
+        // Contoh:
+        $sortDir = $request->get('sortDir', 'desc');
+        $sortBy = $request->get('sortBy', 'tanggal_kajian');
+        
+        // PENTING: Fix sorting untuk kajian rutin yg tanggalnya null
+        // Agar kajian rutin tetap muncul rapi, kita bisa sort by created_at atau hari
+        if($sortBy == 'tanggal_kajian') {
+             $data = $query->orderByRaw("CASE WHEN tanggal_kajian IS NULL THEN 1 ELSE 0 END, tanggal_kajian " . $sortDir)->paginate($request->perPage);
+        } else {
+             $data = $query->orderBy($sortBy, $sortDir)->paginate($request->perPage);
+        }
 
         return response()->json($data);
     }

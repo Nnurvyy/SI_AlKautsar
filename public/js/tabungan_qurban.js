@@ -213,7 +213,16 @@ document.addEventListener('DOMContentLoaded', () => {
         response.links.forEach(link => {
             const active = link.active ? 'active' : '';
             const disabled = link.url ? '' : 'disabled';
-            let label = link.label.replace('&laquo;', '<').replace('&raquo;', '>');
+            let label = link.label;
+
+            // Cek jika label mengandung kata 'Previous' atau simbol kiri, ubah jadi '<'
+            if (label.includes('Previous') || label.includes('&laquo;')) {
+                label = '<';
+            } 
+            // Cek jika label mengandung kata 'Next' atau simbol kanan, ubah jadi '>'
+            else if (label.includes('Next') || label.includes('&raquo;')) {
+                label = '>';
+            }
             let pageNum = link.url ? new URL(link.url).searchParams.get('page') : 1;
             nav += `<li class="page-item ${active} ${disabled}"><button class="page-link" onclick="loadTable(${pageNum})">${label}</button></li>`;
         });

@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- Definisi Elemen ---
+    // --- 1. Definisi Elemen ---
     const form = document.getElementById('formKajian');
     const modalKajianEl = document.getElementById('modalKajian');
-    const modalKajian = new bootstrap.Modal(modalKajianEl); // Fix inisialisasi modal
+    const modalKajian = new bootstrap.Modal(modalKajianEl);
     const searchInput = document.getElementById('searchInput');
     const tbody = document.querySelector('#tabelKajian tbody');
     const token = document.querySelector('meta[name="csrf-token"]').content;
@@ -22,19 +22,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Filter & Table
     const statusFilter = document.getElementById('statusFilter');
-    const tipeFilter = document.getElementById('tipeFilter'); // <--- 1. Ambil elemen filter tipe
+    const tipeFilter = document.getElementById('tipeFilter'); 
     const paginationContainer = document.getElementById('paginationLinks');
     const paginationInfo = document.getElementById('paginationInfo');
     const sortTanggal = document.getElementById('sortTanggal');
     const sortIcon = document.getElementById('sortIcon');
 
-    // Input Modal Baru
-    const tipeInput = document.getElementById('tipe'); // <--- 2. Ambil input tipe di modal
+    // --- Elemen Baru untuk Logic Hari/Tanggal ---
+    const tipeInput = document.getElementById('tipe'); 
+    const wrapperHari = document.getElementById('wrapperHari');
+    const wrapperTanggal = document.getElementById('wrapperTanggal');
+    const inputHari = document.getElementById('hari');
+    const inputTanggal = document.getElementById('tanggal_kajian');
 
     let state = {
         currentPage: 1,
         status: 'aktif',
-        tipe: '', // <--- 3. Tambahkan state tipe
+        tipe: '', 
         search: '',
         perPage: 10,
         sortBy: 'tanggal_kajian',
@@ -42,8 +46,44 @@ document.addEventListener('DOMContentLoaded', () => {
         searchTimeout: null
     };
 
-    // --- Event Listener ---
+    // --- 2. Fungsi Logic Tampilan Input (BARU) ---
+    function toggleInputType() {
+        if (!tipeInput) return;
 
+        if (tipeInput.value === 'rutin') {
+            // Jika RUTIN: Tampilkan Hari, Sembunyikan Tanggal
+            wrapperHari.classList.remove('d-none');
+            wrapperTanggal.classList.add('d-none');
+            
+            // Set required pada Hari
+            if(inputHari) inputHari.setAttribute('required', 'required');
+            if(inputTanggal) {
+                inputTanggal.removeAttribute('required');
+                inputTanggal.value = ''; // Reset tanggal
+            }
+        } else {
+            // Jika EVENT: Tampilkan Tanggal, Sembunyikan Hari
+            wrapperHari.classList.add('d-none');
+            wrapperTanggal.classList.remove('d-none');
+            
+            // Set required pada Tanggal
+            if(inputTanggal) inputTanggal.setAttribute('required', 'required');
+            if(inputHari) {
+                inputHari.removeAttribute('required');
+                inputHari.value = ''; // Reset hari
+            }
+        }
+    }
+
+    // --- 3. Event Listener ---
+
+    // Listener Ganti Tipe di Modal (BARU)
+    if (tipeInput) {
+        tipeInput.addEventListener('change', toggleInputType);
+        toggleInputType(); // Jalankan sekali saat load
+    }
+
+    // Listener Sorting
     if (sortTanggal) {
         sortTanggal.addEventListener('click', () => {
             state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
@@ -52,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Listener Filter Status
     if (statusFilter) {
         statusFilter.addEventListener('change', () => {
             state.status = statusFilter.value;
@@ -60,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. Listener Filter Tipe
+    // Listener Filter Tipe (Di Header)
     if (tipeFilter) {
         tipeFilter.addEventListener('change', () => {
             state.tipe = tipeFilter.value;
@@ -69,6 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Listener Search
     if (searchInput) {
         searchInput.addEventListener('keyup', function() {
             clearTimeout(state.searchTimeout);
@@ -80,6 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Listener Pagination
     if (paginationContainer) {
         paginationContainer.addEventListener('click', e => {
             e.preventDefault();
@@ -95,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- CRUD Operations ---
+    // --- 4. CRUD Operations (Submit Form) ---
 
     if (form) {
         form.addEventListener('submit', async e => {
@@ -135,19 +178,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Reset Modal
+    // Reset Modal Saat Ditutup
     if (modalKajianEl) {
         modalKajianEl.addEventListener('hidden.bs.modal', function () {
             form.reset();
             if(fotoInput) fotoInput.dispatchEvent(new Event('change'));
             document.getElementById('id_kajian').value = '';
-            // Reset tipe ke default (rutin)
-            if(tipeInput) tipeInput.value = 'rutin'; 
+            
+            // Reset tipe ke default (rutin) dan update tampilan
+            if(tipeInput) {
+                tipeInput.value = 'rutin'; 
+                toggleInputType(); 
+            }
             setLoading(false); 
         });
     }
 
-    // --- Functions ---
+    // --- 5. Functions Load Data & Render ---
 
     async function loadKajian() {
         if (!tbody) return;
@@ -155,7 +202,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let colCount = tbody.closest('table').querySelector('thead tr').cells.length;
         tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center"><div class="spinner-border text-primary"></div></td></tr>`;
 
-        // 5. Tambahkan param tipe ke URL
         const url = `/pengurus/kajian-data?page=${state.currentPage}&status=${state.status}&tipe=${state.tipe}&search=${state.search}&perPage=${state.perPage}&sortBy=${state.sortBy}&sortDir=${state.sortDir}`;
 
         try {
@@ -183,12 +229,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         data.forEach((item, i) => {
-            // 6. Format Badge Tipe
+            // Badge Tipe
             let tipeBadge = '';
             if (item.tipe === 'rutin') {
                 tipeBadge = '<span class="badge bg-info text-dark">Rutin</span>';
             } else if (item.tipe === 'event') {
                 tipeBadge = '<span class="badge bg-warning text-dark">Event</span>';
+            }
+
+            // Logic Tampilan Tanggal vs Hari di Tabel
+            let infoJadwal = '';
+            if(item.tipe === 'rutin') {
+                // Tampilkan Hari
+                infoJadwal = `<span class="fw-bold">Setiap ${item.hari || '-'}</span>`;
+            } else {
+                // Tampilkan Tanggal
+                infoJadwal = formatTanggal(item.tanggal_kajian);
             }
 
             const row = `
@@ -200,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="text-center">${tipeBadge}</td> <td>${item.nama_penceramah}</td>
                 <td>${item.tema_kajian}</td>
                 <td class="text-center">${formatWaktu(item.waktu_kajian)}</td>
-                <td class="text-center">${formatTanggal(item.tanggal_kajian)}</td>
+                <td class="text-center">${infoJadwal}</td>
                 <td class="text-center">
                     <button class="btn btn-warning btn-sm" onclick="editKajian('${item.id_kajian}')"> 
                         <i class="bi bi-pencil"></i>
@@ -286,7 +342,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Global Functions (Window) ---
+    // --- 6. Global Functions (Window) ---
+    
+    // UPDATE: Fungsi Edit dengan Logic Hari/Tanggal
     window.editKajian = async function(id) {
         try {
             const res = await fetch(`/pengurus/kajian/${id}`);
@@ -295,14 +353,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.getElementById('id_kajian').value = data.id_kajian;
             
-            // 7. Isi input Tipe saat edit
-            if(tipeInput) tipeInput.value = data.tipe; 
+            // 1. Set Tipe dulu
+            if(tipeInput) {
+                tipeInput.value = data.tipe; 
+                toggleInputType(); // Trigger agar input yang sesuai muncul
+            }
 
             document.getElementById('nama_penceramah').value = data.nama_penceramah;
             document.getElementById('tema_kajian').value = data.tema_kajian;
-            if (data.tanggal_kajian) document.getElementById('tanggal_kajian').value = data.tanggal_kajian.split('T')[0];
             if (data.waktu_kajian) document.getElementById('waktu_kajian').value = data.waktu_kajian.substring(0, 5);
 
+            // 2. Isi data Hari ATAU Tanggal sesuai tipe
+            if (data.tipe === 'rutin') {
+                if(inputHari) inputHari.value = data.hari;
+            } else {
+                if (data.tanggal_kajian && inputTanggal) {
+                    inputTanggal.value = data.tanggal_kajian.split('T')[0];
+                }
+            }
+
+            // Logic Foto
             if (data.foto_penceramah) {
                 fotoLabelSpan.textContent = data.foto_penceramah.split('/').pop();
                 fotoLabelSpan.classList.remove('text-muted');
@@ -343,6 +413,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Init
+    // Init Load
     loadKajian();
 });
