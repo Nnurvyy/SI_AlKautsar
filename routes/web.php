@@ -13,7 +13,7 @@ use App\Http\Controllers\InfaqJumatController;
 use App\Http\Controllers\BarangInventarisController;
 use App\Http\Controllers\GrafikController;
 use App\Http\Controllers\LapKeuController;
-use App\Http\Controllers\QurbanController; // Controller Jamaah
+use App\Http\Controllers\QurbanController; // Controller Jamaah (PASTIKAN INI ADA)
 use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\DonasiController;
 use App\Http\Controllers\PemasukanDonasiController;
@@ -51,8 +51,9 @@ Route::get('/khutbah-jumat', [PublicController::class, 'jadwalKhotib'])->name('p
 Route::get('/jadwal-kajian', [PublicController::class, 'jadwalKajian'])->name('public.jadwal-kajian');
 Route::get('/tentang-kami', [App\Http\Controllers\PublicController::class, 'tentangKami'])->name('public.tentang-kami');
 
-
-Route::get('/tabungan-qurban-saya', [PublicController::class, 'tabunganQurbanSaya'])
+// --- [PERBAIKAN DISINI] ---
+// Arahkan ke QurbanController agar logic 'pending' tidak dihitung aset berjalan benar
+Route::get('/tabungan-qurban-saya', [QurbanController::class, 'index'])
     ->name('public.tabungan-qurban-saya');
 
 
@@ -126,7 +127,7 @@ Route::middleware(['auth:pengurus'])->prefix('pengurus')->name('pengurus.')->gro
     
     // Hewan & Pemasukan Qurban
     Route::resource('pemasukan-qurban', PemasukanTabunganQurbanController::class)->parameter('pemasukan-qurban', 'id');
-    Route::resource('hewan-qurban', HewanQurbanController::class)->parameters(['hewan-qurban' => 'id']); // Perbaiki resource name
+    Route::resource('hewan-qurban', HewanQurbanController::class)->parameters(['hewan-qurban' => 'id']); 
 
     // Content
     Route::get('artikel-data', [ArtikelController::class, 'artikelData'])->name('artikel.data');
@@ -152,16 +153,21 @@ Route::middleware(['auth:jamaah'])->name('jamaah.')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
-    // Halaman Utama Tabungan (Milik Jamaah) - Route ini opsional karena sudah dihandle di public route atas
-    // Tapi kita simpan sebagai alias 'jamaah.qurban'
+    // Halaman Utama Tabungan (Milik Jamaah) 
+    // Ini duplikat dengan yang di public, tapi tidak apa-apa dibiarkan atau dihapus salah satu.
+    // Jika dihapus, pastikan di view/controller tidak ada yang memanggil route('jamaah.qurban')
     Route::get('/qurban-saya', [QurbanController::class, 'index'])->name('qurban');
     
     // Proses Daftar Tabungan Baru
-    Route::post('/qurban-saya/store', [QurbanController::class, 'store'])->name('qurban.store'); // Sesuaikan nama route di JS
-    Route::post('/tabungan-qurban-saya/daftar', [PublicController::class, 'storeTabunganJamaah'])->name('tabungan-qurban.store'); // Backup route lama jika JS belum update
+    Route::post('/qurban-saya/store', [QurbanController::class, 'store'])->name('qurban.store'); 
+    
+    // Route ini sepertinya sisa dari PublicController lama, bisa dihapus atau dikomentari
+    // Route::post('/tabungan-qurban-saya/daftar', [PublicController::class, 'storeTabunganJamaah'])->name('tabungan-qurban.store'); 
 
     // Ambil Detail JSON (Untuk Modal Riwayat)
-    // Menggunakan PublicController::getTabunganDetail yang baru kita buat
-    Route::get('/qurban-saya/{id}', [PublicController::class, 'getTabunganDetail'])->name('qurban.show');
+    // Pastikan ini menggunakan QurbanController::show
+    Route::get('/qurban-saya/{id}', [QurbanController::class, 'show'])->name('qurban.show');
+    
+    // Checkout Payment
     Route::post('/tabungan-qurban/checkout', [TabunganPaymentController::class, 'checkout'])->name('tabungan.checkout');
 });

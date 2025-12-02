@@ -7,8 +7,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\TabunganHewanQurban;
 use App\Models\DetailTabunganHewanQurban;
-use App\Models\PemasukanTabunganQurban; // Pastikan Model Pemasukan di-import
+use App\Models\PemasukanTabunganQurban; 
 use App\Models\HewanQurban;
+use App\Models\MasjidProfil; // <--- WAJIB DITAMBAHKAN
 use Illuminate\Support\Str;
 
 class QurbanController extends Controller
@@ -18,38 +19,63 @@ class QurbanController extends Controller
      */
     public function index()
     {
+        // --- [PINDAHAN DARI PUBLIC CONTROLLER] ---
+        // 1. Ambil Profil Masjid untuk tombol bantuan WA
+        $masjidSettings = MasjidProfil::first(); 
+
+        // Fallback jika data kosong agar tidak error di view
+        if (!$masjidSettings) {
+            $masjidSettings = new MasjidProfil();
+            $masjidSettings->social_whatsapp = ''; 
+        }
+
+        // 2. Cek apakah user login
+        if (!Auth::guard('jamaah')->check()) {
+            return view('public.tabungan-qurban-saya', [
+                'user' => null,
+                'tabungans' => collect([]),
+                'totalAset' => 0,
+                'masterHewan' => [],
+                'masjidSettings' => $masjidSettings // Kirim ke view
+            ]);
+        }
+
         $user = Auth::guard('jamaah')->user();
 
-        // 1. Ambil list tabungan user beserta detail & pemasukan
+        // 3. Ambil list tabungan user
         $tabungans = TabunganHewanQurban::with(['details.hewan', 'pemasukanTabunganQurban'])
                         ->where('id_jamaah', $user->id)
                         ->orderBy('created_at', 'desc')
                         ->get();
 
-        // 2. Hitung Total Aset (HANYA YANG SUKSES)
-        // Logika: Ambil semua pemasukan milik user ini -> Filter Status Success -> Jumlahkan Nominal
+        // 4. Hitung Total Aset (Hanya yang SUCCESS)
         $totalAset = PemasukanTabunganQurban::whereHas('tabunganHewanQurban', function($q) use ($user){
-                        $q->where('id_jamaah', $user->id);
-                    })
-                    ->where('status', 'success') // <--- FILTER PENTING: Pending tidak dihitung
-                    ->sum('nominal');
+                            $q->where('id_jamaah', $user->id);
+                        })
+                        ->where('status', 'success') 
+                        ->sum('nominal');
 
-        // 3. Data master hewan untuk modal "Buka Tabungan"
+        // 5. Data master hewan untuk modal tambah
         $masterHewan = HewanQurban::where('is_active', true)
                         ->orderBy('nama_hewan')
                         ->get();
 
-        return view('public.tabungan-qurban-saya', compact('user', 'tabungans', 'totalAset', 'masterHewan'));
+        // Kirim semua variabel ke view, termasuk $masjidSettings
+        return view('public.tabungan-qurban-saya', compact('user', 'tabungans', 'totalAset', 'masterHewan', 'masjidSettings'));
     }
 
     /**
-     * Logic Buka Tabungan Baru (Dari Modal Jamaah)
+     * Logic Buka Tabungan Baru
      */
     public function store(Request $request)
     {
+        if (!Auth::guard('jamaah')->check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        
         $user = Auth::guard('jamaah')->user();
 
-        // 1. Cek Maksimal 2 Tabungan Aktif (Menunggu atau Disetujui)
+        // 1. Cek Maksimal 2 Tabungan Aktif
         $activeCount = TabunganHewanQurban::where('id_jamaah', $user->id)
                         ->whereIn('status', ['menunggu', 'disetujui'])
                         ->count();
@@ -69,16 +95,18 @@ class QurbanController extends Controller
 
         DB::beginTransaction();
         try {
-            // Hitung Grand Total Server Side (Demi Keamanan)
+            $uuid = (string) Str::uuid();
             $grandTotal = 0;
             $itemsToInsert = [];
 
+            // Hitung Grand Total & Siapkan Data
             foreach($request->items as $item) {
                 $hewan = HewanQurban::find($item['id_hewan']);
+                if(!$hewan) continue;
+
                 $subtotal = $hewan->harga_hewan * $item['qty'];
                 $grandTotal += $subtotal;
                 
-                // Simpan sementara data hewan untuk diinsert ke detail nanti
                 $itemsToInsert[] = [
                     'hewan' => $hewan,
                     'qty' => $item['qty'],
@@ -88,8 +116,9 @@ class QurbanController extends Controller
 
             // 3. Create Header Tabungan
             $tabungan = TabunganHewanQurban::create([
+                'id_tabungan_hewan_qurban' => $uuid,
                 'id_jamaah' => $user->id,
-                'status' => 'menunggu', // Default Status
+                'status' => 'menunggu', 
                 'saving_type' => $request->saving_type,
                 'duration_months' => ($request->saving_type == 'cicilan') ? $request->duration_months : null,
                 'total_tabungan' => 0,
@@ -100,7 +129,7 @@ class QurbanController extends Controller
             // 4. Create Detail Tabungan
             foreach($itemsToInsert as $data) {
                 DetailTabunganHewanQurban::create([
-                    'id_tabungan_hewan_qurban' => $tabungan->id_tabungan_hewan_qurban,
+                    'id_tabungan_hewan_qurban' => $uuid,
                     'id_hewan_qurban' => $data['hewan']->id_hewan_qurban,
                     'jumlah_hewan' => $data['qty'],
                     'harga_per_ekor' => $data['hewan']->harga_hewan,
@@ -118,15 +147,19 @@ class QurbanController extends Controller
     }
 
     /**
-     * Ambil Data Detail Tabungan (untuk Modal Riwayat/Dashboard di View Jamaah)
+     * Ambil Data Detail Tabungan (untuk Modal Riwayat)
      */
     public function show($id) {
+        if (!Auth::guard('jamaah')->check()) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         $user = Auth::guard('jamaah')->user();
         
         $tabungan = TabunganHewanQurban::with(['details.hewan', 'pemasukanTabunganQurban' => function($q){
             $q->orderBy('tanggal', 'desc');
         }])
-        ->where('id_jamaah', $user->id) // Security check: Pastikan milik user yg login
+        ->where('id_jamaah', $user->id) 
         ->findOrFail($id);
 
         return response()->json($tabungan);

@@ -78,7 +78,7 @@ class TabunganPaymentController extends Controller
                     ]
                 ],
                 'return_url'   => route('public.tabungan-qurban-saya'), // Pastikan route ini ada
-                'expired_time' => (time() + (24 * 60 * 60)),
+                'expired_time' => (time() + (60 * 60)),
                 'signature'    => $signature
             ];
 
