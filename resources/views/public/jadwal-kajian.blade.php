@@ -146,7 +146,7 @@
                             <span class="badge bg-light text-dark border">
                                 <i class="bi bi-calendar3 me-1"></i>
                                 
-                                {{-- LOGIC BARU --}}
+                                {{-- LOGIC BENAR (DESKTOP) --}}
                                 @if($kajian->tipe == 'rutin')
                                     Setiap Hari {{ $kajian->hari }}
                                 @else
@@ -241,7 +241,18 @@
                     <div>
                         <span class="text-muted small">
                             <i class="bi bi-calendar3 me-1"></i>
-                            {{ \Carbon\Carbon::parse($kajian->tanggal_kajian)->translatedFormat('d M Y') }}
+                            
+                            {{-- PERBAIKAN: LOGIKA TAMPILAN HARI --}}
+                            @if($kajian->tipe == 'rutin')
+                                Setiap Hari {{ $kajian->hari }}
+                            @else
+                                {{ \Carbon\Carbon::parse($kajian->tanggal_kajian)->translatedFormat('d M Y') }}
+                            @endif
+
+                            {{-- Tambahan Waktu agar konsisten --}}
+                            @if($kajian->waktu_kajian)
+                                • {{ \Carbon\Carbon::parse($kajian->waktu_kajian)->format('H:i') }}
+                            @endif
                         </span>
                     </div>
                 </div>
@@ -271,7 +282,18 @@
                     <div>
                         <span class="text-muted small">
                             <i class="bi bi-calendar3 me-1"></i>
-                            {{ \Carbon\Carbon::parse($kajian->tanggal_kajian)->translatedFormat('d M Y') }}
+                            
+                            {{-- PERBAIKAN: LOGIKA TAMPILAN HARI --}}
+                            @if($kajian->tipe == 'rutin')
+                                Setiap Hari {{ $kajian->hari }}
+                            @else
+                                {{ \Carbon\Carbon::parse($kajian->tanggal_kajian)->translatedFormat('d M Y') }}
+                            @endif
+
+                             {{-- Tambahan Waktu agar konsisten --}}
+                             @if($kajian->waktu_kajian)
+                                • {{ \Carbon\Carbon::parse($kajian->waktu_kajian)->format('H:i') }}
+                            @endif
                         </span>
                     </div>
                 </div>

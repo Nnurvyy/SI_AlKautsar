@@ -24,16 +24,16 @@
         }
         .hero-top-nav .navbar-brand { color: white; font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
         
-        /* [UBAH] Style untuk Foto Profil di Header Mobile */
+        /* Style untuk Foto Profil di Header Mobile */
         .hero-top-nav .profile-trigger {
             color: white; font-size: 1.5rem; text-decoration: none; text-shadow: 0 1px 3px rgba(0,0,0,0.5);
             border: none; background: none; padding: 0; cursor: pointer;
         }
         .hero-top-nav .profile-img-nav {
-            width: 36px; height: 36px; /* Ukuran disamakan dgn desktop */
-            border-radius: 50%; /* Membuat bulat */
-            object-fit: cover; /* Agar gambar tidak gepeng */
-            border: 2px solid white; /* Border putih agar kontras dengan background masjid */
+            width: 36px; height: 36px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            border: 2px solid white; 
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
         /* Fallback jika tidak ada foto (Huruf Inisial) */
@@ -64,10 +64,10 @@
             width: 24px; height: 24px; object-fit: contain; margin-bottom: 2px;
         }
         
-        /* [UBAH] Khusus Foto Profil di Bottom Nav */
+        /* Khusus Foto Profil di Bottom Nav */
         .navbar-bottom-item .account-img {
-            width: 26px; height: 26px; /* Sedikit lebih besar dari icon biasa */
-            border-radius: 50%; /* Membuat bulat */
+            width: 26px; height: 26px; 
+            border-radius: 50%; 
             object-fit: cover; 
             margin-bottom: 2px;
             border: 1px solid #dee2e6;
@@ -85,7 +85,7 @@
         .navbar-bottom-item.active { color: #4caf50; font-weight: 600; }
         .navbar-bottom-item.active .account-img { border-color: #4caf50; border-width: 2px; }
 
-        /* --- Styles Lainnya (Tidak Berubah) --- */
+        /* --- Styles Lainnya --- */
         .feature-header { background-color: #ffffff; border-bottom: 1px solid #dee2e6; position: sticky; top: 0; z-index: 1020; }
         .feature-header .btn-back { font-size: 1.5rem; color: #333; text-decoration: none; }
         .feature-header .title { font-size: 1.15rem; font-weight: 600; color: #333; }
@@ -220,7 +220,8 @@
             <div class="container d-flex justify-content-between align-items-center px-4">
                 <a class="navbar-brand" href="{{ url('/') }}">Smart Masjid</a>
                 
-                @guest
+                {{-- [PERBAIKAN] Cek Manual Guard: Jika TIDAK login Pengurus DAN TIDAK login Jamaah --}}
+                @if(!Auth::guard('pengurus')->check() && !Auth::guard('jamaah')->check())
                     <a href="{{ route('auth.welcome') }}" class="profile-trigger">
                         <i class="bi bi-box-arrow-in-right"></i>
                     </a>
@@ -232,7 +233,7 @@
                                 $user = Auth::guard('pengurus')->check() ? Auth::guard('pengurus')->user() : Auth::guard('jamaah')->user(); 
                             @endphp
                             
-                            {{-- [UBAH] Tampilan Foto Profil Mobile Atas --}}
+                            {{-- Tampilan Foto Profil Mobile Atas --}}
                             @if($user->avatar)
                                 <img src="{{ $user->avatar_url }}" alt="Profil" class="profile-img-nav">
                             @else
@@ -254,6 +255,7 @@
                                 <li><a class="dropdown-item py-2" href="{{ route('pengurus.settings.edit') }}"><i class="bi bi-gear me-2 text-primary"></i> Settings</a></li>
                                 <li><a class="dropdown-item py-2" href="{{ route('pengurus.dashboard') }}"><i class="bi bi-speedometer2 me-2 text-primary"></i> Dashboard</a></li>
                             @else
+                                {{-- MENU JAMAAH MOBILE --}}
                                 <li><a class="dropdown-item py-2" href="{{ route('jamaah.profile.edit') }}"><i class="bi bi-person-gear me-2 text-success"></i> Profil Saya</a></li>
                                 <li><a class="dropdown-item py-2" href="{{ route('public.tabungan-qurban-saya') }}"><i class="bi bi-bank me-2 text-success"></i> Tabungan Qurban</a></li>
                             @endif
@@ -269,7 +271,7 @@
                             </li>
                         </ul>
                     </div>
-                @endguest
+                @endif
             </div>
         </nav>
     @endif
@@ -317,13 +319,14 @@
             <span>Lainnya</span>
         </a>
 
-        {{-- [UBAH] ITEM BARU: AKUN DENGAN FOTO --}}
-        @auth
+        {{-- [PERBAIKAN] ITEM BARU: AKUN DENGAN FOTO (Ganti @auth dengan cek manual) --}}
+        @if(Auth::guard('pengurus')->check() || Auth::guard('jamaah')->check())
             @php 
                 $user = Auth::guard('pengurus')->check() ? Auth::guard('pengurus')->user() : Auth::guard('jamaah')->user(); 
+                $profileRoute = Auth::guard('pengurus')->check() ? route('pengurus.profile.edit') : route('jamaah.profile.edit');
             @endphp
             {{-- Jika Login: Ke Halaman Edit Profil --}}
-            <a href="{{ Auth::guard('pengurus')->check() ? route('pengurus.profile.edit') : route('jamaah.profile.edit') }}" 
+            <a href="{{ $profileRoute }}" 
                class="navbar-bottom-item {{ Request::routeIs('*.profile.edit') ? 'active' : '' }}">
                 
                 @if($user->avatar)
@@ -342,10 +345,10 @@
                 <i class="bi bi-person-circle text-secondary" style="font-size: 24px; margin-bottom: 2px;"></i>
                 <span>Masuk</span>
             </a>
-        @endauth
+        @endif
     </nav>
 
-    {{-- Modal Lainnya (Tidak berubah isinya) --}}
+    {{-- Modal Lainnya --}}
     <div class="modal fade" id="modalLainnya" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-bottom"> 
             <div class="modal-content">
