@@ -10,11 +10,11 @@ return new class extends Migration
     {
         Schema::create('hewan_qurban', function (Blueprint $table) {
             $table->uuid('id_hewan_qurban')->primary();
-            // Enum nama hewan dan kategori dipisah agar fleksibel
+            
             $table->enum('nama_hewan', ['kambing', 'kerbau', 'domba', 'sapi', 'unta']);
             $table->enum('kategori_hewan', ['premium', 'reguler', 'basic']);
-            $table->bigInteger('harga_hewan')->default(0); // Gunakan BigInt untuk harga
-            $table->boolean('is_active')->default(true); // Soft delete simpel untuk menyembunyikan hewan
+            $table->bigInteger('harga_hewan')->default(0); 
+            $table->boolean('is_active')->default(true); 
             $table->timestamps();
         });
     }

@@ -30,14 +30,14 @@ class PemasukanController extends Controller
     {
         $request->validate([
             'tanggal' => 'required|date',
-            // VALIDASI KETAT: Pastikan ID Kategori yang dipilih TYPE-nya adalah 'pemasukan'
+
             'id_kategori_keuangan' => 'required|exists:kategori_keuangan,id_kategori_keuangan,tipe,pemasukan',
             'nominal' => 'required|numeric|min:1',
             'deskripsi' => 'nullable|string|max:255',
         ]);
 
         $data = $request->all();
-        $data['tipe'] = 'pemasukan'; 
+        $data['tipe'] = 'pemasukan';
 
         Keuangan::create($data);
 
@@ -52,10 +52,10 @@ class PemasukanController extends Controller
     public function update(Request $request, $id)
     {
         $keuangan = Keuangan::findOrFail($id);
-        
+
         $request->validate([
             'tanggal' => 'required|date',
-            // VALIDASI KETAT JUGA DI SINI
+
             'id_kategori_keuangan' => 'required|exists:kategori_keuangan,id_kategori_keuangan,tipe,pemasukan',
             'nominal' => 'required|numeric|min:1',
             'deskripsi' => 'nullable|string|max:255',

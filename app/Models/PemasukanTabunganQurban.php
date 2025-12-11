@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,16 +19,16 @@ class PemasukanTabunganQurban extends Model
     protected $fillable = [
         'id_pemasukan_tabungan_qurban',
         'id_tabungan_hewan_qurban',
-        'order_id',          // Baru
-        'tripay_reference',  // Baru
-        'checkout_url',      // Baru
+        'order_id',
+        'tripay_reference',
+        'checkout_url',
         'tanggal',
         'nominal',
-        'metode_pembayaran', // Baru
-        'status'             // Baru
+        'metode_pembayaran',
+        'status'
     ];
 
-    // Generate UUID otomatis (opsional jika sudah pakai trait HasUuids, tapi aman ditambahkan)
+
     protected static function booted(): void
     {
         static::creating(function ($model) {

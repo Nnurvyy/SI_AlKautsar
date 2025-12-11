@@ -17,25 +17,20 @@ use App\Models\MasjidProfil;
 
 class TabunganHewanQurbanController extends Controller
 {
-    /**
-     * Menampilkan halaman index admin
-     */
-    public function index() {
+    public function index()
+    {
         $hewanList = HewanQurban::where('is_active', true)->get();
         $jamaahList = Jamaah::orderBy('name')->get();
         return view('tabungan-qurban', compact('hewanList', 'jamaahList'));
     }
 
-    /**
-     * Menyediakan data JSON untuk DataTable (Server Side)
-     */
     public function data(Request $request)
     {
         $statusTabungan = $request->query('status_tabungan', 'semua');
         $statusSetoran  = $request->query('status_setoran', 'semua');
         $tipeTabungan   = $request->query('tipe_tabungan', 'semua');
         $searchNama     = $request->query('search_nama', '');
-        
+
         $perPage = $request->query('perPage', 10);
         $sortBy  = $request->query('sortBy', 'created_at');
         $sortDir = $request->query('sortDir', 'desc');
@@ -43,30 +38,30 @@ class TabunganHewanQurbanController extends Controller
         $tblTabungan = (new TabunganHewanQurban)->getTable();
         $tblPemasukan = (new PemasukanTabunganQurban)->getTable();
 
-        // Query Utama
+
         $query = TabunganHewanQurban::with(['jamaah', 'details.hewan']);
 
-        // Filter Pencarian Nama Jamaah
+
         if (!empty($searchNama)) {
-            $query->whereHas('jamaah', function($q) use ($searchNama) {
+            $query->whereHas('jamaah', function ($q) use ($searchNama) {
                 $q->where('name', 'like', '%' . $searchNama . '%');
             });
         }
 
-        // Filter Tipe Tabungan
+
         if ($tipeTabungan !== 'semua') {
             $query->where('saving_type', $tipeTabungan);
         }
 
-        // Filter Status Tabungan
+
         if ($statusTabungan !== 'semua') {
             $query->where('status', $statusTabungan);
         }
 
-        // [PERBAIKAN 1]: Filter Status Setoran (SQL Manual)
-        // Harus ditambahkan "AND status = 'success'" agar pending tidak dihitung lunas
+
+
         if ($statusSetoran !== 'semua') {
-            // Subquery untuk menghitung total sukses
+
             $subQueryTotal = "(SELECT COALESCE(SUM(nominal), 0) FROM $tblPemasukan WHERE $tblPemasukan.id_tabungan_hewan_qurban = $tblTabungan.id_tabungan_hewan_qurban AND $tblPemasukan.status = 'success')";
 
             if ($statusSetoran == 'lunas') {
@@ -74,22 +69,22 @@ class TabunganHewanQurbanController extends Controller
                 $query->where('status', 'disetujui');
             } elseif ($statusSetoran == 'menunggak') {
                 $query->where('saving_type', 'cicilan')
-                      ->where('status', 'disetujui')
-                      ->whereRaw("$subQueryTotal < $tblTabungan.total_harga_hewan_qurban");
+                    ->where('status', 'disetujui')
+                    ->whereRaw("$subQueryTotal < $tblTabungan.total_harga_hewan_qurban");
             } elseif ($statusSetoran == 'aktif') {
-                 $query->where(function($q) {
-                      $q->where('saving_type', 'bebas')->orWhere('saving_type', 'cicilan');
-                 })->where('status', 'disetujui');
+                $query->where(function ($q) {
+                    $q->where('saving_type', 'bebas')->orWhere('saving_type', 'cicilan');
+                })->where('status', 'disetujui');
             }
         }
 
-        // [PERBAIKAN 2]: Hitung total terkumpul HANYA yang SUCCESS
-        // Jika tidak difilter, transaksi pending (belum bayar) akan dianggap uang masuk.
-        $query->withSum(['pemasukanTabunganQurban as total_terkumpul' => function($q) {
+
+
+        $query->withSum(['pemasukanTabunganQurban as total_terkumpul' => function ($q) {
             $q->where('status', 'success');
         }], 'nominal');
 
-        // Sorting
+
         if ($sortBy == 'total_terkumpul') {
             $query->orderBy('total_terkumpul', $sortDir);
         } else if ($sortBy == 'created_at') {
@@ -100,12 +95,12 @@ class TabunganHewanQurbanController extends Controller
 
         $data = $query->paginate($perPage);
 
-        // Transformasi Data
+
         $data->getCollection()->transform(function ($item) {
             $item->terkumpul = (float) ($item->total_terkumpul ?? 0);
             $item->total_harga = (float) $item->total_harga_hewan_qurban;
-            
-            if($item->saving_type == 'cicilan' && $item->duration_months > 0) {
+
+            if ($item->saving_type == 'cicilan' && $item->duration_months > 0) {
                 $item->installment_amount = round($item->total_harga / $item->duration_months);
             } else {
                 $item->installment_amount = 0;
@@ -121,7 +116,7 @@ class TabunganHewanQurbanController extends Controller
                 $tglBuat = Carbon::parse($item->tanggal_pembuatan);
                 $sekarang = Carbon::now();
                 $diffMonth = (($sekarang->year - $tglBuat->year) * 12) + ($sekarang->month - $tglBuat->month);
-                
+
                 if ($diffMonth > 0) {
                     $targetIdeal = $item->installment_amount * $diffMonth;
                     if ($item->terkumpul < $targetIdeal) {
@@ -136,7 +131,7 @@ class TabunganHewanQurbanController extends Controller
                     $item->finance_label = 'Aktif (Baru)';
                 }
             } else {
-                $item->finance_status = 'pending'; 
+                $item->finance_status = 'pending';
                 $item->finance_label = '-';
             }
             return $item;
@@ -145,9 +140,6 @@ class TabunganHewanQurbanController extends Controller
         return response()->json($data);
     }
 
-    /**
-     * Menyimpan data baru (Admin create manual)
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -163,7 +155,7 @@ class TabunganHewanQurbanController extends Controller
         DB::beginTransaction();
         try {
             $uuid = (string) Str::uuid();
-            $systemTotal = 0; 
+            $systemTotal = 0;
 
             $tabungan = TabunganHewanQurban::create([
                 'id_tabungan_hewan_qurban' => $uuid,
@@ -189,23 +181,19 @@ class TabunganHewanQurbanController extends Controller
                     'subtotal' => $subtotal
                 ]);
             }
-            
+
             DB::commit();
             return response()->json(['success' => true, 'message' => 'Tabungan berhasil dibuat.']);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'Gagal menyimpan: ' . $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Menampilkan data detail (Show) untuk Modal Admin
-     */
     public function show($id)
     {
-        // Ambil data pemasukan lengkap untuk history
-        $tabungan = TabunganHewanQurban::with(['jamaah', 'details.hewan', 'pemasukanTabunganQurban' => function($q) {
+
+        $tabungan = TabunganHewanQurban::with(['jamaah', 'details.hewan', 'pemasukanTabunganQurban' => function ($q) {
             $q->orderBy('tanggal', 'desc');
         }])->findOrFail($id);
 
@@ -217,9 +205,6 @@ class TabunganHewanQurbanController extends Controller
         return response()->json($tabungan);
     }
 
-    /**
-     * Update Data Tabungan
-     */
     public function update(Request $request, $id)
     {
         $tabungan = TabunganHewanQurban::findOrFail($id);
@@ -256,20 +241,16 @@ class TabunganHewanQurbanController extends Controller
 
             DB::commit();
             return response()->json(['success' => true, 'message' => 'Tabungan berhasil diperbarui.']);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'Gagal update: ' . $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Update Status Approval
-     */
-    public function updateStatus(Request $request, $id) 
+    public function updateStatus(Request $request, $id)
     {
         $request->validate(['status' => 'required|in:disetujui,ditolak']);
-        
+
         $tabungan = TabunganHewanQurban::findOrFail($id);
         $tabungan->status = $request->status;
         $tabungan->save();
@@ -277,9 +258,6 @@ class TabunganHewanQurbanController extends Controller
         return response()->json(['success' => true, 'message' => 'Status tabungan diperbarui.']);
     }
 
-    /**
-     * Hapus Data Tabungan
-     */
     public function destroy($id)
     {
         $tabungan = TabunganHewanQurban::findOrFail($id);
@@ -291,9 +269,6 @@ class TabunganHewanQurbanController extends Controller
         ]);
     }
 
-    /**
-     * Cetak PDF Laporan Keuangan Qurban
-     */
     public function cetakPdf(Request $request)
     {
         $periode = $request->get('periode', 'semua');
@@ -303,9 +278,9 @@ class TabunganHewanQurbanController extends Controller
         $tanggal_mulai = $request->get('tanggal_mulai', date('Y-m-01'));
         $tanggal_akhir = $request->get('tanggal_akhir', date('Y-m-d'));
 
-        // [PERBAIKAN 3]: Filter Pemasukan yang SUCCESS saja
+
         $query = PemasukanTabunganQurban::with(['tabunganHewanQurban.jamaah', 'tabunganHewanQurban.details.hewan'])
-            ->where('status', 'success') // <--- PENTING!
+            ->where('status', 'success')
             ->orderBy('tanggal', 'asc');
 
         $periodeTeks = 'Semua Periode';
@@ -331,8 +306,8 @@ class TabunganHewanQurbanController extends Controller
         $pemasukanData = $query->get();
         $totalPemasukan = $pemasukanData->sum('nominal');
 
-        $settings = MasjidProfil::first(); 
-        if(!$settings) {
+        $settings = MasjidProfil::first();
+        if (!$settings) {
             $settings = (object) ['nama_masjid' => 'Masjid Kita', 'alamat' => 'Alamat Masjid'];
         }
 
@@ -345,8 +320,8 @@ class TabunganHewanQurbanController extends Controller
         ];
 
         $pdf = Pdf::loadView('laporan_qurban_pdf', $data);
-        $pdf->setPaper('a4', 'landscape'); 
-        
+        $pdf->setPaper('a4', 'landscape');
+
         return $pdf->stream('laporan-tabungan-qurban-' . time() . '.pdf');
     }
 }

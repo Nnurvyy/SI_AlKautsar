@@ -2,7 +2,7 @@
 const CACHE_NAME = 'laravel-pwa-v3'; 
 
 const urlsToCache = [
-  // --- HANYA FILE ASET STATIS (JANGAN MASUKKAN ROUTE HALAMAN HTML DI SINI) ---
+  // --- HANYA FILE ASET STATIS ---
   '/manifest.json',
   '/favicon.ico',
   '/images/icons/icon-192.png', 

@@ -5,16 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\PemasukanTabunganQurban;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Str; // Wajib import ini untuk generate random string
+use Illuminate\Support\Str;
 
 class PemasukanTabunganQurbanController extends Controller
 {
-    /**
-     * Menyimpan data pemasukan baru (Setoran Manual).
-     */
     public function store(Request $request)
     {
-        // 1. Validasi Input
+
         $request->validate([
             'id_tabungan_hewan_qurban' => 'required|exists:tabungan_hewan_qurban,id_tabungan_hewan_qurban',
             'tanggal' => 'required|date',
@@ -22,19 +19,19 @@ class PemasukanTabunganQurbanController extends Controller
         ]);
 
         try {
-            // 2. Buat Order ID Unik (Format: MAN-Timestamp-Random)
-            // Ini penting agar data terlihat rapi dan tidak error jika kolom order_id unique
+
+
             $orderId = 'MAN-' . time() . '-' . Str::random(3);
 
-            // 3. Simpan Data dengan Status SUCCESS (Hardcode)
-            // Karena ini input manual Admin, maka dianggap uang sudah diterima (Tunai/Transfer Langsung)
+
+
             $pemasukan = PemasukanTabunganQurban::create([
                 'id_tabungan_hewan_qurban' => $request->id_tabungan_hewan_qurban,
                 'order_id'          => $orderId,
                 'tanggal'           => $request->tanggal,
                 'nominal'           => $request->nominal,
-                'metode_pembayaran' => 'tunai',   // Default Manual = Tunai
-                'status'            => 'success', // WAJIB SUCCESS agar saldo bertambah
+                'metode_pembayaran' => 'tunai',
+                'status'            => 'success',
             ]);
 
             return response()->json([
@@ -42,7 +39,6 @@ class PemasukanTabunganQurbanController extends Controller
                 'message' => 'Setoran berhasil disimpan dan saldo bertambah.',
                 'data'    => $pemasukan
             ], Response::HTTP_CREATED);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -51,9 +47,6 @@ class PemasukanTabunganQurbanController extends Controller
         }
     }
 
-    /**
-     * Hapus data pemasukan.
-     */
     public function destroy(string $id)
     {
         try {

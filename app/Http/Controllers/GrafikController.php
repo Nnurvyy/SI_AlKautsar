@@ -16,7 +16,7 @@ class GrafikController extends Controller
         $startDate = $this->calculateStartDate($range);
         $isDaily = str_contains($range, 'day');
 
-        // 1. DATA UNTUK CHART (Garis/Batang)
+
         $selectFormat = $isDaily ? "TO_CHAR(tanggal, 'YYYY-MM-DD')" : "TO_CHAR(tanggal, 'YYYY-MM')";
         $groupKey = $isDaily ? "DATE(tanggal)" : "DATE_TRUNC('month', tanggal)";
 
@@ -30,42 +30,42 @@ class GrafikController extends Controller
 
         $chartData = $this->formatChartData($pemasukanChart, $pengeluaranChart, $isDaily);
 
-        // 2. DATA UNTUK ALOKASI (Top 3 Kategori)
+
         $topPemasukan = $this->getTopCategories('pemasukan', $startDate);
         $topPengeluaran = $this->getTopCategories('pengeluaran', $startDate);
 
         return response()->json([
             'status' => 'success',
             'range' => $range,
-            'chart' => $chartData, // Data Grafik
-            'allocation' => [      // Data Progress Bar
+            'chart' => $chartData,
+            'allocation' => [
                 'pemasukan' => $topPemasukan,
                 'pengeluaran' => $topPengeluaran
             ]
         ]);
     }
 
-    // Helper: Ambil Top 3 Kategori + Persentase
+
     protected function getTopCategories($tipe, $startDate)
     {
-        // Hitung total dulu untuk penyebut persentase
+
         $totalSemua = Keuangan::where('tipe', $tipe)
             ->where('tanggal', '>=', $startDate)
             ->sum('nominal');
 
         if ($totalSemua == 0) return [];
 
-        // Ambil per kategori
+
         $data = Keuangan::with('kategori')
             ->select('id_kategori_keuangan', DB::raw('SUM(nominal) as total'))
             ->where('tipe', $tipe)
             ->where('tanggal', '>=', $startDate)
             ->groupBy('id_kategori_keuangan')
             ->orderByDesc('total')
-            ->take(3) // Ambil 3 Terbesar
+            ->take(3)
             ->get();
 
-        // Format hasil
+
         return $data->map(function ($item) use ($totalSemua) {
             return [
                 'kategori' => $item->kategori->nama_kategori_keuangan ?? 'Tanpa Kategori',
@@ -90,33 +90,33 @@ class GrafikController extends Controller
 
     protected function formatChartData($pemasukan, $pengeluaran, bool $isDaily): array
     {
-        // 1. Gabungkan semua periode unik dari pemasukan dan pengeluaran
+
         $allPeriods = $pemasukan->pluck('periode')
             ->merge($pengeluaran->pluck('periode'))
             ->unique()
-            ->sort() // Sort string (YYYY-MM atau YYYY-MM-DD) pasti urut tanggal/bulan
-            ->values(); // Reset index array
+            ->sort()
+            ->values();
 
         $labels = [];
         $dataPemasukan = [];
         $dataPengeluaran = [];
 
-        // Map data agar mudah diakses berdasarkan key periode
+
         $mapPemasukan = $pemasukan->keyBy('periode');
         $mapPengeluaran = $pengeluaran->keyBy('periode');
 
         foreach ($allPeriods as $period) {
-            // 2. Format Label Sumbu X
+
             if ($isDaily) {
-                // Format Harian: 2025-02-15 -> 15 Feb
+
                 $labels[] = Carbon::parse($period)->isoFormat('D MMM');
             } else {
-                // Format Bulanan: 2025-02 -> Feb 2025
-                // Gunakan parse sederhana karena formatnya YYYY-MM
+
+
                 $labels[] = Carbon::parse($period . '-01')->isoFormat('MMM YYYY');
             }
 
-            // 3. Masukkan Data (0 jika tidak ada)
+
             $dataPemasukan[] = (float) ($mapPemasukan[$period]->total_nominal ?? 0);
             $dataPengeluaran[] = (float) ($mapPengeluaran[$period]->total_nominal ?? 0);
         }
@@ -125,15 +125,15 @@ class GrafikController extends Controller
             'labels' => $labels,
             'datasets' => [
                 [
-                    'label' => 'Total Pemasukan', 
-                    'data' => $dataPemasukan, 
-                    'backgroundColor' => '#28a745', 
+                    'label' => 'Total Pemasukan',
+                    'data' => $dataPemasukan,
+                    'backgroundColor' => '#28a745',
                     'borderRadius' => 4
                 ],
                 [
-                    'label' => 'Total Pengeluaran', 
-                    'data' => $dataPengeluaran, 
-                    'backgroundColor' => '#dc3545', 
+                    'label' => 'Total Pengeluaran',
+                    'data' => $dataPengeluaran,
+                    'backgroundColor' => '#dc3545',
                     'borderRadius' => 4
                 ],
             ],

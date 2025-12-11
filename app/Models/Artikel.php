@@ -25,11 +25,11 @@ class Artikel extends Model
     ];
 
     protected $casts = [
-        'tanggal_terbit_artikel' => 'date', // Cukup 'date' saja
+        'tanggal_terbit_artikel' => 'date',
         'last_update_artikel' => 'date',
     ];
 
-    // --- PENTING: Tambahkan ini agar 'foto_url' muncul di JSON ---
+
     protected $appends = ['foto_url'];
 
     protected static function booted(): void
@@ -41,17 +41,13 @@ class Artikel extends Model
         });
     }
 
-    /**
-     * Accessor untuk 'foto_url' (Virtual Column)
-     * Dipanggil via $artikel->foto_url atau di JSON response
-     */
     public function getFotoUrlAttribute()
     {
-        // Menggunakan $this->attributes['foto_artikel'] untuk mengambil raw value dari DB
+
         $foto = $this->attributes['foto_artikel'] ?? null;
-        
-        return $foto 
-            ? asset('storage/' . $foto) 
+
+        return $foto
+            ? asset('storage/' . $foto)
             : asset('images/default_artikel.png');
     }
 }

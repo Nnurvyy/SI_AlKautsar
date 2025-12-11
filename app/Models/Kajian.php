@@ -5,25 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use Carbon\Carbon; 
+use Carbon\Carbon;
 
 class Kajian extends Model
 {
     use HasFactory;
 
-    /**
-     * Ganti nama tabel
-     */
     protected $table = 'kajian';
-    
-    /**
-     * Ganti primary key
-     */
+
     protected $primaryKey = 'id_kajian';
 
-    /**
-     * Sesuaikan kolom-kolom yang bisa diisi
-     */
     protected $fillable = [
         'tipe',
         'nama_penceramah',
@@ -34,14 +25,11 @@ class Kajian extends Model
         'foto_penceramah',
     ];
 
-    /**
-     * Sesuaikan kolom tanggal
-     */
     protected $casts = [
         'tanggal_kajian' => 'date',
     ];
 
-    // --- Ini untuk UUID (Biarkan saja, sudah benar) ---
+
     public $incrementing = false;
     protected $keyType = 'string';
 
@@ -53,40 +41,31 @@ class Kajian extends Model
             }
         });
     }
-    // --- Selesai UUID ---
 
 
-    /**
-     * (PENTING) Biarkan ini agar 'foto_url' dan 'is_aktif' bisa dipakai di JS/Blade
-     */
+
     protected $appends = ['foto_url', 'is_aktif'];
 
-    /**
-     * (PENTING) Ganti 'foto_khotib' menjadi 'foto_penceramah'
-     */
     public function getFotoUrlAttribute()
     {
         return $this->foto_penceramah
             ? asset('storage/' . $this->foto_penceramah)
-            : asset('images/default.png'); // Pastikan kamu punya default.png di public/images
+            : asset('images/default.png');
     }
 
-    /**
-     * (PENTING) Ganti 'tanggal' menjadi 'tanggal_kajian'
-     */
     public function getIsAktifAttribute()
     {
-        // 1. Jika tipe Rutin, selalu anggap Aktif
+
         if ($this->tipe === 'rutin') {
             return true;
         }
 
-        // 2. Jika tipe Event, baru cek tanggalnya
+
         if (!$this->tanggal_kajian) {
             return false;
         }
 
-        // Bandingkan 'tanggal_kajian' dengan hari ini
+
         return $this->tanggal_kajian->greaterThanOrEqualTo(Carbon::today());
     }
 
@@ -95,9 +74,8 @@ class Kajian extends Model
         if ($this->tipe == 'rutin') {
             return "Setiap Hari " . ucfirst($this->hari);
         }
-        
-        // Jika event, format tanggal
+
+
         return \Carbon\Carbon::parse($this->tanggal_kajian)->translatedFormat('d F Y');
     }
-
 }

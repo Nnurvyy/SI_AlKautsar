@@ -6,24 +6,33 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Http; // Untuk API WA
+use Illuminate\Support\Facades\Http;
 use App\Models\Jamaah;
 use App\Models\Pengurus;
 use App\Models\Keuangan;
 use App\Models\TabunganHewanQurban;
-use App\Mail\OtpVerificationMail; // Pastikan Mailable ini sudah dibuat
+use App\Mail\OtpVerificationMail;
 use Laravel\Socialite\Facades\Socialite;
 use Exception;
 use Carbon\Carbon;
 
 class AuthController extends Controller
 {
-    // --- HALAMAN UTAMA ---
-    public function showWelcomeForm() { return view('auth.welcome'); }
-    public function showLoginForm() { return view('auth.login'); }
-    public function showRegistrationForm() { return view('auth.register'); }
 
-    // --- LOGIN PROCESS (EMAIL & PASSWORD) ---
+    public function showWelcomeForm()
+    {
+        return view('auth.welcome');
+    }
+    public function showLoginForm()
+    {
+        return view('auth.login');
+    }
+    public function showRegistrationForm()
+    {
+        return view('auth.register');
+    }
+
+
     public function loginProcess(Request $request)
     {
         $credentials = $request->validate([
@@ -31,22 +40,22 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        // 1. Cek Pengurus
+
         $pengurus = Pengurus::where('email', $credentials['email'])->first();
         if ($pengurus && Hash::check($credentials['password'], $pengurus->password)) {
-            // Ubah argumen kedua menjadi true (selalu ingat)
+
             Auth::guard('pengurus')->login($pengurus, true);
             $request->session()->regenerate();
             return redirect()->intended(route('pengurus.dashboard'));
         }
 
-        // 2. Cek Jamaah
+
         $jamaah = Jamaah::where('email', $credentials['email'])->first();
         if ($jamaah && Hash::check($credentials['password'], $jamaah->password)) {
-            
-            // CEK VERIFIKASI: Jika belum verifikasi, minta verifikasi dulu
+
+
             if (!$jamaah->is_verified) {
-                // Kirim ulang OTP jika perlu (opsional, di sini kita redirect aja)
+
                 return redirect()->route('auth.verify', ['email' => $jamaah->email])
                     ->with('warning', 'Akun Anda belum terverifikasi. Silakan masukkan kode OTP.');
             }
@@ -59,60 +68,60 @@ class AuthController extends Controller
         return back()->withErrors(['email' => 'Email atau password salah.'])->onlyInput('email');
     }
 
-    // --- REGISTER PROCESS (EMAIL & PASSWORD) ---
-    // Di dalam class AuthController
 
-public function registerProcess(Request $request)
-{
-    // 1. Validasi Input (HAPUS 'unique:jamaah' dari sini)
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|string|email|max:255', // Hapus unique di sini
-        'no_hp' => 'required|string|max:15',         // Hapus unique di sini
-        'password' => 'required|string|min:8|confirmed',
-    ]);
 
-    // 2. Cek Manual Keunikan Data
-    $existingUser = Jamaah::where('email', $request->email)
-                          ->orWhere('no_hp', $request->no_hp)
-                          ->first();
 
-    // Jika user sudah ada DAN sudah verifikasi => Tolak
-    if ($existingUser && $existingUser->is_verified) {
-        return back()->withInput()->withErrors(['email' => 'Email atau No HP sudah terdaftar dan terverifikasi. Silakan login.']);
+    public function registerProcess(Request $request)
+    {
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255',
+            'no_hp' => 'required|string|max:15',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+
+        $existingUser = Jamaah::where('email', $request->email)
+            ->orWhere('no_hp', $request->no_hp)
+            ->first();
+
+
+        if ($existingUser && $existingUser->is_verified) {
+            return back()->withInput()->withErrors(['email' => 'Email atau No HP sudah terdaftar dan terverifikasi. Silakan login.']);
+        }
+
+
+        $otp = rand(100000, 999999);
+        $dataToSave = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'no_hp' => $request->no_hp,
+            'password' => Hash::make($request->password),
+            'otp_code' => $otp,
+            'otp_expires_at' => Carbon::now()->addMinutes(10),
+            'is_verified' => false,
+        ];
+
+
+        if ($existingUser) {
+
+            $existingUser->update($dataToSave);
+            $jamaah = $existingUser;
+        } else {
+
+            $jamaah = Jamaah::create($dataToSave);
+        }
+
+
+        $this->sendOtp($jamaah, $otp);
+
+
+        return redirect()->route('auth.verify', ['email' => $jamaah->email])
+            ->with('success', 'Kode OTP telah dikirim. Silakan cek Email/WhatsApp.');
     }
 
-    // 3. Generate OTP
-    $otp = rand(100000, 999999);
-    $dataToSave = [
-        'name' => $request->name,
-        'email' => $request->email, // Pastikan email konsisten
-        'no_hp' => $request->no_hp,
-        'password' => Hash::make($request->password),
-        'otp_code' => $otp,
-        'otp_expires_at' => Carbon::now()->addMinutes(10),
-        'is_verified' => false,
-    ];
 
-    // 4. Simpan Data (Update jika belum verif, Create jika baru)
-    if ($existingUser) {
-        // OVERWRITE data lama yang belum verified (Solusi agar tidak error "Duplicate")
-        $existingUser->update($dataToSave);
-        $jamaah = $existingUser;
-    } else {
-        // Buat baru
-        $jamaah = Jamaah::create($dataToSave);
-    }
-
-    // 5. Kirim OTP
-    $this->sendOtp($jamaah, $otp);
-
-    // 6. Redirect
-    return redirect()->route('auth.verify', ['email' => $jamaah->email])
-        ->with('success', 'Kode OTP telah dikirim. Silakan cek Email/WhatsApp.');
-}
-
-    // --- GOOGLE AUTHENTICATION ---
     public function redirectToGoogle()
     {
         return Socialite::driver('google')->redirect();
@@ -123,7 +132,7 @@ public function registerProcess(Request $request)
         try {
             $googleUser = Socialite::driver('google')->user();
 
-            // 1. Cek Pengurus (Login Biasa)
+
             $pengurus = Pengurus::where('google_id', $googleUser->id)->orWhere('email', $googleUser->email)->first();
             if ($pengurus) {
                 if (!$pengurus->google_id) $pengurus->update(['google_id' => $googleUser->id]);
@@ -131,40 +140,38 @@ public function registerProcess(Request $request)
                 return redirect()->intended(route('pengurus.dashboard'));
             }
 
-            // 2. Cek Jamaah
+
             $jamaah = Jamaah::where('google_id', $googleUser->id)->orWhere('email', $googleUser->email)->first();
 
             if ($jamaah) {
-                // Update Google ID jika belum ada
+
                 if (!$jamaah->google_id) $jamaah->update(['google_id' => $googleUser->id]);
 
-                // CEK KELENGKAPAN DATA: Jika No HP kosong atau Belum Verifikasi
+
                 if (empty($jamaah->no_hp) || !$jamaah->is_verified) {
                     return redirect()->route('auth.complete-data', ['email' => $jamaah->email]);
                 }
 
                 Auth::guard('jamaah')->login($jamaah);
                 return redirect()->intended(route('public.landing'));
-
             } else {
-                // 3. User Baru via Google -> Simpan Data Dasar -> Redirect ke Lengkapi Data
+
                 $newJamaah = Jamaah::create([
                     'name' => $googleUser->name,
                     'email' => $googleUser->email,
                     'google_id' => $googleUser->id,
-                    'password' => null, // Tidak ada password
-                    'is_verified' => false, // Wajib verifikasi no hp dulu
+                    'password' => null,
+                    'is_verified' => false,
                 ]);
 
                 return redirect()->route('auth.complete-data', ['email' => $newJamaah->email]);
             }
-
         } catch (Exception $e) {
             return redirect()->route('login')->withErrors(['email' => 'Gagal login dengan Google. Silakan coba lagi.']);
         }
     }
 
-    // --- LOGOUT ---
+
     public function logout(Request $request)
     {
         Auth::guard('pengurus')->logout();
@@ -174,7 +181,7 @@ public function registerProcess(Request $request)
         return redirect()->route('public.landing');
     }
 
-    // --- DASHBOARD PENGURUS ---
+
     public function dashboard()
     {
         $totalPemasukan = Keuangan::where('tipe', 'pemasukan')->sum('nominal');
@@ -186,11 +193,11 @@ public function registerProcess(Request $request)
         return view('dashboard', compact('totalPemasukan', 'totalPengeluaran', 'saldo', 'totalPenabungQurban', 'recentTransactions'));
     }
 
-    // ==========================================================
-    // LOGIC TAMBAHAN: VERIFIKASI OTP & LENGKAPI DATA
-    // ==========================================================
 
-    // 1. Halaman Input OTP
+
+
+
+
     public function showVerifyForm(Request $request)
     {
         $email = $request->query('email');
@@ -201,7 +208,7 @@ public function registerProcess(Request $request)
         return view('auth.verify_otp', compact('email'));
     }
 
-    // 2. Proses Cek OTP
+
     public function verifyProcess(Request $request)
     {
         $request->validate([
@@ -211,17 +218,17 @@ public function registerProcess(Request $request)
 
         $jamaah = Jamaah::where('email', $request->email)->first();
 
-        // Cek OTP
+
         if ($jamaah->otp_code != $request->otp) {
             return back()->withErrors(['otp' => 'Kode OTP salah.']);
         }
 
-        // Cek Kadaluarsa
+
         if (Carbon::now()->gt($jamaah->otp_expires_at)) {
             return back()->withErrors(['otp' => 'Kode OTP sudah kadaluarsa. Silakan minta ulang.']);
         }
 
-        // Sukses Verifikasi
+
         $jamaah->update([
             'is_verified' => true,
             'email_verified_at' => now(),
@@ -234,15 +241,15 @@ public function registerProcess(Request $request)
         return redirect()->route('public.landing')->with('success', 'Akun berhasil diverifikasi!');
     }
 
-    // 3. Halaman Lengkapi Data (Khusus Google User yg belum punya HP)
+
     public function showCompleteDataForm(Request $request)
     {
         $email = $request->query('email');
         if (!$email) return redirect()->route('login');
-        return view('auth.complete_data', compact('email')); // Buat view ini (mirip register tapi cuma input HP)
+        return view('auth.complete_data', compact('email'));
     }
 
-    // 4. Proses Simpan No HP & Kirim OTP (Lanjutan Google)
+
     public function processCompleteData(Request $request)
     {
         $request->validate([
@@ -252,43 +259,36 @@ public function registerProcess(Request $request)
 
         $jamaah = Jamaah::where('email', $request->email)->first();
 
-        // Update No HP dan Langsung Verifikasi
+
         $jamaah->update([
             'no_hp' => $request->no_hp,
-            'is_verified' => true, // Langsung dianggap verified
-            'email_verified_at' => now(), // Email Google pasti valid
-            'phone_verified_at' => now(), // HP dianggap valid tanpa OTP
+            'is_verified' => true,
+            'email_verified_at' => now(),
+            'phone_verified_at' => now(),
             'otp_code' => null,
             'otp_expires_at' => null,
         ]);
 
-        // Login Otomatis
+
         Auth::guard('jamaah')->login($jamaah);
 
-        // Redirect ke Halaman Utama
+
         return redirect()->intended(route('public.landing'))
             ->with('success', 'Data berhasil dilengkapi. Selamat datang!');
     }
 
-    // 5. Helper Kirim OTP (Email & WA)
+
     private function sendOtp($user, $otp)
     {
-        // A. Kirim Email
+
         try {
             Mail::to($user->email)->send(new OtpVerificationMail($otp));
         } catch (Exception $e) {
-            // Log error email, jangan stop proses
         }
 
-        // B. Kirim WhatsApp (Contoh pakai Fonnte / Twilio)
+
         try {
-            // Sesuaikan dengan vendor WA Gateway Anda
-            // Http::withHeaders(['Authorization' => 'TOKEN_FONNTE'])->post('https://api.fonnte.com/send', [
-            //     'target' => $user->no_hp,
-            //     'message' => "Kode OTP Smart Masjid: *$otp*. Jangan berikan ke siapa pun.",
-            // ]);
         } catch (Exception $e) {
-            // Log error WA
         }
     }
 
@@ -298,20 +298,20 @@ public function registerProcess(Request $request)
 
         $jamaah = Jamaah::where('email', $request->email)->first();
 
-        // Cek apakah user ada
+
         if (!$jamaah) {
             return back()->withErrors(['email' => 'Email tidak ditemukan.']);
         }
 
-        // Generate OTP Baru
+
         $otp = rand(100000, 999999);
-        
+
         $jamaah->update([
             'otp_code' => $otp,
             'otp_expires_at' => \Carbon\Carbon::now()->addMinutes(10),
         ]);
 
-        // Panggil fungsi kirim OTP yang sudah ada
+
         $this->sendOtp($jamaah, $otp);
 
         return back()->with('success', 'Kode OTP baru berhasil dikirim!');

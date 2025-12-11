@@ -51,7 +51,7 @@ class ProfileController extends Controller
         if (!$user->google_id) {
             // Email harus unik, tapi abaikan ID user sendiri
             $rules['email'] = ['required', 'email', Rule::unique($table)->ignore($user->id)];
-            
+
             // Password opsional (hanya jika diisi)
             $rules['password'] = 'nullable|string|min:8|confirmed';
         }
@@ -59,7 +59,7 @@ class ProfileController extends Controller
         $validatedData = $request->validate($rules);
 
         // 4. PROSES UPLOAD FOTO (Prioritas: Crop -> Upload Biasa)
-        
+
         // A. Cek apakah ada data gambar hasil Crop (Base64)
         if ($request->filled('cropped_image')) {
             // Hapus foto lama jika ada
@@ -70,14 +70,14 @@ class ProfileController extends Controller
             // Proses Base64 String
             // Format biasanya: "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
             $image_parts = explode(";base64,", $request->cropped_image);
-            
+
             // Ambil ekstensi file (jpeg/png)
             $image_type_aux = explode("image/", $image_parts[0]);
             $image_type = $image_type_aux[1] ?? 'jpg'; // Default jpg jika gagal detect
-            
+
             // Decode data gambar
             $image_base64 = base64_decode($image_parts[1]);
-            
+
             // Buat nama file unik
             $filename = 'avatars/profile_' . time() . '_' . Str::random(10) . '.' . $image_type;
 

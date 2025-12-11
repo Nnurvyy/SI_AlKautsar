@@ -13,16 +13,16 @@ class DonasiController extends Controller
 {
     public function index()
     {
-        // PERBAIKAN: Tambahkan where('status', 'success')
-        // Agar uang pending/gagal tidak ikut dijumlahkan di Header Halaman Admin
+
+
         $totalDonasi = DB::table('pemasukan_donasi')
-                         ->where('status', 'success') 
-                         ->sum('nominal');
+            ->where('status', 'success')
+            ->sum('nominal');
 
         return view('donasi', compact('totalDonasi'));
     }
 
-    // Data JSON untuk DataTables/Pagination
+
     public function data(Request $request)
     {
         $search  = $request->query('search', '');
@@ -31,35 +31,35 @@ class DonasiController extends Controller
         $sortBy  = $request->query('sortBy', 'created_at');
         $sortDir = $request->query('sortDir', 'desc');
 
-        // PERBAIKAN: Subquery total terkumpul per program
-        // Hanya hitung jika status = success
+
+
         $totalTerkumpulSubquery = DB::table('pemasukan_donasi')
             ->select(DB::raw('COALESCE(SUM(nominal), 0)'))
             ->whereColumn('id_donasi', 'donasi.id_donasi')
-            ->where('status', 'success'); // <--- PENTING: Filter status success
+            ->where('status', 'success');
 
         $query = Donasi::select('donasi.*')
             ->selectSub($totalTerkumpulSubquery, 'total_terkumpul');
 
-        // 1. Filter Search
+
         if (!empty($search)) {
             $query->where('nama_donasi', 'ILIKE', "%{$search}%");
         }
 
-        // 2. Filter Status
+
         $today = Carbon::today();
         if ($status === 'aktif') {
-            $query->where(function($q) use ($today) {
+            $query->where(function ($q) use ($today) {
                 $q->whereDate('tanggal_selesai', '>=', $today)
-                  ->orWhereNull('tanggal_selesai');
+                    ->orWhereNull('tanggal_selesai');
             });
         } elseif ($status === 'lewat') {
             $query->whereDate('tanggal_selesai', '<', $today);
         }
 
-        // 3. Sorting
+
         $allowedSorts = ['nama_donasi', 'target_dana', 'tanggal_mulai', 'tanggal_selesai', 'created_at'];
-        
+
         if ($sortBy === 'total_terkumpul') {
             $query->orderByRaw("($totalTerkumpulSubquery) $sortDir");
         } elseif (in_array($sortBy, $allowedSorts)) {
@@ -96,28 +96,28 @@ class DonasiController extends Controller
 
     public function show($id)
     {
-        // Load donasi beserta history pemasukan
-        // Kita biarkan history memuat SEMUA status (pending/success) agar admin bisa melihat log transaksi
-        $donasi = Donasi::with(['pemasukan' => function($q) {
+
+
+        $donasi = Donasi::with(['pemasukan' => function ($q) {
             $q->orderBy('tanggal', 'desc');
         }])->findOrFail($id);
 
-        // PERBAIKAN: Hitung total manual hanya yang success
-        // Ini untuk angka besar di Modal Detail Admin
+
+
         $donasi->total_terkumpul = $donasi->pemasukan
-                                          ->where('status', 'success')
-                                          ->sum('nominal');
+            ->where('status', 'success')
+            ->sum('nominal');
 
         $donasi->foto_url = $donasi->foto_donasi ? Storage::url($donasi->foto_donasi) : null;
 
         return response()->json($donasi);
     }
 
-    // ... (Method update dan destroy sama seperti sebelumnya, tidak perlu diubah)
+
     public function update(Request $request, $id)
     {
         $donasi = Donasi::findOrFail($id);
-        
+
         $request->validate([
             'nama_donasi' => 'required|string|max:255',
             'target_dana' => 'required|numeric|min:0',

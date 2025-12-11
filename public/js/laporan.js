@@ -1,37 +1,37 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // State
+    
     let currentPage = 1;
     const tbody = document.querySelector('#tabelLaporan tbody');
     const paginationInfo = document.getElementById('paginationInfo');
     const paginationContainer = document.getElementById('paginationLinks');
     const btnFilter = document.getElementById('btnTerapkanFilter');
 
-    // 1. Fungsi Format Rupiah
+    
     const formatRupiah = (angka) => {
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
     };
 
-    // 2. Fungsi Format Tanggal
+    
     const formatTanggal = (dateString) => {
         const options = { day: '2-digit', month: 'long', year: 'numeric' };
         return new Date(dateString).toLocaleDateString('id-ID', options);
     };
 
-    // 3. Load Data Utama
+    
     async function loadLaporan() {
         if (!tbody) return;
 
-        // Loading State
+        
         tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>`;
 
-        // Ambil Data dari Form Filter
+        
         const form = document.getElementById('formFilterLaporan');
         const formData = new FormData(form);
         const params = new URLSearchParams(formData);
-        params.append('page', currentPage); // Tambahkan page number
+        params.append('page', currentPage); 
 
         try {
-            // Panggil URL Controller yang sama (Controller akan deteksi AJAX)
+            
             const res = await fetch(`/pengurus/lapkeu?${params.toString()}`, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 4. Render Tabel
+    
     function renderTable(data) {
         tbody.innerHTML = '';
 
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         data.forEach(item => {
-            // Logika Tampilan per Baris
+            
             const isMasuk = item.tipe === 'pemasukan';
             const badgeClass = isMasuk ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger';
             const nominalClass = isMasuk ? 'text-success' : 'text-danger';
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 5. Render Pagination (Sama persis dengan request kamu sebelumnya)
+    
     function renderPagination(response) {
         paginationInfo.textContent = `Menampilkan ${response.from || 0} - ${response.to || 0} dari ${response.total} data`;
         paginationContainer.innerHTML = '';
@@ -117,19 +117,19 @@ document.addEventListener('DOMContentLoaded', () => {
         paginationContainer.appendChild(ul);
     }
 
-    // 6. Event Listeners
+    
     if (btnFilter) {
         btnFilter.addEventListener('click', () => {
-            currentPage = 1; // Reset ke halaman 1 setiap filter baru
+            currentPage = 1; 
             loadLaporan();
         });
     }
 
-    // Logika Hide/Show Filter Periode (Copied & Adapted from your Blade script)
+    
     const periodeFilter = document.getElementById('filter-periode');
     const filterBulanan = document.getElementById('filter-bulanan');
-    const filterTahunan = document.getElementById('filter-tahunan'); // Pastikan ID ini ada di HTML
-    const filterRentang = document.getElementById('filter-rentang'); // Pastikan ID ini ada di HTML
+    const filterTahunan = document.getElementById('filter-tahunan'); 
+    const filterRentang = document.getElementById('filter-rentang'); 
 
     if (periodeFilter) {
         periodeFilter.addEventListener('change', function() {
@@ -144,6 +144,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Init Load
+    
     loadLaporan();
 });

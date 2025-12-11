@@ -13,21 +13,21 @@ class InfaqJumatController extends Controller
     {
         return KategoriKeuangan::firstOrCreate(
             ['nama_kategori_keuangan' => 'Infaq Jumat'],
-            ['tipe' => 'pemasukan'] // Opsional
+            ['tipe' => 'pemasukan']
         );
     }
 
     public function index()
     {
-        // 1. Hitung Total Infaq Jumat
+
         $kategori = $this->getKategoriInfaq();
         $totalInfaq = Keuangan::where('id_kategori_keuangan', $kategori->id_kategori_keuangan)->sum('nominal');
 
-        // 2. Kirim ke view
+
         return view('infaq-jumat', compact('totalInfaq'));
     }
 
-    // ========== DATA TABLE ==========
+
     public function data(Request $request)
     {
         $search = $request->search;
@@ -39,11 +39,11 @@ class InfaqJumatController extends Controller
 
         $query = Keuangan::where('id_kategori_keuangan', $kategori->id_kategori_keuangan);
 
-        // SEARCH
+
         if ($search) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('tanggal', 'LIKE', "%$search%")
-                  ->orWhere('nominal', 'LIKE', "%$search%");
+                    ->orWhere('nominal', 'LIKE', "%$search%");
             });
         }
 
@@ -51,7 +51,7 @@ class InfaqJumatController extends Controller
 
         $data = $query->paginate($perPage);
 
-        // Mapping kolom ke format JSON lama
+
         $data->getCollection()->transform(function ($item) {
             return [
                 'id_infaq_jumat' => $item->id_keuangan,
@@ -63,7 +63,7 @@ class InfaqJumatController extends Controller
         return response()->json($data);
     }
 
-    // ========== STORE ==========
+
     public function store(Request $request)
     {
         try {
@@ -83,13 +83,12 @@ class InfaqJumatController extends Controller
             ]);
 
             return response()->json(['message' => 'Data infaq berhasil ditambahkan!'], 201);
-        } 
-        catch (ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json(['message' => 'Validasi gagal', 'errors' => $e->errors()], 422);
         }
     }
 
-    // ========== SHOW ==========
+
     public function show($id)
     {
         $keu = Keuangan::findOrFail($id);
@@ -101,7 +100,7 @@ class InfaqJumatController extends Controller
         ]);
     }
 
-    // ========== UPDATE ==========
+
     public function update(Request $request, $id)
     {
         try {
@@ -118,13 +117,12 @@ class InfaqJumatController extends Controller
             ]);
 
             return response()->json(['message' => 'Data infaq berhasil diubah!']);
-        } 
-        catch (ValidationException $e) {
+        } catch (ValidationException $e) {
             return response()->json(['message' => 'Validasi gagal', 'errors' => $e->errors()], 422);
         }
     }
 
-    // ========== DELETE ==========
+
     public function destroy($id)
     {
         $keu = Keuangan::findOrFail($id);

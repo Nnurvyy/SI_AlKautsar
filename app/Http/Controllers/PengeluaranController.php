@@ -30,14 +30,14 @@ class PengeluaranController extends Controller
     {
         $request->validate([
             'tanggal' => 'required|date',
-            // VALIDASI KETAT: Hanya terima kategori bertipe 'pengeluaran'
+
             'id_kategori_keuangan' => 'required|exists:kategori_keuangan,id_kategori_keuangan,tipe,pengeluaran',
             'nominal' => 'required|numeric|min:1',
             'deskripsi' => 'nullable|string|max:255',
         ]);
 
         $data = $request->all();
-        $data['tipe'] = 'pengeluaran'; 
+        $data['tipe'] = 'pengeluaran';
 
         Keuangan::create($data);
 
@@ -52,10 +52,10 @@ class PengeluaranController extends Controller
     public function update(Request $request, $id)
     {
         $keuangan = Keuangan::findOrFail($id);
-        
+
         $request->validate([
             'tanggal' => 'required|date',
-            // VALIDASI KETAT DI SINI JUGA
+
             'id_kategori_keuangan' => 'required|exists:kategori_keuangan,id_kategori_keuangan,tipe,pengeluaran',
             'nominal' => 'required|numeric|min:1',
             'deskripsi' => 'nullable|string|max:255',

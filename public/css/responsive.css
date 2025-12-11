@@ -16,7 +16,6 @@
     }
 }
 
-/* Saat layar kecil (HP), ubah jadi 1 kolom */
 @media (max-width: 700px) {
     .row.g-4.mb-4>.col-md-6.col-xl-3 {
         flex: 0 0 100%;
@@ -26,51 +25,31 @@
 
 @media (min-width: 992px) and (max-width: 1300px) {
 
-    /* 1. Target container utama */
-    /* paksa 2 grup (filter & tombol) untuk tidak 'wrap' (turun baris) */
     .d-flex.flex-wrap.justify-content-between.align-items-center.mb-4 {
         flex-wrap: nowrap;
         align-items: flex-start;
-        /* Ratakan kedua kolom ke atas */
         gap: 1.5rem;
-        /* Jarak antara kolom filter dan kolom tombol */
     }
 
-    /* 2. Target Kolom Kiri (Grup Filter) */
-    /* target 'div' anak PERTAMA dari container utama */
     .d-flex.flex-wrap.justify-content-between.align-items-center.mb-4>div:first-child {
-        /* Ubah arahnya jadi vertikal (menumpuk ke bawah) */
         flex-direction: column;
         flex-basis: 60%;
-        /* Beri lebar 60% */
         flex-grow: 1;
         gap: 0.75rem;
-        /* Jarak antar search bar dan select box */
     }
 
-    /* 3. Target Kolom Kanan (Grup Tombol) */
-    /* target 'div' anak KEDUA dari container utama */
     .d-flex.flex-wrap.justify-content-between.align-items-center.mb-4>div:last-child {
         flex-basis: 40%;
-        /* Ambil sisa lebarnya */
         flex-grow: 1;
         justify-content: flex-end;
-        /* Dorong tombol ke paling kanan */
         flex-wrap: nowrap;
-        /* Pastikan tombolnya tidak 'wrap' */
     }
 
-    /* 4. Target Item DI DALAM Kolom Kiri */
-    /* buat search bar dan select box jadi 100% lebar kolomnya */
     .d-flex.flex-wrap.justify-content-between.align-items-center.mb-4>div:first-child>.input-group,
     .d-flex.flex-wrap.justify-content-between.align-items-center.mb-4>div:first-child>.form-select {
 
-        /* butuh !important untuk "mengalahkan" style inline di HTML
-                (yaitu style="width: 300px;" dan style="width: auto;")
-                */
         width: 100% !important;
 
-        /* Hapus margin kanan agar rata sempurna */
         margin-right: 0 !important;
     }
 }
@@ -78,14 +57,13 @@
 @media (max-width: 991.98px) {
 
     .responsive-title {
-        font-size: 13px !important; /* Ubah angka ini sesuai keinginan (contoh: 0.9rem atau 14px) */
-        white-space: nowrap;        /* Opsional: agar teks tidak turun baris jika panjang */
-        overflow: hidden;           /* Opsional: memotong teks jika terlalu panjang */
-        text-overflow: ellipsis;    /* Opsional: memberi titik-titik (...) jika kepanjangan */
-        max-width: 200px;           /* Opsional: batasi lebar agar tidak menabrak icon user */
+        font-size: 13px !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
     }
 
-    /* --- NAVBAR MOBILE (POSISI JUDUL & FONT) --- */
     .top-navbar {
         display: flex;
         align-items: center;
@@ -95,14 +73,12 @@
         border-bottom: 1px solid #dee2e6;
     }
 
-    /* Tombol toggle sidebar tetap di kiri */
     #sidebar-toggle {
         flex-shrink: 0;
         font-size: 1.25rem;
         margin-right: 0.5rem;
     }
 
-    /* Judul halaman */
     .navbar-page-title {
         flex: 1;
         text-align: center;
@@ -118,7 +94,6 @@
         display: none;
     }
 
-    /* --- POSISI DROPDOWN AKUN DI MOBILE --- */
     .navbar-nav .dropdown-menu {
         position: absolute !important;
         right: 0.5rem !important;
@@ -130,7 +105,6 @@
     }
 
 
-    /* Profil user di kanan */
     .navbar-nav {
         display: flex;
         align-items: center;
@@ -139,7 +113,6 @@
         gap: 0.5rem;
     }
 
-    /* Avatar user dan nama */
     .user-avatar {
         width: 30px;
         height: 30px;
@@ -148,7 +121,6 @@
 
     .user-avatar+div {
         display: none;
-        /* sembunyikan teks nama di layar kecil */
     }
 
     .top-navbar,
@@ -173,14 +145,11 @@
     }
 
     .navbar-page-title {
-        /* Hapus flex-grow agar tidak mendorong */
-        /* flex-grow: 1; */
         margin-left: 0;
     }
 
     .navbar-page-title h4 {
         font-size: 1rem;
-        /* Kecilkan lagi judul halaman */
     }
 
     .navbar-page-title p {
@@ -190,7 +159,6 @@
     .navbar-nav {
         flex-shrink: 0;
         margin-left: auto;
-        /* Pastikan tetap di kanan */
     }
 
     .nav-bell-link i.bi-bell {
@@ -211,9 +179,7 @@
         display: none !important;
     }
 
-    /* --- AKHIR NAVBAR --- */
 
-    /* --- KONTEN & SIDEBAR --- */
     .main-content,
     .main-content.toggled {
         margin-left: 0;
@@ -243,9 +209,7 @@
         display: block;
     }
 
-    /* --- AKHIR KONTEN & SIDEBAR --- */
 
-    /* --- TABEL MOBILE --- */
     .transaction-table table {
         font-size: 0.65rem;
         table-layout: auto;
@@ -272,9 +236,7 @@
         padding-bottom: 0.6rem;
     }
 
-    /* --- AKHIR TABEL MOBILE --- */
 
-    /* --- FILTER/TOMBOL MOBILE --- */
     .d-flex.align-items-center.flex-wrap>*:not(:last-child) {
         margin-bottom: 0.5rem;
     }
@@ -295,24 +257,16 @@
     .transaction-table th,
     .transaction-table td {
 
-        /* 1. MATIKAN PEMOTONGAN KATA */
         -webkit-hyphens: none;
         -ms-hyphens: none;
         hyphens: none;
 
-        /* 2. JANGAN PECAH KATA DI TENGAH */
         word-break: keep-all;
 
-        /* 3. BIARKAN TEKS TURUN BARIS (WRAP) SECARA ALAMI */
-        /* !important di sini untuk mengalahkan 'nowrap' 
-                    jika ada di kode Anda yang lain */
         white-space: normal !important;
 
-        /* 4. Kecilkan font & padding sedikit biar muat */
         font-size: 0.875rem;
-        /* (14px) */
         padding: 0.75rem 0.5rem;
-        /* (atas/bawah 0.75, kiri/kanan 0.5) */
         vertical-align: middle;
     }
 }
@@ -468,5 +422,3 @@
     padding-top: 0.9rem !important;
     padding-bottom: 0.9rem !important;
 }
-
-

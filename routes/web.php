@@ -7,13 +7,13 @@ use App\Http\Controllers\PemasukanController;
 use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\KhotibJumatController;
 use App\Http\Controllers\PublicController;
-use App\Http\Controllers\TabunganHewanQurbanController; // Controller Admin
+use App\Http\Controllers\TabunganHewanQurbanController; 
 use App\Http\Controllers\PemasukanTabunganQurbanController;
 use App\Http\Controllers\InfaqJumatController;
 use App\Http\Controllers\BarangInventarisController;
 use App\Http\Controllers\GrafikController;
 use App\Http\Controllers\LapKeuController;
-use App\Http\Controllers\QurbanController; // Controller Jamaah (PASTIKAN INI ADA)
+use App\Http\Controllers\QurbanController; 
 use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\DonasiController;
 use App\Http\Controllers\PemasukanDonasiController;
@@ -51,8 +51,6 @@ Route::get('/khutbah-jumat', [PublicController::class, 'jadwalKhotib'])->name('p
 Route::get('/jadwal-kajian', [PublicController::class, 'jadwalKajian'])->name('public.jadwal-kajian');
 Route::get('/tentang-kami', [App\Http\Controllers\PublicController::class, 'tentangKami'])->name('public.tentang-kami');
 
-// --- [PERBAIKAN DISINI] ---
-// Arahkan ke QurbanController agar logic 'pending' tidak dihitung aset berjalan benar
 Route::get('/tabungan-qurban-saya', [QurbanController::class, 'index'])
     ->name('public.tabungan-qurban-saya');
 
@@ -153,21 +151,9 @@ Route::middleware(['auth:jamaah'])->name('jamaah.')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
-    // Halaman Utama Tabungan (Milik Jamaah) 
-    // Ini duplikat dengan yang di public, tapi tidak apa-apa dibiarkan atau dihapus salah satu.
-    // Jika dihapus, pastikan di view/controller tidak ada yang memanggil route('jamaah.qurban')
     Route::get('/qurban-saya', [QurbanController::class, 'index'])->name('qurban');
-    
-    // Proses Daftar Tabungan Baru
     Route::post('/qurban-saya/store', [QurbanController::class, 'store'])->name('qurban.store'); 
-    
-    // Route ini sepertinya sisa dari PublicController lama, bisa dihapus atau dikomentari
-    // Route::post('/tabungan-qurban-saya/daftar', [PublicController::class, 'storeTabunganJamaah'])->name('tabungan-qurban.store'); 
-
-    // Ambil Detail JSON (Untuk Modal Riwayat)
-    // Pastikan ini menggunakan QurbanController::show
     Route::get('/qurban-saya/{id}', [QurbanController::class, 'show'])->name('qurban.show');
     
-    // Checkout Payment
     Route::post('/tabungan-qurban/checkout', [TabunganPaymentController::class, 'checkout'])->name('tabungan.checkout');
 });

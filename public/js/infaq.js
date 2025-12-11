@@ -1,17 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- 1. DEFINISI ELEMEN DAN STATE ---
+    
 
     const form = document.getElementById('formTambahInfaq');
     const modalTambahInfaqElement = document.getElementById('modaltambahinfaq');
     const modalTambahInfaq = new bootstrap.Modal(modalTambahInfaqElement);
     const modalTitle = document.getElementById('modalInfaqLabel');
 
-    // Input Nominal Khusus
+    
     const nominalInput = document.getElementById('nominal_infaq');
 
-    // Elemen Tabel
-    const tbody = document.querySelector('#tabelKhotib tbody'); // Pastikan ID tabel di blade sesuai
+    
+    const tbody = document.querySelector('#tabelKhotib tbody'); 
     const searchInput = document.getElementById('searchInput');
     const paginationContainer = document.getElementById('paginationLinks');
     const paginationInfo = document.getElementById('paginationInfo');
@@ -22,25 +22,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitButton = form ? form.querySelector('button[type="submit"]') : null;
     const originalButtonText = submitButton ? submitButton.innerHTML : 'Simpan';
 
-    // State
+    
     let state = {
         currentPage: 1,
         search: '',
         perPage: 10,
-        sortBy: 'tanggal', // Sesuaikan dengan nama kolom DB
+        sortBy: 'tanggal', 
         sortDir: 'desc',        
         searchTimeout: null     
     };
 
-    // --- 2. LOGIKA FORMAT RUPIAH ---
+    
 
-    // A. Format saat mengetik (Input Event)
+    
     if (nominalInput) {
         nominalInput.addEventListener('keyup', function(e) {
-            // 1. Ambil value dan buang karakter selain angka
+            
             let value = this.value.replace(/[^0-9]/g, ''); 
             
-            // 2. Format jadi rupiah (pake titik)
+            
             if (value) {
                 let formatted = new Intl.NumberFormat('id-ID').format(value);
                 this.value = formatted;
@@ -50,18 +50,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // B. Helper untuk mengubah angka DB (10000) ke tampilan (10.000)
+    
     function formatRupiahDisplay(angka) {
         if (!angka) return '';
         return new Intl.NumberFormat('id-ID').format(angka);
     }
 
-    // C. Helper untuk mengubah tampilan (10.000) balik ke angka (10000) buat dikirim ke server
+    
     function cleanRupiah(formattedValue) {
-        return formattedValue.replace(/\./g, ''); // Hapus semua titik
+        return formattedValue.replace(/\./g, ''); 
     }
 
-    // --- 3. HELPER FUNCTIONS ---
+    
 
     function setLoading(isLoading) {
         if (!submitButton) return;
@@ -82,9 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
             : '-';
     }
 
-    // --- 4. CRUD OPERATIONS ---
+    
 
-    // LOAD DATA
+    
     async function loadInfaq() {
         if (!tbody) return;
         
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // RENDER TABEL
+    
     function renderTable(data, startingNumber) {
         tbody.innerHTML = ''; 
         
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // SUBMIT FORM
+    
     if (form) {
         form.addEventListener('submit', async e => {
             e.preventDefault();
@@ -145,8 +145,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const id = document.getElementById('id_infaq').value;
             const formData = new FormData(form);
 
-            // [PENTING] Bersihkan format rupiah sebelum dikirim
-            // Ambil nilai dari input, hapus titik, lalu update ke formData
+            
+            
             const rawNominal = cleanRupiah(document.getElementById('nominal_infaq').value);
             formData.set('nominal_infaq', rawNominal); 
             
@@ -180,17 +180,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // EDIT DATA
+    
     window.editInfaq = async function(id_infaq) {
         try {
             const res = await fetch(`/pengurus/infaq-jumat/${id_infaq}`);
             if (!res.ok) throw new Error('Data tidak ditemukan');
             const data = await res.json();
 
-            document.getElementById('id_infaq').value = data.id_infaq_jumat; // Sesuaikan primary key
+            document.getElementById('id_infaq').value = data.id_infaq_jumat; 
             document.getElementById('tanggal_infaq').value = data.tanggal_infaq;
             
-            // Format nominal dari DB ke tampilan (10000 -> 10.000) saat edit
+            
             document.getElementById('nominal_infaq').value = formatRupiahDisplay(data.nominal_infaq);
             
             modalTitle.textContent = 'Ubah Infaq Jumat';
@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // HAPUS DATA
+    
     window.hapusInfaq = async function(id_infaq) {
         const confirmResult = await Swal.fire({
             title: 'Hapus Data?',
@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // SEARCH & PAGINATION
+    
     if (searchInput) {
         searchInput.addEventListener('keyup', function() {
             clearTimeout(state.searchTimeout);
@@ -267,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Pagination Render Helper
+    
     function renderPagination(response) {
         const { from, to, total, links } = response;
         if (total === 0) {
@@ -289,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
         paginationContainer.innerHTML = linksHtml;
     }
 
-    // RESET MODAL
+    
     if (modalTambahInfaqElement) {
         modalTambahInfaqElement.addEventListener('hidden.bs.modal', function () {
             form.reset();
@@ -307,6 +307,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // INIT
+    
     loadInfaq();
 });

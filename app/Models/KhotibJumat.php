@@ -29,7 +29,7 @@ class KhotibJumat extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    
+
     protected static function booted(): void
     {
         static::creating(function ($model) {
@@ -48,10 +48,6 @@ class KhotibJumat extends Model
             : asset('images/default.png');
     }
 
-    /**
-     * Accessor untuk 'is_aktif'
-     * Otomatis membandingkan tanggal dengan hari ini.
-     */
     public function getIsAktifAttribute()
     {
         if (!$this->tanggal) {

@@ -3,7 +3,6 @@
 @section('title', 'Lengkapi Data')
 
 @section('content')
-    {{-- CSS agar posisi card ada di tengah (Sama seperti halaman Register) --}}
     <style>
         .auth-screen {
             display: flex;
@@ -12,6 +11,7 @@
             min-height: 100vh;
             padding: 20px 0;
         }
+
         .auth-content {
             width: 100%;
             max-width: 400px;
@@ -32,7 +32,7 @@
 
             <form action="{{ route('auth.complete-data.process') }}" method="POST">
                 @csrf
-                
+
                 {{-- Email (Readonly karena dari Google) --}}
                 <div class="form-group mb-3">
                     <label class="form-label small text-muted">Email (dari Google)</label>
@@ -42,11 +42,10 @@
                 {{-- Input No HP --}}
                 <div class="form-group mb-4">
                     <label class="form-label small">Nomor WhatsApp</label>
-                    <input type="text" id="no_hp" name="no_hp" class="form-control" 
-                           placeholder="Contoh: 08123..." required autofocus
-                           inputmode="numeric" pattern="[0-9]*">
+                    <input type="text" id="no_hp" name="no_hp" class="form-control" placeholder="Contoh: 08123..."
+                        required autofocus inputmode="numeric" pattern="[0-9]*">
                     @error('no_hp')
-                    <div class="text-danger small mt-1">{{ $message }}</div>
+                        <div class="text-danger small mt-1">{{ $message }}</div>
                     @enderror
                 </div>
 

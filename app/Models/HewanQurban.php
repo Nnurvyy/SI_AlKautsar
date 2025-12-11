@@ -12,18 +12,18 @@ class HewanQurban extends Model
 
     protected $table = 'hewan_qurban';
     protected $primaryKey = 'id_hewan_qurban';
-    public $incrementing = false; // Karena UUID
+    public $incrementing = false;
     protected $keyType = 'string';
-    
+
     protected $fillable = [
-        'id_hewan_qurban', 
-        'nama_hewan', 
-        'kategori_hewan', 
-        'harga_hewan', 
+        'id_hewan_qurban',
+        'nama_hewan',
+        'kategori_hewan',
+        'harga_hewan',
         'is_active'
     ];
 
-    // Boot function untuk generate UUID otomatis saat create
+
     protected static function booted(): void
     {
         static::creating(function ($model) {
@@ -33,7 +33,7 @@ class HewanQurban extends Model
         });
     }
 
-    // Scope untuk mengambil hanya hewan yang dijual
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true);

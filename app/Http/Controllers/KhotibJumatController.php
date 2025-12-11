@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\KhotibJumatRequest;
 use App\Models\KhotibJumat;
-use Illuminate\Http\Request; 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Carbon\Carbon; 
+use Carbon\Carbon;
 
 class KhotibJumatController extends Controller
 {
@@ -21,34 +21,34 @@ class KhotibJumatController extends Controller
         $status = $request->query('status', 'aktif');
         $search = $request->query('search', '');
         $perPage = $request->query('perPage', 10);
-        $sortBy = $request->query('sortBy', 'tanggal'); // default urut tanggal
-        $sortDir = $request->query('sortDir', 'desc');  // default terbaru dulu
+        $sortBy = $request->query('sortBy', 'tanggal');
+        $sortDir = $request->query('sortDir', 'desc');
 
         $query = KhotibJumat::query();
 
-        // Filter status
+
         if ($status === 'aktif') {
             $query->where('tanggal', '>=', Carbon::today());
         } elseif ($status === 'tidak_aktif') {
             $query->where('tanggal', '<', Carbon::today());
         }
 
-        // Filter search 
+
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $searchLower = strtolower($search);
 
                 $q->whereRaw('LOWER(nama_khotib) LIKE ?', ["%{$searchLower}%"])
-                ->orWhereRaw('LOWER(nama_imam) LIKE ?', ["%{$searchLower}%"])
-                ->orWhereRaw('LOWER(tema_khutbah) LIKE ?', ["%{$searchLower}%"])
-                ->orWhereRaw("LOWER(to_char(tanggal, 'DD Mon YYYY')) LIKE ?", ["%{$searchLower}%"])
-                ->orWhereRaw("LOWER(to_char(tanggal, 'DD Month YYYY')) LIKE ?", ["%{$searchLower}%"])
-                ->orWhereRaw("LOWER(to_char(tanggal, 'YYYY-MM-DD')) LIKE ?", ["%{$searchLower}%"]);
+                    ->orWhereRaw('LOWER(nama_imam) LIKE ?', ["%{$searchLower}%"])
+                    ->orWhereRaw('LOWER(tema_khutbah) LIKE ?', ["%{$searchLower}%"])
+                    ->orWhereRaw("LOWER(to_char(tanggal, 'DD Mon YYYY')) LIKE ?", ["%{$searchLower}%"])
+                    ->orWhereRaw("LOWER(to_char(tanggal, 'DD Month YYYY')) LIKE ?", ["%{$searchLower}%"])
+                    ->orWhereRaw("LOWER(to_char(tanggal, 'YYYY-MM-DD')) LIKE ?", ["%{$searchLower}%"]);
             });
         }
 
-        // Urutkan data
-        $allowedSorts = ['tanggal', 'nama_khotib', 'nama_imam']; 
+
+        $allowedSorts = ['tanggal', 'nama_khotib', 'nama_imam'];
         if (!in_array($sortBy, $allowedSorts)) $sortBy = 'tanggal';
         $sortDir = $sortDir === 'asc' ? 'asc' : 'desc';
 

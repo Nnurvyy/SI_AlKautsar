@@ -16,16 +16,18 @@
                 @csrf
 
                 <div class="form-group">
-                    <input type="email" id="email" name="email" class="form-control" placeholder="Email Address" value="{{ old('email') }}" required autofocus>
+                    <input type="email" id="email" name="email" class="form-control" placeholder="Email Address"
+                        value="{{ old('email') }}" required autofocus>
 
                     @error('email')
-                    <div class="error-message">{{ $message }}</div>
+                        <div class="error-message">{{ $message }}</div>
                     @enderror
                 </div>
 
                 <div class="form-group">
                     <div class="password-wrapper" style="position: relative;">
-                        <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="Password"
+                            required>
 
                         <span id="password-toggle" class="password-toggle-icon">
                             <i id="icon-eye-slash" class="bi bi-eye-slash-fill"></i>
@@ -43,7 +45,7 @@
 
             <div class="divider">atau</div>
 
-            <!-- GANTI INI: href="#" -> href="{{ route('auth.google.redirect') }}" -->
+            {{ route('auth.google.redirect') }}" -->
             <a href="{{ route('auth.google.redirect') }}" class="btn btn-social">
                 <i class="bi bi-google"></i>
                 Sign In with Google
@@ -58,7 +60,7 @@
 @endsection
 
 @push('scripts')
-    {{-- Script password toggle Anda --}}
+    {{-- Script password toggle --}}
     <script>
         const toggleButton = document.getElementById('password-toggle');
         const passwordInput = document.getElementById('password');

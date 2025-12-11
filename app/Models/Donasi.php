@@ -26,7 +26,7 @@ class Donasi extends Model
         'deskripsi',
     ];
 
-    // Generate UUID otomatis
+
     protected static function booted(): void
     {
         static::creating(function ($model) {
@@ -38,18 +38,18 @@ class Donasi extends Model
 
     public function getSisaHariAttribute()
     {
-        if (!$this->tanggal_selesai) return null; // Unlimited
+        if (!$this->tanggal_selesai) return null;
 
         $now = Carbon::now()->startOfDay();
         $end = Carbon::parse($this->tanggal_selesai)->startOfDay();
 
-        // Jika sudah lewat, return 0
+
         if ($now->gt($end)) return 0;
 
-        return $now->diffInDays($end, false); // false agar bisa negatif (opsional, tp kita sudah handle di atas)
+        return $now->diffInDays($end, false);
     }
 
-    // Relasi ke pemasukan donasi
+
     public function pemasukan()
     {
         return $this->hasMany(PemasukanDonasi::class, 'id_donasi', 'id_donasi');

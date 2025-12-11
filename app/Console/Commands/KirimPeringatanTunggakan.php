@@ -19,9 +19,9 @@ class KirimPeringatanTunggakan extends Command
 
         $tabunganList = TabunganHewanQurban::with(['jamaah', 'details.hewan', 'pemasukanTabunganQurban'])
             ->where('saving_type', 'cicilan')
-            ->where('status', 'disetujui') 
-            // Kita hapus whereRaw ini agar perhitungan lebih akurat di PHP (karena ada filter success)
-            // ->whereRaw('total_tabungan < total_harga_hewan_qurban') 
+            ->where('status', 'disetujui')
+
+
             ->get();
 
         if ($tabunganList->isEmpty()) {
@@ -36,7 +36,7 @@ class KirimPeringatanTunggakan extends Command
         $bar->start();
 
         foreach ($tabunganList as $tabungan) {
-            // Validasi data dasar & Hindari Division by Zero
+
             if ($tabungan->duration_months <= 0 || !$tabungan->jamaah || $tabungan->total_harga_hewan_qurban <= 0) {
                 $bar->advance();
                 continue;
@@ -44,47 +44,47 @@ class KirimPeringatanTunggakan extends Command
 
             $tanggalMulai = Carbon::parse($tabungan->tanggal_pembuatan);
 
-            // 1. Hitung Bulan Berjalan (Selisih Bulan Kalender)
+
             $monthsPassed = (($tanggalHariIni->year - $tanggalMulai->year) * 12) + ($tanggalHariIni->month - $tanggalMulai->month);
 
-            // Batasi maksimal durasi (jangan menagih lebih dari durasi kontrak)
+
             $monthsPassed = min($monthsPassed, $tabungan->duration_months);
 
-            // Jika masih bulan pertama (bulan pendaftaran), beri grace period (tidak ditagih)
+
             if ($monthsPassed <= 0) {
                 $bar->advance();
                 continue;
             }
 
-            // 2. Hitung Target Seharusnya
+
             $installmentAmount = round($tabungan->total_harga_hewan_qurban / $tabungan->duration_months);
             $accumulatedTarget = $installmentAmount * $monthsPassed;
 
-            // 3. [PERBAIKAN PENTING] Hitung Uang Masuk (HANYA SUCCESS)
-            // Karena pakai Tripay, kita harus abaikan status 'pending'/'failed'
+
+
             $totalTerkumpul = $tabungan->pemasukanTabunganQurban
-                ->where('status', 'success') // <--- INI KUNCI PERBAIKANNYA
+                ->where('status', 'success')
                 ->sum('nominal');
 
-            // Jika sudah lunas total, skip
+
             if ($totalTerkumpul >= $tabungan->total_harga_hewan_qurban) {
                 $bar->advance();
                 continue;
             }
 
-            // 4. Cek Apakah Menunggak dari Target Bulanan
+
             if ($totalTerkumpul < $accumulatedTarget) {
                 $penunggakDitemukan++;
                 $jamaah = $tabungan->jamaah;
                 $sisaKekurangan = $accumulatedTarget - $totalTerkumpul;
 
-                // Format List Hewan
-                $listHewanStr = $tabungan->details->map(function($detail) {
+
+                $listHewanStr = $tabungan->details->map(function ($detail) {
                     $namaHewan = $detail->hewan ? $detail->hewan->nama_hewan : 'Hewan';
                     return "{$detail->jumlah_hewan} ekor {$namaHewan}";
                 })->join(', ');
 
-                // Kirim Email
+
                 if ($jamaah->email) {
                     $teksEmail = "Assalamu'alaikum Warahmatullahi Wabarakatuh, Sdr/i {$jamaah->name}.\n\n"
                         . "Semoga Anda dalam keadaan sehat walafiat.\n\n"
@@ -120,7 +120,7 @@ class KirimPeringatanTunggakan extends Command
         $bar->finish();
         $this->newLine();
         $this->info("Selesai. Total {$penunggakDitemukan} email peringatan dikirim.");
-        
+
         return 0;
     }
 }

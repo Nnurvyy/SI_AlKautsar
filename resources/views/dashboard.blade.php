@@ -7,13 +7,13 @@
 
     {{-- 1. Kartu Statistik --}}
     <div class="row g-4 mb-4">
-        {{-- Total Pemasukan (HIJAU) --}}
+        {{-- Total Pemasukan --}}
         <div class="col-md-6 col-xl-3">
             <div class="card stat-card h-100">
                 <div class="card-body">
                     <div>
                         <p class="text-muted mb-1">Total Pemasukan</p>
-                        {{-- WARNA HIJAU (text-success) --}}
+                        {{-- WARNA HIJAU --}}
                         <h5 class="fw-bold mb-0 text-success">Rp {{ number_format($totalPemasukan, 0, ',', '.') }}</h5>
                     </div>
                     <div class="stat-card-icon bg-success bg-opacity-10 text-success">
@@ -23,13 +23,13 @@
             </div>
         </div>
 
-        {{-- Total Pengeluaran (MERAH) --}}
+        {{-- Total Pengeluaran --}}
         <div class="col-md-6 col-xl-3">
             <div class="card stat-card h-100">
                 <div class="card-body">
                     <div>
                         <p class="text-muted mb-1">Total Pengeluaran</p>
-                        {{-- WARNA MERAH (text-danger) --}}
+                        {{-- WARNA MERAH --}}
                         <h5 class="fw-bold mb-0 text-danger">Rp {{ number_format($totalPengeluaran, 0, ',', '.') }}</h5>
                     </div>
                     <div class="stat-card-icon bg-danger bg-opacity-10 text-danger">
@@ -79,7 +79,6 @@
                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h5 class="mb-0 fw-bold">Analisis Keuangan</h5>
                     <div class="col-12 col-md-auto">
-                        {{-- Filter ini akan mengupdate CHART dan ALOKASI --}}
                         <select class="form-select form-select-sm" id="filterRange">
                             <option value="7_days">7 Hari Terakhir</option>
                             <option value="30_days">30 Hari Terakhir</option>
@@ -97,7 +96,7 @@
         </div>
     </div>
 
-    {{-- 3. LAYOUT SPLIT: ALOKASI (KIRI) & TABEL (KANAN) --}}
+    {{-- 3. LAYOUT SPLIT--}}
     <div class="row g-4">
         
         {{-- KOLOM KIRI: ALOKASI KATEGORI (Progress Bar) --}}

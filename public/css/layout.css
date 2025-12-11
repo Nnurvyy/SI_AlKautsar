@@ -1,35 +1,33 @@
-html, body {
+html,
+body {
     margin: 0;
     padding: 0;
     width: 100%;
-    overflow-x: hidden; /* Mencegah scroll ke samping tidak sengaja */
+    overflow-x: hidden;
 }
 
-body { 
+body {
     font-family: 'Poppins', sans-serif;
-    background-color: #f3f4f6; 
+    background-color: #f3f4f6;
 }
 
-/* === 2. NAVBAR (DIPERBAIKI: Mengembalikan Position Fixed) === */
 .top-navbar {
-    position: fixed; /* KEMBALIKAN INI: Agar nempel di atas */
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    width: 100%;     /* Pastikan lebar penuh */
+    width: 100%;
     height: 70px;
     z-index: 1030;
-    background-color: #ffffff; /* PENTING: Agar tidak transparan */
-    box-shadow: 0 2px 15px rgba(0,0,0,0.05); /* Shadow halus modern */
+    background-color: #ffffff;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
-    
-    /* Layout Flex untuk isi navbar (Opsional, agar rapi) */
+
     display: flex;
     align-items: center;
-    padding: 0 1.5rem; 
+    padding: 0 1.5rem;
 }
 
-/* === 3. SIDEBAR (Style Baru Kamu + Layout Lama) === */
 .sidebar {
     width: 280px;
     position: fixed;
@@ -40,18 +38,17 @@ body {
     overflow-y: auto;
     transition: all 0.3s ease-in-out;
     background-color: #ffffff;
-    border-right: 1px solid #e5e7eb; /* Pembatas halus dengan konten */
-    scrollbar-width: thin; 
+    border-right: 1px solid #e5e7eb;
+    scrollbar-width: thin;
     scrollbar-color: #cbd5e1 transparent;
 }
 
-/* === SIDEBAR LINKS STYLE (MIRIP DONASI) === */
 .sidebar .nav-link {
-    color: #4b5563; /* Abu-abu gelap */
+    color: #4b5563;
     padding: 0.85rem 1.25rem;
     font-weight: 500;
     font-size: 0.95rem;
-    border-radius: 12px; /* Rounded modern */
+    border-radius: 12px;
     margin-bottom: 4px;
     transition: all 0.2s ease;
     display: flex;
@@ -61,26 +58,25 @@ body {
 .sidebar .nav-link i {
     font-size: 1.1rem;
     margin-right: 12px;
-    color: #9ca3af; /* Ikon abu-abu muda */
+    color: #9ca3af;
     transition: color 0.2s ease;
     width: 24px;
     text-align: center;
 }
 
-/* Hover State */
 .sidebar .nav-link:hover {
-    background-color: #f0fdf4; /* Hijau sangat muda */
-    color: #166534; /* Hijau tua */
+    background-color: #f0fdf4;
+    color: #166534;
 }
+
 .sidebar .nav-link:hover i {
     color: #166534;
 }
 
-/* Active State (Gradient Green) */
 .sidebar .nav-link.active {
-    background: linear-gradient(135deg, #198754, #20c997); /* Gradasi Hijau */
+    background: linear-gradient(135deg, #198754, #20c997);
     color: #ffffff;
-    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.25); /* Shadow halus hijau */
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.25);
     font-weight: 600;
 }
 
@@ -88,58 +84,53 @@ body {
     color: #ffffff;
 }
 
-/* === MAIN CONTENT === */
 .main-content {
-    margin-top: 50px;     /* Jarak dari navbar */
-    margin-left: 280px;   /* Jarak dari sidebar */
-    padding: 1.5rem;      /* Jarak isi konten dari pinggir */
+    margin-top: 50px;
+    margin-left: 280px;
+    padding: 1.5rem;
     transition: all 0.3s ease-in-out;
     min-height: calc(100vh - 70px);
-    width: auto;          /* Ikuti sisa layar */
-
-    overflow-x: hidden; 
-    width: 100%; /* Pastikan lebar 100% relatif terhadap parent */
+    width: auto;
+    overflow-x: hidden;
+    width: 100%;
 }
 
-/* === TOGGLED STATES === */
 .sidebar.toggled {
     margin-left: -280px;
 }
+
 .main-content.toggled {
     margin-left: 0;
 }
 
-/* === LOGOUT BUTTON === */
 .logout-btn {
     border-radius: 12px;
     transition: all 0.2s;
     border: 1px solid #fee2e2;
     background-color: #fef2f2;
 }
+
 .logout-btn:hover {
     background-color: #fee2e2;
     transform: translateY(-2px);
 }
 
-/* === RESPONSIVE (MOBILE) === */
 @media (max-width: 991.98px) {
-    .sidebar { 
-        margin-left: -280px; 
+    .sidebar {
+        margin-left: -280px;
     }
-    
-    /* Saat sidebar muncul di HP */
-    .sidebar.toggled { 
-        margin-left: 0; 
-        box-shadow: 5px 0 15px rgba(0,0,0,0.1); 
+
+    .sidebar.toggled {
+        margin-left: 0;
+        box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
     }
-    
-    .main-content { 
-        margin-left: 0; 
-        width: 100%; /* Pastikan konten penuh di HP */
-        padding: 1px; /* Padding lebih kecil di HP agar luas */
+
+    .main-content {
+        margin-left: 0;
+        width: 100%;
+        padding: 1px;
     }
-    
-    /* Perbaikan agar Navbar tetap rapi di HP */
+
     .top-navbar {
         padding: 0 1rem;
     }

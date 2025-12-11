@@ -10,19 +10,19 @@ return new class extends Migration {
             $table->uuid('id_tabungan_hewan_qurban')->primary();
             $table->unsignedBigInteger('id_jamaah'); 
             
-            // Status default adalah menunggu
+            
             $table->enum('status', ['menunggu', 'disetujui', 'ditolak', 'selesai'])->default('menunggu');
             $table->date('tanggal_pembuatan');
             
             $table->enum('saving_type', ['bebas', 'cicilan'])->default('cicilan');
-            $table->integer('duration_months')->nullable(); // Jika cicilan, berapa bulan
+            $table->integer('duration_months')->nullable(); 
             
-            $table->bigInteger('total_tabungan')->default(0); // Uang yang sudah disetor
-            $table->bigInteger('total_harga_hewan_qurban')->default(0); // Target total harga (sum dari detail)
+            $table->bigInteger('total_tabungan')->default(0); 
+            $table->bigInteger('total_harga_hewan_qurban')->default(0); 
             
             $table->timestamps();
 
-            // Pastikan tabel jamaah sudah ada, jika belum, hapus foreign key ini dulu
+            
             $table->foreign('id_jamaah')->references('id')->on('jamaah')->onDelete('cascade');
         });
     }

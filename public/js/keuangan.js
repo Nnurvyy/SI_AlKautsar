@@ -1,15 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- 1. SETUP VARIABEL GLOBAL & TOKEN ---
+    
     const metaToken = document.querySelector('meta[name="csrf-token"]');
     const token = metaToken ? metaToken.content : '';
     const tbody = document.querySelector('#tabelKeuangan tbody');
 
-    // --- 2. DETEKSI TOMBOL UTAMA ---
+    
     const btnTambahPemasukan = document.getElementById('btnTambahPemasukan');
     const btnTambahPengeluaran = document.getElementById('btnTambahPengeluaran');
     const btnTambahTransaksi = btnTambahPemasukan || btnTambahPengeluaran;
 
-    // --- 3. INISIALISASI MODAL ---
+    
     let modalTransaksiBS = null;
     const modalTransaksiEl = document.getElementById('modalTransaksi');
     if (modalTransaksiEl) {
@@ -22,15 +22,15 @@ document.addEventListener('DOMContentLoaded', () => {
         modalKategoriBS = new bootstrap.Modal(modalKategoriEl);
     }
 
-    // Elemen Form
+    
     const formTransaksi = document.getElementById('formTransaksi');
     const formKategori = document.getElementById('formKategori');
     const inputNominal = document.getElementById('inputNominal');
 
-    // State Pagination
+    
     let currentPage = 1;
 
-    // --- 4. FORMAT RUPIAH OTOMATIS (SAAT KETIK) ---
+    
     if (inputNominal) {
         inputNominal.addEventListener('keyup', function(e) {
             let value = this.value.replace(/[^,\d]/g, '').toString();
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 5. LOGIKA TOMBOL TAMBAH TRANSAKSI ---
+    
     if (btnTambahTransaksi) {
         btnTambahTransaksi.addEventListener('click', function() {
             if(formTransaksi) formTransaksi.reset();
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 6. SUBMIT FORM TRANSAKSI ---
+    
     if (formTransaksi) {
         formTransaksi.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 7. EDIT TRANSAKSI ---
+    
     window.editTransaksi = async (id) => {
         try {
             const tipe = btnTambahPemasukan ? 'pemasukan' : 'pengeluaran';
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- 8. HAPUS TRANSAKSI ---
+    
     window.hapusTransaksi = async (id) => {
         const c = await Swal.fire({ 
             title: 'Hapus Transaksi?', text: 'Data tidak bisa dikembalikan!', icon: 'warning', 
@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- 9. FUNGSI LOAD KATEGORI ---
+    
     async function loadDropdownKategori() {
         const select = document.getElementById('selectKategori');
         if(!select) return;
@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try { const res = await fetch(`${URL_API_KATEGORI}/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token } }); if (res.ok) { loadListKategori(); loadDropdownKategori(); } } catch (err) { alert('Gagal'); }
     };
 
-    // --- 10. LOAD DATA TABEL ---
+    
     async function loadTransaksi() {
         if(!tbody) return;
         const searchInput = document.getElementById('searchInput');
@@ -322,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await res.json();
 
             renderTable(response.data, response.from || 1);
-            renderPagination(response); // Panggil fungsi pagination yang baru
+            renderPagination(response); 
         } catch (err) {
             console.error(err);
             tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Gagal memuat data</td></tr>`;
@@ -357,22 +357,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-   // --- FUNGSI PAGINATION (UPDATED) ---
+   
     function renderPagination(response) {
-        // 1. Update Info Text
+        
         const infoEl = document.getElementById('paginationInfo');
         if(infoEl) {
             infoEl.textContent = `Menampilkan ${response.from || 0} - ${response.to || 0} dari ${response.total} data`;
         }
 
-        // 2. Render Tombol
+        
         const linksContainer = document.getElementById('paginationLinks');
         if (!linksContainer) return;
 
-        linksContainer.innerHTML = ''; // Reset tombol
+        linksContainer.innerHTML = ''; 
 
-        // KITA HAPUS kondisi 'if (response.last_page > 1)' agar pagination tetap muncul
-        // meskipun hanya ada 1 halaman.
+        
+        
 
         let ul = document.createElement('ul');
         ul.className = 'pagination justify-content-end mb-0';
@@ -380,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
         response.links.forEach(link => {
             let li = document.createElement('li');
             
-            // Logika Ganti Label Next/Prev jadi Simbol
+            
             let label = link.label;
             if (label.includes('Previous')) {
                 label = '<';
@@ -388,23 +388,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 label = '>';
             }
 
-            // Set kelas aktif dan disabled
+            
             li.className = `page-item ${link.active ? 'active' : ''} ${link.url ? '' : 'disabled'}`;
 
-            // Buat tombol (gunakan button agar tidak reload)
+            
             let btn = document.createElement('button');
             btn.className = 'page-link';
-            btn.innerHTML = label; // Render simbol < atau >
+            btn.innerHTML = label; 
 
-            // Jika ada URL (tidak disabled), tambahkan event click
+            
             if (link.url) {
                 btn.onclick = (e) => {
-                    e.preventDefault(); // Mencegah scroll ke atas
-                    // Ambil nomor halaman dari URL
+                    e.preventDefault(); 
+                    
                     const urlObj = new URL(link.url);
                     const page = urlObj.searchParams.get('page');
                     currentPage = page;
-                    loadTransaksi(); // Reload data
+                    loadTransaksi(); 
                 };
             }
 

@@ -10,16 +10,13 @@ use App\Models\HewanQurban;
 use App\Models\DetailTabunganHewanQurban; 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Carbon\Carbon; // Pastikan import Carbon
+use Carbon\Carbon; 
 
 class QurbanSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run(): void
+        public function run(): void
     {
-        // 1. SEED MASTER HEWAN QURBAN
+        
         
         $kambingReguler = HewanQurban::where('nama_hewan', 'kambing')
             ->where('kategori_hewan', 'reguler')
@@ -49,12 +46,12 @@ class QurbanSeeder extends Seeder
             ]);
         }
 
-        // 2. Cari jamaah target (misal: joko)
+        
         $joko = Jamaah::where('email', 'arctant2.5one@gmail.com')->first();
 
-        // 3. Buat Tabungan & Transaksi Dummy
+        
         if ($joko) {
-            // Cek apakah Joko sudah punya tabungan
+            
             $existingTabungan = TabunganHewanQurban::where('id_jamaah', $joko->id)->exists();
 
             if (!$existingTabungan) {
@@ -64,11 +61,11 @@ class QurbanSeeder extends Seeder
                     $jumlahHewan = 1;
                     $totalHarga = $kambingReguler->harga_hewan * $jumlahHewan;
 
-                    // [PENTING] Set tanggal pembuatan mundur ke belakang (misal 2 bulan lalu)
-                    // Agar bisa ngetest logika "Menunggak" vs "Lancar"
+                    
+                    
                     $tanggalPembuatan = Carbon::now()->subMonths(2)->toDateString(); 
 
-                    // A. Buat Header Tabungan
+                    
                     $tabunganJoko = TabunganHewanQurban::create([
                         'id_tabungan_hewan_qurban' => $tabunganId,
                         'id_jamaah' => $joko->id,
@@ -77,11 +74,11 @@ class QurbanSeeder extends Seeder
                         'duration_months' => 10,
                         'total_tabungan' => 0, 
                         'total_harga_hewan_qurban' => $totalHarga,
-                        'tanggal_pembuatan' => $tanggalPembuatan, // Set manual tanggal lama
-                        'created_at' => $tanggalPembuatan, // Samakan created_at agar rapi
+                        'tanggal_pembuatan' => $tanggalPembuatan, 
+                        'created_at' => $tanggalPembuatan, 
                     ]);
 
-                    // B. Buat Detail Tabungan
+                    
                     DetailTabunganHewanQurban::create([
                         'id_tabungan_hewan_qurban' => $tabunganId,
                         'id_hewan_qurban' => $kambingReguler->id_hewan_qurban,
@@ -90,10 +87,10 @@ class QurbanSeeder extends Seeder
                         'subtotal' => $totalHarga
                     ]);
 
-                    // C. Buat Riwayat Setoran (Pemasukan)
-                    // Skenario: Total Target 3.5jt / 10 bulan = 350rb/bulan.
-                    // Sudah jalan 2 bulan, harusnya terkumpul 700rb.
-                    // Kita isi 2.5jt biar statusnya "Lancar" (Surplus)
+                    
+                    
+                    
+                    
                     
                     PemasukanTabunganQurban::create([
                         'id_tabungan_hewan_qurban' => $tabunganId,

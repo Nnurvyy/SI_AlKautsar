@@ -28,7 +28,7 @@ class Keuangan extends Model
     {
         parent::boot();
 
-        // Generate UUID otomatis
+
         static::creating(function ($model) {
             if (empty($model->id_keuangan)) {
                 $model->id_keuangan = (string) Str::uuid();
@@ -36,7 +36,7 @@ class Keuangan extends Model
         });
     }
 
-    // Relasi ke KategoriKeuangan (Many to One)
+
     public function kategori()
     {
         return $this->belongsTo(KategoriKeuangan::class, 'id_kategori_keuangan', 'id_kategori_keuangan');

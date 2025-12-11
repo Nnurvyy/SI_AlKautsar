@@ -1,13 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- Definisi Elemen ---
+    
     const form = document.getElementById('formSettings');
     const token = document.querySelector('meta[name="csrf-token"]').content;
     
     const submitButton = form ? form.querySelector('button[type="submit"]') : null;
     const originalButtonText = submitButton ? submitButton.innerHTML : 'Simpan Pengaturan';
 
-    // Elemen Input File Kustom
+    
     const fotoInput = document.getElementById('foto_masjid');
     const fotoLabel = document.getElementById('foto_masjid_label');
     const fotoLabelSpan = fotoLabel ? fotoLabel.querySelector('span') : null;
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const preview = document.getElementById('previewFotoMasjid');
     const previewContainer = document.getElementById('previewFotoMasjidContainer');
 
-    // --- Event Listener Utama ---
+    
     if (form) {
         form.addEventListener('submit', async e => {
             e.preventDefault();
@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     Swal.fire('Berhasil!', data.message, 'success');
                     
                     if (data.foto_url) {
-                         // Tampilkan foto baru
+                         
                          preview.src = data.foto_url;
                          previewContainer.classList.remove('d-none');
                          clearFileBtn.classList.remove('d-none');
@@ -49,11 +49,11 @@ document.addEventListener('DOMContentLoaded', () => {
                          fotoLabelSpan.textContent = fileName;
                          fotoLabelSpan.classList.remove('text-muted');
                     } else {
-                        // Jika server merespon tidak ada foto (krn dihapus)
+                        
                         clearFileVisuals(); 
                     }
                     
-                    // Hapus hidden input 'hapus_foto_masjid' setelah sukses
+                    
                     const deleteInput = document.getElementById('hapus_foto_masjid');
                     if (deleteInput) {
                         deleteInput.remove();
@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Fungsi Helper (setLoading) ---
+    
     function setLoading(isLoading) {
         if (!submitButton) return;
         if (isLoading) {
@@ -86,9 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // --- Logika Input File Kustom ---
     
-    // Fungsi untuk mereset tampilan input file
+    
+    
     function clearFileVisuals() {
         fotoLabelSpan.textContent = "Choose file...";
         fotoLabelSpan.classList.add('text-muted');
@@ -115,14 +115,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 reader.readAsDataURL(file);
                 
-                // PENTING: Jika user pilih file baru, hapus sinyal 'hapus_foto_masjid'
+                
                 const deleteInput = document.getElementById('hapus_foto_masjid');
                 if (deleteInput) {
                     deleteInput.remove();
                 }
                 
             } else {
-                // (Jika user batal pilih file, jangan lakukan apa-apa, biarkan state sebelumnya)
+                
             }
         });
     }
@@ -132,10 +132,10 @@ document.addEventListener('DOMContentLoaded', () => {
             e.stopPropagation(); 
             e.preventDefault();
             
-            fotoInput.value = ""; // Hapus file dari input
-            clearFileVisuals(); // Reset tampilan
+            fotoInput.value = ""; 
+            clearFileVisuals(); 
             
-            // PENTING: Buat hidden input untuk memberitahu server agar menghapus file
+            
             let deleteInput = document.getElementById('hapus_foto_masjid');
             if (!deleteInput) {
                 deleteInput = document.createElement('input');
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 deleteInput.id = 'hapus_foto_masjid';
                 form.appendChild(deleteInput);
             }
-            deleteInput.value = '1'; // Beri sinyal 'hapus'
+            deleteInput.value = '1'; 
         });
     }
 });

@@ -19,9 +19,9 @@ class PemasukanDonasiController extends Controller
             'pesan' => 'nullable|string'
         ]);
 
-        // TAMBAHAN: Paksa status jadi 'success' untuk input manual
-        // Karena pengurus yang input, diasumsikan uang sudah diterima/verifikasi
-        $validated['status'] = 'success'; 
+
+
+        $validated['status'] = 'success';
 
         PemasukanDonasi::create($validated);
 

@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
 
 class Program extends Model
 {
@@ -30,19 +29,15 @@ class Program extends Model
         'tanggal_program' => 'datetime',
     ];
 
-    // Tambahkan atribut virtual agar bisa diakses di JS
+
     protected $appends = ['foto_url'];
 
-    /**
-     * Accessor untuk URL Foto
-     * Jika tidak ada foto, tampilkan placeholder default
-     */
     public function getFotoUrlAttribute()
     {
         if ($this->foto_program) {
             return asset('storage/' . $this->foto_program);
         }
-        // Pastikan Anda memiliki gambar ini di public/images/ atau ganti namanya
-        return asset('images/default_program.png'); 
+
+        return asset('images/default_program.png');
     }
 }

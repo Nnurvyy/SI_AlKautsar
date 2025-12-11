@@ -20,8 +20,8 @@ class MasjidProfil extends Model
         'lokasi_nama',
         'lokasi_id_api',
         'lokasi_nama_api',
-        'deskripsi_masjid', 
-        'latitude',  
+        'deskripsi_masjid',
+        'latitude',
         'longitude',
         'social_facebook',
         'social_instagram',
@@ -31,7 +31,7 @@ class MasjidProfil extends Model
     ];
 
 
-    // Generate UUID otomatis
+
     protected static function booted(): void
     {
         static::creating(function ($model) {
@@ -43,22 +43,21 @@ class MasjidProfil extends Model
 
     public function landingPage()
     {
-        // Coba ambil data profil masjid jika model ada
+
         $masjidSettings = null;
         if (class_exists(\App\Models\MasjidProfil::class)) {
             $masjidSettings = \App\Models\MasjidProfil::first();
         }
 
-        // Default fallback agar view tidak error
+
         if (!$masjidSettings) {
             $masjidSettings = (object)[
                 'nama_masjid' => config('app.name', 'E‑Masjid'),
                 'lokasi_nama' => 'Bandung',
-                'foto_masjid'  => null, // view harus menangani null
+                'foto_masjid'  => null,
             ];
         }
 
         return view('landing-page', compact('masjidSettings'));
     }
-    
 }

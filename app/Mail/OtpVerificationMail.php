@@ -20,6 +20,6 @@ class OtpVerificationMail extends Mailable
     public function build()
     {
         return $this->subject('Kode Verifikasi OTP Smart Masjid')
-                    ->view('emails.otp'); // Kita akan buat view ini
+            ->view('emails.otp');
     }
 }

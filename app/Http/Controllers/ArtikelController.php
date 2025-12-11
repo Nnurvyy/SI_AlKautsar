@@ -10,31 +10,22 @@ use Illuminate\Support\Facades\Log;
 
 class ArtikelController extends Controller
 {
-    /**
-     * Menampilkan halaman utama dashboard artikel.
-     */
     public function index()
     {
-        // Hitung total artikel
+
         $totalArtikel = Artikel::count();
-        
+
         return view('artikel', compact('totalArtikel'));
     }
 
-    /**
-     * Menampilkan form untuk membuat artikel baru.
-     */
     public function create()
     {
         return view('artikel_form');
     }
 
-    /**
-     * Menyimpan artikel baru ke database (Tambah).
-     */
     public function store(Request $request)
     {
-        // 1. Validasi Input
+
         $validator = Validator::make($request->all(), [
             'judul_artikel' => 'required|string|max:255',
             'isi_artikel' => 'required',
@@ -44,7 +35,7 @@ class ArtikelController extends Controller
             'foto_artikel' => 'nullable|image|max:2048',
         ]);
 
-        // JIKA VALIDASI GAGAL -> Return JSON Error 422
+
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validasi gagal, periksa inputan anda.',
@@ -54,55 +45,48 @@ class ArtikelController extends Controller
 
         $data = $validator->validated();
 
-        // 2. Upload Foto Jika Ada
+
         if ($request->hasFile('foto_artikel')) {
             $path = $request->file('foto_artikel')->store('artikel_photos', 'public');
             $data['foto_artikel'] = $path;
         }
 
-        // 3. Simpan ke Database
+
         try {
             Artikel::create($data);
-            // SUKSES -> Return JSON 200
+
             return response()->json([
                 'message' => 'Artikel berhasil ditambahkan!',
-                'redirect_url' => route('pengurus.artikel.index') // Kirim URL redirect buat JS
+                'redirect_url' => route('pengurus.artikel.index')
             ], 200);
-
         } catch (\Exception $e) {
-            // ERROR SERVER -> Return JSON 500
+
             return response()->json([
                 'message' => 'Gagal menyimpan artikel: ' . $e->getMessage()
             ], 500);
         }
     }
 
-    /**
-     * Menampilkan form edit.
-     */
     public function edit(string $id)
     {
         $artikel = Artikel::findOrFail($id);
         return view('artikel_form', compact('artikel'));
     }
 
-    /**
-     * Update artikel
-     */
     public function update(Request $request, string $id)
     {
         $artikel = Artikel::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
             'judul_artikel' => 'required|string|max:255',
-            'isi_artikel' => 'nullable', 
+            'isi_artikel' => 'nullable',
             'status_artikel' => 'required|in:draft,published',
             'penulis_artikel' => 'required|string|max:100',
             'tanggal_terbit_artikel' => 'required|date',
             'foto_artikel' => 'nullable|image|max:2048',
         ]);
 
-        // JIKA VALIDASI GAGAL -> Return JSON Error 422
+
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validasi gagal.',
@@ -111,12 +95,12 @@ class ArtikelController extends Controller
         }
 
         $data = $validator->validated();
-        
+
         if (empty($request->isi_artikel) || trim(strip_tags($request->isi_artikel)) == '') {
-             return response()->json(['message' => 'Isi artikel tidak boleh kosong.'], 422);
+            return response()->json(['message' => 'Isi artikel tidak boleh kosong.'], 422);
         }
 
-        // --- LOGIKA HAPUS FOTO ---
+
         if ($request->has('hapus_foto') && $request->hapus_foto == '1') {
             if ($artikel->foto_artikel) {
                 Storage::disk('public')->delete($artikel->foto_artikel);
@@ -124,36 +108,32 @@ class ArtikelController extends Controller
             $data['foto_artikel'] = null;
         }
 
-        // --- LOGIKA UPLOAD FOTO ---
+
         if ($request->hasFile('foto_artikel')) {
             if ($artikel->foto_artikel && Storage::disk('public')->exists($artikel->foto_artikel)) {
                 Storage::disk('public')->delete($artikel->foto_artikel);
             }
             $path = $request->file('foto_artikel')->store('artikel_photos', 'public');
             $data['foto_artikel'] = $path;
-        } 
-        elseif (!array_key_exists('foto_artikel', $data)) {
-             unset($data['foto_artikel']);
+        } elseif (!array_key_exists('foto_artikel', $data)) {
+            unset($data['foto_artikel']);
         }
 
         try {
             $artikel->update($data);
-            // SUKSES -> Return JSON 200
+
             return response()->json([
                 'message' => 'Artikel berhasil diperbarui!',
                 'redirect_url' => route('pengurus.artikel.index')
             ], 200);
         } catch (\Exception $e) {
-            // ERROR -> Return JSON 500
+
             return response()->json([
                 'message' => 'Gagal memperbarui artikel: ' . $e->getMessage()
             ], 500);
         }
     }
 
-    /**
-     * Delete artikel
-     */
     public function destroy(string $id)
     {
         $artikel = Artikel::find($id);
@@ -163,7 +143,7 @@ class ArtikelController extends Controller
         }
 
         try {
-            // Hapus foto
+
             if ($artikel->foto_artikel) {
                 Storage::disk('public')->delete($artikel->foto_artikel);
             }
@@ -171,18 +151,14 @@ class ArtikelController extends Controller
             $artikel->delete();
 
             return response()->json(['message' => 'Artikel berhasil dihapus.'], 200);
-
         } catch (\Exception $e) {
             return response()->json(['message' => 'Gagal menghapus artikel: ' . $e->getMessage()], 500);
         }
     }
 
-    /**
-     * API untuk data artikel (list & single)
-     */
     public function artikelData(Request $request, string $id = null)
     {
-            Log::info('artikelData terpanggil', ['id' => $id, 'query' => $request->all()]);
+        Log::info('artikelData terpanggil', ['id' => $id, 'query' => $request->all()]);
         if ($id) {
             $artikel = Artikel::select(
                 'id_artikel',
@@ -199,21 +175,21 @@ class ArtikelController extends Controller
 
         $query = Artikel::query();
 
-        // Filter Status
+
         if ($request->status && $request->status !== 'all') {
             $query->where('status_artikel', $request->status);
         }
 
-        // Searching
+
         if ($request->search) {
             $query->where('judul_artikel', 'like', '%' . $request->search . '%')
                 ->orWhere('penulis_artikel', 'like', '%' . $request->search . '%');
         }
 
-        // Sorting
+
         $query->orderBy($request->sortBy ?? 'tanggal_terbit_artikel', $request->sortDir ?? 'desc');
 
-        // Pagination
+
         $artikels = $query->paginate($request->perPage ?? 10);
 
         return response()->json($artikels);

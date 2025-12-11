@@ -6,62 +6,62 @@ use Illuminate\Http\Request;
 use App\Models\PemasukanDonasi;
 use App\Models\Donasi;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Http; // Pastikan ini ada
-use Illuminate\Support\Facades\Auth; // Pastikan ini ada
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
 use App\Models\PemasukanTabunganQurban;
 
 class DonasiPaymentController extends Controller
 {
     public function checkout(Request $request)
     {
-        // 1. Cek Login Jamaah
+
         $user = Auth::guard('jamaah')->user();
 
-        // 2. Validasi Input (Email dihapus dari validasi frontend, kita handle di backend)
+
         $request->validate([
             'id_donasi' => 'required',
             'nominal' => 'required|numeric|min:1000',
             'method' => 'required',
-            // Nama hanya wajib jika TIDAK login (jika login, kita ambil dari DB)
-            'nama' => $user ? 'nullable' : 'required|string', 
+
+            'nama' => $user ? 'nullable' : 'required|string',
         ]);
-        
+
         $donasi = Donasi::find($request->id_donasi);
         if (!$donasi) return response()->json(['message' => 'Donasi tidak ditemukan'], 404);
 
-        // 3. Tentukan Nama & Email
+
         if ($user) {
-            // Jika Jamaah Login
+
             $customerName = $user->name;
             $customerEmail = $user->email;
             $idJamaah = $user->id;
         } else {
-            // Jika Tamu (Guest)
+
             $customerName = $request->nama;
-            // Tripay WAJIB butuh email. Kita buat dummy email jika user tidak input.
-            // Format: guest_{timestamp}_{random}@nomail.com
+
+
             $customerEmail = 'guest_' . time() . '_' . Str::random(3) . '@nomail.com';
             $idJamaah = null;
         }
 
-        // 4. Ambil Config Tripay
+
         $merchantCode = config('services.tripay.merchant_code');
         $apiKey       = config('services.tripay.api_key');
         $privateKey   = config('services.tripay.private_key');
         $amount       = (int) $request->nominal;
         $merchantRef  = 'DON-' . time() . '-' . Str::random(5);
 
-        // 5. Generate Signature
+
         $signature = hash_hmac('sha256', $merchantCode . $merchantRef . $amount, $privateKey);
 
-        // 6. Data Request ke Tripay
+
         $data = [
             'method'         => $request->input('method'),
             'merchant_ref'   => $merchantRef,
             'amount'         => $amount,
             'customer_name'  => $customerName,
-            'customer_email' => $customerEmail, // Email asli (jamaah) atau dummy (tamu)
-            'customer_phone' => $user ? $user->no_hp : '08123456789', // Jika jamaah ada HP pakai itu
+            'customer_email' => $customerEmail,
+            'customer_phone' => $user ? $user->no_hp : '08123456789',
             'order_items'    => [
                 [
                     'sku'      => $donasi->id_donasi,
@@ -75,24 +75,24 @@ class DonasiPaymentController extends Controller
             'signature'    => $signature
         ];
 
-        // 7. Kirim Request ke API Tripay
+
         $url = config('services.tripay.api_url');
         $response = Http::withToken($apiKey)->post($url, $data);
         $res = $response->json();
 
         if (!$response->successful() || empty($res['success']) || !$res['success']) {
             return response()->json([
-                'status' => 'error', 
+                'status' => 'error',
                 'message' => $res['message'] ?? 'Gagal request ke Tripay'
             ], 500);
         }
 
-        // 8. Simpan ke Database
+
         $dataTripay = $res['data'];
-        
+
         PemasukanDonasi::create([
             'id_donasi' => $donasi->id_donasi,
-            'id_jamaah' => $idJamaah, // Simpan ID Jamaah jika ada
+            'id_jamaah' => $idJamaah,
             'order_id' => $merchantRef,
             'tripay_reference' => $dataTripay['reference'],
             'tanggal' => now(),
@@ -105,14 +105,14 @@ class DonasiPaymentController extends Controller
         ]);
 
         return response()->json([
-            'status' => 'success', 
+            'status' => 'success',
             'checkout_url' => $dataTripay['checkout_url']
         ]);
     }
 
     public function callback(Request $request)
     {
-        // 1. Validasi Signature (Sama seperti sebelumnya)
+
         $callbackSignature = $request->server('HTTP_X_CALLBACK_SIGNATURE');
         $json = $request->getContent();
         $data = json_decode($json);
@@ -123,16 +123,16 @@ class DonasiPaymentController extends Controller
             return response()->json(['success' => false, 'message' => 'Invalid Signature'], 400);
         }
 
-        // 2. Logic Multi-Transaksi
+
         if ($request->header('X-Callback-Event') === 'payment_status') {
-            
+
             $merchantRef = $data->merchant_ref;
             $status = $data->status;
 
-            // CEK 1: Apakah ini Transaksi Donasi? (Prefix 'DON-')
+
             if (str_starts_with($merchantRef, 'DON-')) {
                 $transaksi = PemasukanDonasi::where('order_id', $merchantRef)->first();
-                
+
                 if ($transaksi) {
                     if ($status === 'PAID') {
                         $transaksi->update(['status' => 'success']);
@@ -140,9 +140,7 @@ class DonasiPaymentController extends Controller
                         $transaksi->update(['status' => 'failed']);
                     }
                 }
-            } 
-            // CEK 2: Apakah ini Transaksi Tabungan Qurban? (Prefix 'TRQ-')
-            elseif (str_starts_with($merchantRef, 'TRQ-')) {
+            } elseif (str_starts_with($merchantRef, 'TRQ-')) {
                 $transaksi = PemasukanTabunganQurban::where('order_id', $merchantRef)->first();
 
                 if ($transaksi) {

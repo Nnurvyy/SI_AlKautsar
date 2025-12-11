@@ -12,7 +12,7 @@ class CreateKategoriKeuanganTable extends Migration
             $table->uuid('id_kategori_keuangan')->primary();
             $table->string('nama_kategori_keuangan', 100);
 
-            // Enum tipe: pengeluaran / pemasukan
+            
             $table->enum('tipe', ['pengeluaran', 'pemasukan']);
 
             $table->timestamps();

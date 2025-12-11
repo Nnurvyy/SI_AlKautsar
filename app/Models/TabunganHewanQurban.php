@@ -16,13 +16,13 @@ class TabunganHewanQurban extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'id_tabungan_hewan_qurban', 
-        'id_jamaah', 
-        'status', 
+        'id_tabungan_hewan_qurban',
+        'id_jamaah',
+        'status',
         'tanggal_pembuatan',
-        'saving_type', 
-        'duration_months', 
-        'total_tabungan', 
+        'saving_type',
+        'duration_months',
+        'total_tabungan',
         'total_harga_hewan_qurban'
     ];
 
@@ -39,23 +39,27 @@ class TabunganHewanQurban extends Model
         });
     }
 
-    // Relasi ke User/Jamaah
-    public function jamaah() {
+
+    public function jamaah()
+    {
         return $this->belongsTo(Jamaah::class, 'id_jamaah', 'id');
     }
 
-    // Relasi ke Detail (Barang/Hewan apa saja yang dibeli)
-    public function details() {
+
+    public function details()
+    {
         return $this->hasMany(DetailTabunganHewanQurban::class, 'id_tabungan_hewan_qurban', 'id_tabungan_hewan_qurban');
     }
-    
-    public function pemasukanTabunganQurban() {
+
+    public function pemasukanTabunganQurban()
+    {
         return $this->hasMany(PemasukanTabunganQurban::class, 'id_tabungan_hewan_qurban', 'id_tabungan_hewan_qurban');
     }
-    
-    // Helper untuk cek apakah sudah lunas
-    public function getIsLunasAttribute() {
-        // Hitung manual dari relasi agar akurat
+
+
+    public function getIsLunasAttribute()
+    {
+
         $terkumpul = $this->pemasukanTabunganQurban()->sum('nominal');
         return $terkumpul >= $this->total_harga_hewan_qurban;
     }

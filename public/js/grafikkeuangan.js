@@ -1,19 +1,19 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // === 1. CONFIG & UTILS ===
+    
     const filterRangeSelect = document.getElementById('filterRange');
     const ctx = document.getElementById('GrafikKeuangan');
     let myChart = null;
 
-    // Format Rupiah
+    
     function formatRupiah(amount) {
         return new Intl.NumberFormat('id-ID', {
             style: 'currency', currency: 'IDR', minimumFractionDigits: 0
         }).format(amount || 0);
     }
 
-    // === 2. FETCH DATA ===
+    
     async function updateDashboardData(range) {
-        // Tampilkan loading di section alokasi
+        
         document.getElementById('containerAlokasiPemasukan').innerHTML = '<small class="text-muted">Loading...</small>';
         document.getElementById('containerAlokasiPengeluaran').innerHTML = '<small class="text-muted">Loading...</small>';
 
@@ -22,13 +22,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
 
             if (result.status === 'success') {
-                // A. Update Chart
+                
                 renderChart(result.chart, range);
                 
-                // B. Update Progress Bar Alokasi
+                
                 renderAllocationBars(result.allocation);
                 
-                // Update Label Text
+                
                 const labelText = filterRangeSelect.options[filterRangeSelect.selectedIndex].text;
                 document.getElementById('labelAlokasi').textContent = labelText;
             }
@@ -37,9 +37,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // === 3. RENDER CHART JS ===
+    
     function renderChart(chartData, range) {
-        // Opsi Chart
+        
         const options = {
             responsive: true,
             maintainAspectRatio: false,
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // === 4. RENDER ALOKASI (PROGRESS BARS) ===
+    
     function renderAllocationBars(allocationData) {
         const containerIn = document.getElementById('containerAlokasiPemasukan');
         const containerOut = document.getElementById('containerAlokasiPengeluaran');
@@ -110,11 +110,11 @@ document.addEventListener('DOMContentLoaded', function() {
         return html;
     }
 
-    // === 5. EVENT LISTENERS ===
-    // Load pertama kali
+    
+    
     updateDashboardData(filterRangeSelect.value);
 
-    // Saat filter berubah
+    
     filterRangeSelect.addEventListener('change', function() {
         updateDashboardData(this.value);
     });
