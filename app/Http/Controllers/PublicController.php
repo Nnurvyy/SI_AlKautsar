@@ -73,7 +73,7 @@ class PublicController extends Controller
         // Urutkan dari yang terbaru
         $artikel = Artikel::where('status_artikel', 'published')
                     ->orderBy('tanggal_terbit_artikel', 'desc')
-                    ->paginate(9); // 9 artikel per halaman
+                    ->paginate(3); // 6 artikel per halaman
 
         // Kita perlu memproses sinopsis (potongan teks pendek) dari isi_artikel
         // agar tampilan card rapi
@@ -111,7 +111,7 @@ class PublicController extends Controller
         // 2. Data untuk List Bawah: Ambil SEMUA program
         // Diurutkan descending (yang paling baru inputnya/tanggalnya di atas)
         // Menggunakan pagination 9 item per halaman
-        $semuaProgram = Program::orderBy('tanggal_program', 'desc')->paginate(9);
+        $semuaProgram = Program::orderBy('tanggal_program', 'desc')->paginate(3);
 
         return view('public.program', compact('sliderPrograms', 'semuaProgram'));
     }
@@ -147,9 +147,9 @@ class PublicController extends Controller
                     ->orWhereNull('tanggal_selesai');
             })
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(4);
 
-        $programDonasi->transform(function($item) {
+        $programDonasi->getCollection()->transform(function($item) {
             $target = $item->target_dana;
             // Ambil hasil sum yang sudah difilter
             $terkumpul = $item->pemasukan_sum_nominal ?? 0;
@@ -184,7 +184,7 @@ class PublicController extends Controller
                         ->where('pesan', '!=', '')
                         ->where('pesan', '!=', '-') // Filter pesan default dummy
                         ->orderBy('created_at', 'desc')
-                        ->paginate(4);
+                        ->paginate(9);
 
         // Transformasi Data Donatur (Avatar)
         $donatur->getCollection()->transform(function ($item) {

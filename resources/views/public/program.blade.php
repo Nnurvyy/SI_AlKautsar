@@ -5,6 +5,34 @@
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 <style>
+    /* ========================================= */
+    /* CUSTOM STYLE PAGINATION (Agar Rapi)       */
+    /* ========================================= */
+    .pagination {
+        margin-bottom: 0;
+        gap: 5px; /* Jarak antar tombol */
+    }
+    .page-link {
+        border-radius: 8px !important; /* Sudut membulat */
+        border: 1px solid #dee2e6;
+        color: #333;
+        font-weight: 500;
+        padding: 0.5rem 0.8rem;
+    }
+    .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: white;
+        box-shadow: 0 4px 6px rgba(13, 110, 253, 0.2);
+    }
+    .page-item.disabled .page-link {
+        color: #6c757d;
+        background-color: #f8f9fa;
+    }
+    .page-link:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
     /* ================================================= */
     /* == STYLE JUDUL == */
     /* ================================================= */
@@ -39,11 +67,17 @@
     .swiper-button-next { right: 20px; }
 
     /* ================================================= */
-    /* == STYLE SLIDE PROGRAM == */
+    /* == STYLE SLIDE PROGRAM (UPDATE 1:1) == */
     /* ================================================= */
     .program-slide {
-        position: relative; height: 320px; width: 100%;
-        border-radius: 16px; overflow: hidden; color: white;
+        position: relative; 
+        width: 100%;
+        /* UPDATE: Hapus height fix, ganti aspect-ratio 1:1 */
+        height: auto; 
+        aspect-ratio: 1/1 !important; 
+        border-radius: 16px; 
+        overflow: hidden; 
+        color: white;
     }
     .program-slide-img {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -82,7 +116,7 @@
     .btn-slide-detail:hover { background-color: #f0f0f0; color: #000; transform: scale(1.05); }
 
     /* ================================================= */
-    /* == STYLE CARD LIST PROGRAM == */
+    /* == STYLE CARD LIST PROGRAM (UPDATE 1:1) == */
     /* ================================================= */
     .program-list-card {
         border: none; border-radius: 12px;
@@ -94,16 +128,16 @@
         transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
     }
     
-    /* FIX RATIO GAMBAR CARD (4:5) */
+    /* UPDATE: RATIO GAMBAR CARD JADI 1:1 */
     .program-list-card .card-img {
         object-fit: cover; width: 100%; height: 100%;
-        aspect-ratio: 4/5; /* Rasio tetap 4:5 */
+        aspect-ratio: 1/1 !important; /* KOTAK */
         border-radius: 12px 0 0 12px !important;
     }
     
-    /* Agar col-4 mengikuti tinggi gambar */
-    .program-list-card .col-4 {
-        display: flex; align-items: stretch;
+    /* Agar col gambar mengikuti tinggi */
+    .program-list-card .col-img {
+        display: flex; align-items: stretch; padding: 0;
     }
 
     .program-list-card .card-body {
@@ -143,9 +177,11 @@
         .program-list-grid { grid-template-columns: repeat(3, 1fr); }
     }
 
-    /* STYLE MODAL DETAIL PROGRAM */
+    /* STYLE MODAL DETAIL PROGRAM (UPDATE 1:1) */
     #modalProgramImg {
-        width: 100%; aspect-ratio: 16 / 9; object-fit: cover;
+        width: 100%; 
+        aspect-ratio: 1/1 !important; /* KOTAK */
+        object-fit: cover;
         border-radius: 12px; margin-bottom: 1.5rem; background-color: #f8f9fa;
     }
     .modal-program-label { font-size: 0.9rem; color: #6c757d; margin-bottom: 0.2rem; }
@@ -219,10 +255,14 @@
 
             <div class="card program-list-card"> 
                 <div class="row g-0 h-100">
-                    <div class="col-4">
+                    
+                    {{-- UPDATE: Ganti col-4 jadi col-5 agar gambar kotak proporsional --}}
+                    <div class="col-5 col-img">
                         <img src="{{ $program->foto_url }}" class="card-img" alt="{{ $program->nama_program }}">
                     </div>
-                    <div class="col-8">
+                    
+                    {{-- UPDATE: Ganti col-8 jadi col-7 --}}
+                    <div class="col-7">
                         <div class="card-body">
                             <div> 
                                 <div class="card-badge {{ $badgeColor }}">{{ $statusLabel }}</div>
@@ -248,8 +288,9 @@
             @endforeach
         </div> 
 
-        <div class="d-flex justify-content-center mt-5">
-            {{ $semuaProgram->links() }}
+        {{-- PAGINATION BUTTON (Style Bootstrap 5) --}}
+        <div class="mt-4 d-flex justify-content-center">
+            {{ $semuaProgram->links('pagination::bootstrap-5') }}
         </div>
     @endif
 </div>
@@ -270,6 +311,7 @@
 
                 {{-- Konten Detail --}}
                 <div id="modalContent" class="d-none">
+                    {{-- Gambar di Modal juga 1:1 --}}
                     <img id="modalProgramImg" src="" alt="Detail Foto">
                     
                     <div class="row mb-3">
@@ -328,7 +370,7 @@
                     992: { slidesPerView: 2.5, centeredSlides: true, spaceBetween: 30 },
                     1200: { slidesPerView: 3, centeredSlides: true, spaceBetween: 30 }
                 }
-            });     
+            });      
         }
     });
 

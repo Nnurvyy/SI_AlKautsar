@@ -4,30 +4,79 @@
 
 @push('styles')
 <style>
-    /* Style Pagination agar lebih kecil/compact di kolom kanan */
+    /* ========================================= */
+    /* CUSTOM STYLE PAGINATION (Agar Rapi)       */
+    /* ========================================= */
     .pagination {
-        font-size: 0.85rem;
+        margin-bottom: 0;
+        gap: 5px; /* Jarak antar tombol */
     }
     .page-link {
-        padding: 0.3rem 0.6rem;
+        border-radius: 8px !important; /* Sudut membulat */
+        border: 1px solid #dee2e6;
+        color: #333;
+        font-weight: 500;
+        padding: 0.5rem 0.8rem;
     }
-    
-    /* ... Style CSS lainnya tetap sama ... */
+    .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: white;
+        box-shadow: 0 4px 6px rgba(13, 110, 253, 0.2);
+    }
+    .page-item.disabled .page-link {
+        color: #6c757d;
+        background-color: #f8f9fa;
+    }
+    .page-link:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    /* ========================================= */
+    /* STYLE UTAMA                               */
+    /* ========================================= */
     .khotib-title-heading { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.8rem; color: #333; margin-bottom: 0.5rem; }
     .khotib-title-sub { font-size: 1rem; color: #6c757d; margin-bottom: 1rem; }
+    
+    /* Card Utama */
     .khotib-card { width: 100%; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); border: none; background-color: #ffffff; transition: transform 0.3s ease; }
-    .khotib-img { width: 100%; object-fit: cover; aspect-ratio: 16/9; }
+    
+    /* Gambar Utama 1:1 */
+    .khotib-img { width: 100%; object-fit: cover; aspect-ratio: 1/1; }
+    
     .khotib-content { padding: 1.5rem; }
     .khotib-content h3 { font-weight: 800; letter-spacing: -0.5px; color: #2c3e50; }
     .tanggal-badge { font-size: 0.9rem; font-weight: 600; padding: 0.5em 1em; background-color: #212529; color: #ffffff; border-radius: 50px; display: inline-block; margin-top: 1rem; }
+    
+    /* List Card Kecil */
     .khotib-list-card { border: none; border-radius: 16px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); margin-bottom: 1rem; overflow: hidden; background: #fff; transition: transform 0.2s ease, box-shadow 0.2s ease; }
     .khotib-list-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
-    .khotib-list-card .card-img { object-fit: cover; width: 100px; height: 100px; border-radius: 12px !important; margin: 0.5rem; }
+    
+    /* Gambar List 1:1 */
+    .khotib-list-card .card-img { object-fit: cover; width: 100px; height: 100px; aspect-ratio: 1/1; border-radius: 12px !important; margin: 0.5rem; }
+    
     .khotib-list-card .card-body { padding: 0.75rem 1rem 0.75rem 0; display: flex; flex-direction: column; justify-content: center; }
+    
+    /* Desktop Media Query */
     @media (min-width: 992px) {
-        .khotib-card { display: flex; flex-direction: row; }
-        .khotib-img { aspect-ratio: 4/5; width: 100%; height: 100%; border-radius: 0 !important; }
-        .khotib-content { display: flex; flex-direction: column; justify-content: center; padding: 3rem; width: 100%; }
+        /* Layout Card Utama Desktop */
+        .khotib-card { 
+            display: flex; 
+            flex-direction: row; 
+            height: auto; 
+            align-items: stretch; /* Agar tinggi sama rata */
+        }
+        
+        /* Gambar Desktop Full Height & 1:1 */
+        .khotib-img { 
+            aspect-ratio: 1/1; 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            border-radius: 0 !important; 
+        }
+        
+        .khotib-content { display: flex; flex-direction: column; justify-content: center; padding: 3rem; width: 100%; height: 100%; }
         .khotib-list-card { background: #f8f9fa; border: 1px solid #eee; box-shadow: none; }
     }
 </style>
@@ -42,19 +91,24 @@
         <p class="khotib-title-sub">Informasi petugas khotib dan imam shalat Jumat di masjid kami.</p>
     </div>
 
-    <div class="row g-5">
-        {{-- KOLOM KIRI: Highlight Jumat Ini (Static, tidak ikut paginate) --}}
+    <div class="row g-5 align-items-start"> 
+        
+        {{-- KOLOM KIRI: Highlight Jumat Ini --}}
         <div class="col-lg-7">
             
             @if($khotibJumatIni)
             <div class="khotib-card">
-                <div class="row g-0 w-100">
-                    <div class="col-md-5">
+                <div class="row g-0 w-100 h-100">
+                    
+                    {{-- Kolom Gambar (7 Bagian) --}}
+                    <div class="col-md-7 p-0"> 
                         <img src="{{ $khotibJumatIni->foto_url }}" 
                              alt="{{ $khotibJumatIni->nama_khotib }}" 
                              class="khotib-img">
                     </div>
-                    <div class="col-md-7">
+                    
+                    {{-- Kolom Teks (5 Bagian) --}}
+                    <div class="col-md-5">
                         <div class="khotib-content h-100">
                             <div class="badge bg-primary w-auto align-self-start mb-2">JUMAT TERDEKAT</div>
                             
@@ -94,11 +148,10 @@
             @endif
         </div>
 
-        {{-- KOLOM KANAN: List Khutbah Selanjutnya (Dengan Pagination) --}}
+        {{-- KOLOM KANAN: List Khutbah Selanjutnya --}}
         <div class="col-lg-5">
             <h4 class="fw-bold mb-4 text-dark">Jadwal Selanjutnya</h4>
             
-            {{-- Loop data paginate --}}
             @forelse($khotibSelanjutnya as $khotib)
             <div class="card khotib-list-card">
                 <div class="d-flex align-items-center">
@@ -122,10 +175,9 @@
             </div>
             @endforelse
 
-            {{-- TOMBOL PAGINATION --}}
-            <div class="mt-3">
-                {{ $khotibSelanjutnya->links() }} 
-                {{-- Atau jika pakai bootstrap pagination default: {{ $khotibSelanjutnya->onEachSide(1)->links() }} --}}
+            {{-- PAGINATION BUTTON (Style Bootstrap 5) --}}
+            <div class="mt-4 d-flex justify-content-center">
+                {{ $khotibSelanjutnya->links('pagination::bootstrap-5') }} 
             </div>
         </div>
     </div>

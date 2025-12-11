@@ -5,12 +5,46 @@
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 <style>
+    /* ========================================= */
+    /* CUSTOM STYLE PAGINATION (Agar Rapi)       */
+    /* ========================================= */
+    .pagination {
+        margin-bottom: 0;
+        gap: 5px; /* Jarak antar tombol */
+    }
+    .page-link {
+        border-radius: 8px !important; /* Sudut membulat */
+        border: 1px solid #dee2e6;
+        color: #333;
+        font-weight: 500;
+        padding: 0.5rem 0.8rem;
+    }
+    .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: white;
+        box-shadow: 0 4px 6px rgba(13, 110, 253, 0.2);
+    }
+    .page-item.disabled .page-link {
+        color: #6c757d;
+        background-color: #f8f9fa;
+    }
+    .page-link:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    /* ========================================= */
+    /* STYLE KAJIAN                              */
+    /* ========================================= */
     .donasi-title-heading { font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.8rem; color: #333; margin-bottom: 0.5rem; }
     .donasi-title-sub { font-size: 1rem; color: #6c757d; margin-bottom: 1rem; }
     
-    /* Style Card Event Desktop */
+    /* Style Card Event Desktop & Mobile */
     .kajian-event-card { width: 100%; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); border: none; background-color: #ffffff; }
-    .kajian-event-img { width: 100%; object-fit: cover; aspect-ratio: 16/9; }
+    
+    /* Default (Mobile): Aspect Ratio 1:1 */
+    .kajian-event-img { width: 100%; object-fit: cover; aspect-ratio: 1/1; }
+    
     .kajian-event-content { padding: 1rem; }
     .kajian-event-content h6 { font-weight: 700; font-size: 1.25rem; color: #212529; margin-bottom: 0.25rem; }
     .kajian-event-content p { font-size: 1.0rem; color: #495057; margin-bottom: 0.5rem; line-height: 1.4; }
@@ -18,7 +52,10 @@
 
     /* Style Card List (Rutin & Event di Tab) */
     .kajian-list-card-new { border: none; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); margin-bottom: 1rem; overflow: hidden; background: linear-gradient(to bottom right, #ffffff, #f1f3f5); display: flex; flex-direction: row; }
-    .kajian-list-card-new .card-img { object-fit: cover; width: 110px; height: 110px; border-radius: 12px 0 0 12px !important; }
+    
+    /* List Image 1:1 */
+    .kajian-list-card-new .card-img { object-fit: cover; width: 110px; height: 110px; aspect-ratio: 1/1; border-radius: 12px 0 0 12px !important; }
+    
     .kajian-list-card-new .card-body { padding: 0.75rem 1rem; display: flex; flex-direction: column; justify-content: space-between; flex: 1; min-height: 110px; }
     .kajian-list-card-new .card-title { font-size: 0.95rem; font-weight: 700; color: #212529; line-height: 1.3; }
     .kajian-list-card-new .card-text-tema { font-size: 0.85rem; color: #495057; }
@@ -51,19 +88,40 @@
 
     /* Desktop Media Query */
     @media (min-width: 992px) {
-        .kajian-event-swiper { height: 100%; }
+        .kajian-event-swiper { height: auto; }
         .swiper-slide { height: auto; }
-        .kajian-event-card { display: flex; height: 100%; }
-        .kajian-event-img { aspect-ratio: 4 / 5; width: 100%; height: 100%; object-fit: cover; border-radius: 16px 0 0 16px !important; }
-        .kajian-event-content { display: flex; flex-direction: column; justify-content: center; padding: 2rem; height: 100%; width: 100%; }
         
+        /* Card menyesuaikan konten, align-items center biar teks di tengah vertikal gambar */
+        .kajian-event-card { 
+            display: flex; 
+            flex-direction: row; 
+            height: auto; 
+            align-items: center; 
+        }
+        
+        /* Gambar tetap 1:1 */
+        .kajian-event-img { 
+            aspect-ratio: 1 / 1; 
+            width: 100%; 
+            height: auto; 
+            object-fit: cover; 
+            border-radius: 16px 0 0 16px !important; 
+        }
+        
+        /* Konten teks */
+        .kajian-event-content { 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            padding: 2rem; 
+            height: auto; 
+            width: 100%; 
+        }
+        
+        /* List Style Desktop */
         .kajian-list-card-new { background: #f1f3f5; box-shadow: none; border-radius: 20px; padding: 0.75rem; display: flex; flex-direction: row; }
-        .kajian-list-card-new .card-img { width: 110px; height: 110px; border-radius: 12px !important; object-fit: cover; min-height: auto; }
+        .kajian-list-card-new .card-img { width: 110px; height: 110px; aspect-ratio: 1/1; border-radius: 12px !important; object-fit: cover; min-height: auto; }
         .kajian-list-card-new .card-body { height: auto; min-height: 0; padding: 0.5rem 0 0.5rem 1rem; justify-content: space-between; flex: 1; }
-        
-        .pagination { margin-bottom: 0; }
-        .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; }
-        .page-link { color: #333; }
     }
 </style>
 @endpush
@@ -73,7 +131,7 @@
 <div class="container"> 
 
     {{-- ============================================================ --}}
-    {{-- DESKTOP LAYOUT (Tidak Diubah)                                --}}
+    {{-- DESKTOP LAYOUT                                               --}}
     {{-- ============================================================ --}}
     <div class="d-none d-lg-block" style="padding-top: 2rem; padding-bottom: 2rem;">
         <div class="mb-4">
@@ -81,7 +139,7 @@
             <p class="donasi-title-sub">Ikuti kajian event dan rutin terbaru kami.</p>
         </div>
 
-        <div class="row">
+        <div class="row align-items-start"> 
             {{-- KIRI: KAJIAN EVENT --}}
             <div class="col-lg-7">
                 @if($kajianEvent->isEmpty())
@@ -95,22 +153,26 @@
                             @foreach($kajianEvent as $kajian)
                             <div class="swiper-slide">
                                 <div class="kajian-event-card">
-                                    <div class="row g-0 h-100 w-100">
-                                        <div class="col-md-5">
+                                    <div class="row g-0 w-100 align-items-center">
+                                        
+                                        {{-- Kolom Gambar (8) --}}
+                                        <div class="col-md-8">
                                             <img src="{{ $kajian->foto_url }}" alt="{{ $kajian->tema_kajian }}" class="kajian-event-img">
                                         </div>
-                                        <div class="col-md-7">
+
+                                        {{-- Kolom Teks (4) --}}
+                                        <div class="col-md-4">
                                             <div class="kajian-event-content">
                                                 <h3 class="fw-bold donasi-title-heading text-primary" style="font-size: 1.2rem; letter-spacing: 1px;">KAJIAN EVENT</h3>
                                                 <h6 class="fw-bold mt-2" style="font-size: 1.5rem;">{{ $kajian->nama_penceramah }}</h6>
                                                 <p class="text-muted mb-3" style="font-size: 1.1rem;">"{{ $kajian->tema_kajian }}"</p>
+                                                
                                                 <div>
                                                     <span class="tanggal-badge">
-                                                        <i class="bi bi-calendar-event me-1"></i>
                                                         {{ \Carbon\Carbon::parse($kajian->tanggal_kajian)->translatedFormat('d F Y') }}
                                                         @if($kajian->waktu_kajian)
-                                                            <span class="mx-1">|</span> 
-                                                            <i class="bi bi-clock me-1"></i>
+                                                            <br class="d-xl-none">
+                                                            <span class="d-none d-xl-inline">|</span> 
                                                             {{ \Carbon\Carbon::parse($kajian->waktu_kajian)->format('H:i') }} WIB
                                                         @endif
                                                     </span>
@@ -146,7 +208,6 @@
                             <span class="badge bg-light text-dark border">
                                 <i class="bi bi-calendar3 me-1"></i>
                                 
-                                {{-- LOGIC BENAR (DESKTOP) --}}
                                 @if($kajian->tipe == 'rutin')
                                     Setiap Hari {{ $kajian->hari }}
                                 @else
@@ -166,8 +227,9 @@
                 </div>
                 @endforelse
 
-                <div class="d-flex justify-content-end mt-4">
-                    {{ $kajianRutin->links() }} 
+                {{-- PAGINATION DESKTOP (Style Baru) --}}
+                <div class="mt-4 d-flex justify-content-center">
+                    {{ $kajianRutin->links('pagination::bootstrap-5') }} 
                 </div>
             </div>
         </div>
@@ -241,15 +303,12 @@
                     <div>
                         <span class="text-muted small">
                             <i class="bi bi-calendar3 me-1"></i>
-                            
-                            {{-- PERBAIKAN: LOGIKA TAMPILAN HARI --}}
                             @if($kajian->tipe == 'rutin')
                                 Setiap Hari {{ $kajian->hari }}
                             @else
                                 {{ \Carbon\Carbon::parse($kajian->tanggal_kajian)->translatedFormat('d M Y') }}
                             @endif
 
-                            {{-- Tambahan Waktu agar konsisten --}}
                             @if($kajian->waktu_kajian)
                                 • {{ \Carbon\Carbon::parse($kajian->waktu_kajian)->format('H:i') }}
                             @endif
@@ -262,9 +321,10 @@
                     <small>Tidak ada jadwal kajian rutin.</small>
                 </div>
             @endforelse
-
-            <div class="mt-3 pb-5">
-                 {{ $kajianRutin->links() }}
+            
+            {{-- PAGINATION MOBILE (Style Baru) --}}
+            <div class="mt-3 pb-5 d-flex justify-content-center">
+                 {{ $kajianRutin->links('pagination::bootstrap-5') }}
             </div>
         </div>
 
@@ -282,15 +342,12 @@
                     <div>
                         <span class="text-muted small">
                             <i class="bi bi-calendar3 me-1"></i>
-                            
-                            {{-- PERBAIKAN: LOGIKA TAMPILAN HARI --}}
                             @if($kajian->tipe == 'rutin')
                                 Setiap Hari {{ $kajian->hari }}
                             @else
                                 {{ \Carbon\Carbon::parse($kajian->tanggal_kajian)->translatedFormat('d M Y') }}
                             @endif
 
-                             {{-- Tambahan Waktu agar konsisten --}}
                              @if($kajian->waktu_kajian)
                                 • {{ \Carbon\Carbon::parse($kajian->waktu_kajian)->format('H:i') }}
                             @endif
@@ -304,8 +361,9 @@
                 </div>
             @endforelse
             
-            <div class="mt-3 pb-5">
-                 {{ $kajianRutin->links() }}
+            {{-- PAGINATION MOBILE (Style Baru) --}}
+            <div class="mt-3 pb-5 d-flex justify-content-center">
+                 {{ $kajianRutin->links('pagination::bootstrap-5') }}
             </div>
         </div>
 
@@ -350,27 +408,21 @@
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script>
     function switchTab(tabName, btnElement) {
-        // 1. Reset Tombol Aktif
         document.querySelectorAll('.mobile-tab-btn').forEach(btn => btn.classList.remove('active'));
         if(btnElement) btnElement.classList.add('active');
 
-        // 2. Sembunyikan Semua Konten
         document.getElementById('tab-content-semua').classList.add('d-none');
         document.getElementById('tab-content-rutin').classList.add('d-none');
         document.getElementById('tab-content-event').classList.add('d-none');
 
-        // 3. Tampilkan Konten Terpilih
         document.getElementById('tab-content-' + tabName).classList.remove('d-none');
         
-        // 4. Simpan state di localStorage agar tidak reset saat pagination (opsional)
         localStorage.setItem('activeKajianTab', tabName);
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        // Logic Tab Persistance (agar saat pagination tab rutin tetap aktif)
         const savedTab = localStorage.getItem('activeKajianTab');
         if(savedTab && document.getElementById('tab-content-' + savedTab)) {
-            // Cari tombol yang sesuai
             const btns = document.querySelectorAll('.mobile-tab-btn');
             let activeBtn = btns[0]; // Default 'semua'
             if(savedTab === 'rutin') activeBtn = btns[1];
@@ -379,7 +431,6 @@
             switchTab(savedTab, activeBtn);
         }
 
-        // Init Swiper Desktop
         if (document.querySelector('.kajian-event-swiper')) {
             new Swiper('.kajian-event-swiper', {
                 loop: {{ $kajianEvent->count() > 1 ? 'true' : 'false' }},
@@ -393,7 +444,6 @@
             });
         }
 
-        // Init Swiper Mobile
         if (document.querySelector('.kajian-event-swiper-mobile')) {
             new Swiper('.kajian-event-swiper-mobile', {
                 loop: {{ $kajianEvent->count() > 1 ? 'true' : 'false' }},

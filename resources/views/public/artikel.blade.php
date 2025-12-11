@@ -4,6 +4,34 @@
 
 @push('styles')
 <style>
+    /* ========================================= */
+    /* CUSTOM STYLE PAGINATION (Agar Rapi)       */
+    /* ========================================= */
+    .pagination {
+        margin-bottom: 0;
+        gap: 5px; /* Jarak antar tombol */
+    }
+    .page-link {
+        border-radius: 8px !important; /* Sudut membulat */
+        border: 1px solid #dee2e6;
+        color: #333;
+        font-weight: 500;
+        padding: 0.5rem 0.8rem;
+    }
+    .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: white;
+        box-shadow: 0 4px 6px rgba(13, 110, 253, 0.2);
+    }
+    .page-item.disabled .page-link {
+        color: #6c757d;
+        background-color: #f8f9fa;
+    }
+    .page-link:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
     /* ================================================= */
     /* == STYLE JUDUL == */
     /* ================================================= */
@@ -22,7 +50,7 @@
         width: 100%;
         border: none;
         border-radius: 12px; 
-        background-color: #fff; /* Ubah ke putih agar bersih, atau #d1d6db sesuai request */
+        background-color: #fff; 
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); 
         margin-bottom: 1.5rem;
         overflow: hidden; 
@@ -100,9 +128,9 @@
         transition: background-color 0.2s ease;
         cursor: pointer;
     }
-    .btn-artikel:hover {                                                
+    .btn-artikel:hover {                                                                
         background-color: #0b5ed7;                 
-        color: #ffffff;                                                              
+        color: #ffffff;                                                                 
     }
     
     /* GRID SYSTEM */
@@ -127,17 +155,17 @@
     /* STYLE MODAL DETAIL */
     #modalArtikelImg {
         width: 100%;
-        aspect-ratio: 16 / 9;  /* <-- INI KUNCINYA: Paksa rasio landscape */
-        object-fit: cover;     /* Agar gambar terpotong rapi (tidak gepeng) */
+        aspect-ratio: 16 / 9;  
+        object-fit: cover;     
         border-radius: 12px;
         margin-bottom: 1.5rem;
-        background-color: #f8f9fa; /* Placeholder warna loading */
+        background-color: #f8f9fa; 
     }
 
     /* Style untuk gambar-gambar lain di dalam isi artikel (Body) */
     #modalArtikelBody img {
         max-width: 100%;
-        height: auto; /* Biarkan rasio asli untuk gambar di dalam teks */
+        height: auto; 
         border-radius: 8px;
         margin: 1rem 0;
     }
@@ -145,7 +173,7 @@
     .modal-detail-date {
         color: #6c757d;
         font-size: 0.9rem;
-        margin-bottom: 0; /* Reset margin bottom */
+        margin-bottom: 0; 
     }
     
     .modal-detail-author {
@@ -153,7 +181,6 @@
         color: #0d6efd;
         font-size: 0.9rem;
     }
-                                                                         
 </style>
 @endpush
 
@@ -211,9 +238,9 @@
 
             </div>
 
-            {{-- Pagination --}}
+            {{-- Pagination (Style Bootstrap 5) --}}
             <div class="mt-5 d-flex justify-content-center">
-                {{ $artikel->links() }}
+                {{ $artikel->links('pagination::bootstrap-5') }}
             </div>
         @endif
 
@@ -250,7 +277,7 @@
 
                     {{-- Isi Full --}}
                     <div id="modalArtikelBody" class="typography">
-                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -286,8 +313,7 @@
             .then(data => {
                 // 4. Isi Data ke Modal
                 document.getElementById('modalArtikelTitle').innerText = data.judul_artikel;
-                // SESUAI MODEL ANDA SEKARANG
-                document.getElementById('modalArtikelImg').src = data.foto_url;
+                document.getElementById('modalArtikelImg').src = data.foto_url_lengkap; // Pastikan controller kirim foto_url_lengkap
                 document.getElementById('modalArtikelDate').innerHTML = '<i class="bi bi-calendar-event me-2"></i>' + data.formatted_date;
                 document.getElementById('modalArtikelAuthor').innerHTML = '<i class="bi bi-person-circle me-2"></i>' + data.penulis_artikel;
                 document.getElementById('modalArtikelBody').innerHTML = data.isi_artikel;
