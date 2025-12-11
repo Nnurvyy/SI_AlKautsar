@@ -40,24 +40,4 @@ class MasjidProfil extends Model
             }
         });
     }
-
-    public function landingPage()
-    {
-
-        $masjidSettings = null;
-        if (class_exists(\App\Models\MasjidProfil::class)) {
-            $masjidSettings = \App\Models\MasjidProfil::first();
-        }
-
-
-        if (!$masjidSettings) {
-            $masjidSettings = (object)[
-                'nama_masjid' => config('app.name', 'E‑Masjid'),
-                'lokasi_nama' => 'Bandung',
-                'foto_masjid'  => null,
-            ];
-        }
-
-        return view('landing-page', compact('masjidSettings'));
-    }
 }
