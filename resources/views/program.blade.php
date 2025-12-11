@@ -5,6 +5,9 @@
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
+{{-- 1. Load CSS Cropper.js --}}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+
 <div class="container-fluid p-4">
 
     {{-- HEADER & SEARCH --}}
@@ -36,10 +39,8 @@
                 <h5 class="fw-bold text-dark mb-0">Total Program</h5>
                 <small class="text-muted">Jumlah agenda kegiatan terdaftar</small>
             </div>
-            {{-- ID ini (totalProgramHeader) untuk diisi via JS --}}
             <h3 class="fw-bold text-success mb-0" id="totalProgramHeader">
-                {{-- Tampilkan jumlah program --}}
-                {{ number_format($totalProgram, 0, ',', '.') }}
+                {{ number_format($totalProgram ?? 0, 0, ',', '.') }}
             </h3>
         </div>
     </div>
@@ -75,13 +76,12 @@
 </div>
 
 {{-- ============================================================== --}}
-{{-- MODAL 1: CREATE / EDIT PROGRAM (Style Public Donasi) --}}
+{{-- MODAL 1: CREATE / EDIT PROGRAM --}}
 {{-- ============================================================== --}}
 <div class="modal fade" id="modalProgram" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg modal-rounded">
             
-            {{-- Header Clean --}}
             <div class="modal-header border-0 pb-0 pt-4 px-4 bg-white">
                 <div>
                     <h5 class="modal-title fw-bold text-dark" id="modalTitle">Program Kegiatan</h5>
@@ -94,7 +94,6 @@
                 <form id="formProgram" enctype="multipart/form-data">
                     <input type="hidden" id="id_program" name="id_program">
 
-                    {{-- WRAPPER HIJAU (Style Public) --}}
                     <div class="donation-card-wrapper">
                         
                         {{-- Upload Foto --}}
@@ -112,11 +111,14 @@
                                 </div>
                             </label>
 
-                            {{-- 2. Tampilan Preview --}}
+                            {{-- 2. Tampilan Preview Final (Rasio 1:1) --}}
                             <div id="previewContainer" class="position-relative d-none">
-                                <img id="previewFoto" class="img-fluid w-100 rounded-3 shadow-sm" style="max-height: 250px; object-fit: cover;">
-                                <button type="button" id="btnHapusFoto" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 rounded-circle shadow-sm" style="width: 30px; height: 30px; padding: 0;"><i class="bi bi-x"></i></button>
-                                <label for="foto_program" class="btn btn-light btn-sm position-absolute bottom-0 end-0 m-2 rounded-pill shadow-sm small fw-bold"><i class="bi bi-pencil me-1"></i> Ubah</label>
+                                <div style="width: 100%; aspect-ratio: 1/1; overflow: hidden; border-radius: 12px; position: relative;">
+                                    <img id="previewFoto" class="img-fluid w-100 h-100 shadow-sm" 
+                                         style="object-fit: cover; display: block;">
+                                </div>
+                                <button type="button" id="btnHapusFoto" class="btn btn-danger btn-sm position-absolute rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="top: 10px; right: 10px; width: 32px; height: 32px; padding: 0; z-index: 10;"><i class="bi bi-x-lg"></i></button>
+                                <label for="foto_program" class="btn btn-light btn-sm position-absolute rounded-pill shadow-sm small fw-bold" style="bottom: 10px; right: 10px; z-index: 10; cursor: pointer;"><i class="bi bi-pencil-fill me-1"></i> Ubah</label>
                             </div>
                         </div>
 
@@ -162,7 +164,7 @@
 
                         {{-- Tombol --}}
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-gradient-green rounded-pill py-2 fw-bold shadow-sm">
+                            <button type="submit" class="btn btn-gradient-green rounded-pill py-2 fw-bold shadow-sm" id="btnSimpanProgram">
                                 <i class="bi bi-check-circle me-2"></i> Simpan Data
                             </button>
                         </div>
@@ -174,12 +176,36 @@
 </div>
 
 {{-- ============================================================== --}}
-{{-- MODAL 2: DETAIL PROGRAM (Clean Style) --}}
+{{-- MODAL 2: CROPPER (BARU) --}}
+{{-- ============================================================== --}}
+<div class="modal fade" id="modalCrop" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-bottom-0 pb-0 pt-3 px-4">
+                <h5 class="modal-title fw-bold">Potong Gambar (1:1)</h5>
+                <button type="button" class="btn-close" id="btnCloseCrop"></button>
+            </div>
+            <div class="modal-body p-0 mt-3">
+                <div class="img-container" style="height: 500px; background-color: #333; display: flex; justify-content: center; align-items: center; overflow: hidden;">
+                    <img id="imageToCrop" style="max-width: 100%; display: block;">
+                </div>
+            </div>
+            <div class="modal-footer border-top-0">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" id="btnCancelCrop">Batal</button>
+                <button type="button" class="btn btn-gradient-green rounded-pill px-4" id="btnCropImage">
+                    <i class="bi bi-scissors me-2"></i>Potong & Gunakan
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ============================================================== --}}
+{{-- MODAL 3: DETAIL PROGRAM --}}
 {{-- ============================================================== --}}
 <div class="modal fade" id="modalDetailProgram" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-lg modal-rounded">
-            
             <div class="modal-header border-0 pb-0 pt-4 px-4 bg-white">
                 <div>
                     <h5 class="modal-title fw-bold text-dark">Detail Program</h5>
@@ -187,34 +213,19 @@
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body p-4">
                 <div class="row g-4 align-items-start">
-                    {{-- Foto --}}
                     <div class="col-md-5">
-                        <img id="detailFotoProgram" src="" class="img-fluid rounded-4 shadow-sm w-100 object-fit-cover" style="min-height: 250px; max-height: 350px;">
+                        <img id="detailFotoProgram" src="" class="img-fluid rounded-4 shadow-sm w-100 object-fit-cover" style="aspect-ratio: 1/1;">
                     </div>
-                    
-                    {{-- Info --}}
                     <div class="col-md-7">
                         <span id="d_status" class="badge rounded-pill px-3 py-2 mb-2"></span>
                         <h3 id="d_nama" class="fw-bold text-dark mb-3"></h3>
-                        
                         <div class="d-flex flex-column gap-2 mb-4">
-                            <div class="d-flex align-items-center text-muted">
-                                <i class="bi bi-calendar-event me-2 text-success"></i>
-                                <span id="d_tanggal" class="fw-medium"></span>
-                            </div>
-                            <div class="d-flex align-items-center text-muted">
-                                <i class="bi bi-geo-alt me-2 text-danger"></i>
-                                <span id="d_lokasi" class="fw-medium"></span>
-                            </div>
-                            <div class="d-flex align-items-center text-muted">
-                                <i class="bi bi-person-badge me-2 text-primary"></i>
-                                <span id="d_penyelenggara" class="fw-medium"></span>
-                            </div>
+                            <div class="d-flex align-items-center text-muted"><i class="bi bi-calendar-event me-2 text-success"></i><span id="d_tanggal" class="fw-medium"></span></div>
+                            <div class="d-flex align-items-center text-muted"><i class="bi bi-geo-alt me-2 text-danger"></i><span id="d_lokasi" class="fw-medium"></span></div>
+                            <div class="d-flex align-items-center text-muted"><i class="bi bi-person-badge me-2 text-primary"></i><span id="d_penyelenggara" class="fw-medium"></span></div>
                         </div>
-
                         <div class="p-3 bg-light rounded-3 border">
                             <small class="text-uppercase text-muted fw-bold ls-1 d-block mb-2">Deskripsi</small>
                             <p id="d_deskripsi" class="text-dark mb-0 small" style="line-height: 1.6;"></p>
@@ -226,73 +237,316 @@
     </div>
 </div>
 
-{{-- CSS KHUSUS HALAMAN INI (Copy dari Donasi) --}}
+{{-- CSS KHUSUS HALAMAN INI --}}
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
-
-    /* Scoping Font Poppins */
-    #tabelProgram, .card, .modal-content, .donation-card-wrapper { 
-        font-family: 'Poppins', sans-serif; 
-    }
-
-    /* --- GLOBAL STYLES --- */
+    #tabelProgram, .card, .modal-content, .donation-card-wrapper { font-family: 'Poppins', sans-serif; }
     .modal-rounded { border-radius: 20px !important; overflow: hidden; }
     .ls-1 { letter-spacing: 0.5px; }
-
-    /* Button Gradient Green */
-    .btn-gradient-green {
-        background: linear-gradient(135deg, #198754, #20c997);
-        border: none; color: white; transition: all 0.3s;
-    }
-    .btn-gradient-green:hover {
-        background: linear-gradient(135deg, #157347, #198754);
-        transform: translateY(-1px); color: white;
-    }
-
-    /* --- DONATION CARD WRAPPER (HIJAU MUDA) --- */
-    .donation-card-wrapper {
-        background-color: #f0fdf4;
-        border: 1px solid #dcfce7;
-        border-radius: 16px;
-        padding: 20px;
-        box-shadow: inset 0 0 15px rgba(34, 197, 94, 0.03);
-    }
-
-    /* --- INPUT STYLES --- */
-    .rounded-pill-input {
-        border-radius: 50px !important;
-        border: 1px solid #d1d5db;
-        padding-left: 15px; font-size: 0.9rem;
-    }
-    .rounded-box-input {
-        border-radius: 12px !important;
-        border: 1px solid #d1d5db; padding: 10px;
-    }
-    .form-control:focus, .form-select:focus {
-        border-color: #22c55e;
-        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
-    }
-
-    /* --- UPLOAD BOX --- */
-    .file-upload-box {
-        background: white; border: 2px dashed #cbd5e1;
-        border-radius: 12px; height: 120px;
-        display: flex; align-items: center; justify-content: center;
-        transition: all 0.3s;
-    }
+    .btn-gradient-green { background: linear-gradient(135deg, #198754, #20c997); border: none; color: white; transition: all 0.3s; }
+    .btn-gradient-green:hover { background: linear-gradient(135deg, #157347, #198754); transform: translateY(-1px); color: white; }
+    .donation-card-wrapper { background-color: #f0fdf4; border: 1px solid #dcfce7; border-radius: 16px; padding: 20px; box-shadow: inset 0 0 15px rgba(34, 197, 94, 0.03); }
+    .rounded-pill-input { border-radius: 50px !important; border: 1px solid #d1d5db; padding-left: 15px; font-size: 0.9rem; }
+    .rounded-box-input { border-radius: 12px !important; border: 1px solid #d1d5db; padding: 10px; }
+    .form-control:focus, .form-select:focus { border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15); }
+    .file-upload-box { background: white; border: 2px dashed #cbd5e1; border-radius: 12px; height: 120px; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
     .file-upload-box:hover { border-color: #22c55e; background: #fafffc; }
-    .icon-circle {
-        width: 40px; height: 40px; background: #dcfce7;
-        border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    }
-
-    /* --- TABLE --- */
+    .icon-circle { width: 40px; height: 40px; background: #dcfce7; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
     .rounded-top-left { border-top-left-radius: 10px; }
     .rounded-top-right { border-top-right-radius: 10px; }
 </style>
 
+{{-- 2. Load JS Libraries --}}
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="{{ asset('js/program.js') }}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. SETUP & VARIABEL GLOBAL
+    const token = document.querySelector('meta[name="csrf-token"]').content;
+    const tbody = document.querySelector('#tabelProgram tbody');
+
+    // Modal Program (Create/Edit)
+    const modalProgramEl = document.getElementById('modalProgram');
+    const modalProgram = new bootstrap.Modal(modalProgramEl);
+    const form = document.getElementById('formProgram');
+    const btnSimpanProgram = document.getElementById('btnSimpanProgram');
+    const originalButtonText = btnSimpanProgram.innerHTML;
+
+    // Modal Detail
+    const modalDetailEl = document.getElementById('modalDetailProgram');
+    const modalDetail = new bootstrap.Modal(modalDetailEl);
+
+    // Modal Crop
+    const modalCropEl = document.getElementById('modalCrop');
+    const modalCrop = new bootstrap.Modal(modalCropEl);
+    const imageToCrop = document.getElementById('imageToCrop');
+    const btnCropImage = document.getElementById('btnCropImage');
+    const btnCancelCrop = document.getElementById('btnCancelCrop');
+    const btnCloseCrop = document.getElementById('btnCloseCrop');
+
+    // Elemen Foto (UI Baru)
+    const fotoInput = document.getElementById('foto_program'); 
+    const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+    const previewContainer = document.getElementById('previewContainer');
+    const preview = document.getElementById('previewFoto');
+    const btnHapusFoto = document.getElementById('btnHapusFoto');
+    
+    // Variabel Cropping
+    let cropper = null;
+    let croppedBlob = null;
+    let originalFileName = '';
+
+    // Filter & Search
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+
+    // State
+    let state = { currentPage: 1, status: 'all', search: '', perPage: 10, sortBy: 'tanggal_program', sortDir: 'desc', searchTimeout: null };
+
+    // ============================================================
+    // 2. LOGIC CROPPING & PREVIEW
+    // ============================================================
+
+    // A. Intercept Input File -> Buka Modal Crop
+    if (fotoInput) {
+        fotoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (!file.type.startsWith('image/')) {
+                    Swal.fire('Error', 'File harus gambar', 'error');
+                    this.value = ''; return;
+                }
+                originalFileName = file.name;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    imageToCrop.src = ev.target.result;
+                    modalProgram.hide(); // Sembunyikan modal utama
+                    modalCrop.show();   // Tampilkan modal crop
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // B. Init Cropper saat modal muncul
+    modalCropEl.addEventListener('shown.bs.modal', () => {
+        if(cropper) cropper.destroy();
+        cropper = new Cropper(imageToCrop, {
+            aspectRatio: 1 / 1, // KUNCI RASIO 1:1
+            viewMode: 1,
+            autoCropArea: 1,
+            responsive: true,
+            background: false,
+        });
+    });
+
+    // C. Tombol Potong -> Simpan Blob -> Tampilkan Preview
+    btnCropImage.addEventListener('click', () => {
+        if (!cropper) return;
+        cropper.getCroppedCanvas({ width: 800, height: 800 }).toBlob((blob) => {
+            croppedBlob = blob; // Simpan Blob
+
+            // Tampilkan Preview Final
+            const url = URL.createObjectURL(blob);
+            preview.src = url;
+            
+            // Swap UI
+            uploadPlaceholder.classList.add('d-none');
+            previewContainer.classList.remove('d-none');
+
+            // Tutup Crop, Buka Modal Utama
+            closeCropModal();
+            modalProgram.show();
+        }, 'image/jpeg', 0.9);
+    });
+
+    // D. Tombol Batal Crop
+    const handleCancelCrop = () => {
+        fotoInput.value = ''; // Reset input file
+        closeCropModal();
+        modalProgram.show(); // Kembali ke modal utama
+    };
+
+    btnCancelCrop.addEventListener('click', handleCancelCrop);
+    btnCloseCrop.addEventListener('click', handleCancelCrop);
+
+    function closeCropModal() {
+        modalCrop.hide();
+        if(cropper) { cropper.destroy(); cropper = null; }
+    }
+
+    // E. Reset Foto
+    if (btnHapusFoto) {
+        btnHapusFoto.addEventListener('click', () => resetFileState());
+    }
+
+    function resetFileState() {
+        fotoInput.value = '';
+        croppedBlob = null;
+        originalFileName = '';
+        preview.src = '';
+        uploadPlaceholder.classList.remove('d-none');
+        previewContainer.classList.add('d-none');
+    }
+
+    // ============================================================
+    // 3. SUBMIT FORM PROGRAM (MODIFIED)
+    // ============================================================
+    form.addEventListener('submit', async e => {
+        e.preventDefault();
+        
+        btnSimpanProgram.disabled = true;
+        btnSimpanProgram.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Menyimpan...`;
+
+        const id = document.getElementById('id_program').value; 
+        const formData = new FormData(form);
+
+        // [PENTING] Ganti file input dengan Blob Cropped
+        if (croppedBlob) {
+            const fname = originalFileName || 'program.jpg';
+            formData.set('foto_program', croppedBlob, fname);
+        }
+
+        const url = id ? `/pengurus/program/${id}` : '/pengurus/program';
+        if (id) formData.append('_method', 'PUT');
+
+        try {
+            const res = await fetch(url, { method: 'POST', headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' }, body: formData });
+            const data = await res.json();
+            
+            if (res.ok) {
+                Swal.fire({ title: 'Berhasil!', text: data.message, icon: 'success', confirmButtonColor: '#198754' });
+                modalProgram.hide(); 
+                loadProgram(); 
+            } else {
+                throw new Error(data.message || 'Terjadi kesalahan');
+            }
+        } catch (err) { 
+            Swal.fire('Gagal', err.message, 'error'); 
+        } finally {
+            btnSimpanProgram.disabled = false;
+            btnSimpanProgram.innerHTML = originalButtonText;
+        }
+    });
+
+    // ============================================================
+    // 4. HELPER & UTILS
+    // ============================================================
+
+    // Tombol Tambah
+    const btnTambah = document.getElementById('btnTambahProgram');
+    if(btnTambah) {
+        btnTambah.addEventListener('click', () => {
+            form.reset();
+            document.getElementById('id_program').value = '';
+            resetFileState();
+            document.getElementById('modalTitle').innerText = "Program Kegiatan Baru";
+            modalProgram.show();
+        });
+    }
+
+    // Reset saat modal ditutup (Jaga-jaga)
+    modalProgramEl.addEventListener('hidden.bs.modal', function () {
+        if (!document.querySelector('.modal-backdrop')) {
+            // Logic tambahan jika perlu
+        }
+    });
+
+    // Edit Function
+    window.editProgram = async function(id) {
+        try {
+            const res = await fetch(`/pengurus/program/${id}`);
+            const data = await res.json();
+
+            document.getElementById('id_program').value = data.id_program;
+            document.getElementById('nama_program').value = data.nama_program;
+            document.getElementById('penyelenggara_program').value = data.penyelenggara_program;
+            document.getElementById('lokasi_program').value = data.lokasi_program;
+            document.getElementById('deskripsi_program').value = data.deskripsi_program;
+            document.getElementById('status_program').value = data.status_program;
+            if (data.tanggal_program) document.getElementById('tanggal_program').value = data.tanggal_program.substring(0, 16);
+
+            // Logic Foto
+            croppedBlob = null; // Reset blob baru
+            if (data.foto_program) {
+                preview.src = data.foto_url;
+                uploadPlaceholder.classList.add('d-none');
+                previewContainer.classList.remove('d-none');
+            } else {
+                resetFileState();
+            }
+
+            document.getElementById('modalTitle').innerText = "Edit Program Kegiatan";
+            modalProgram.show();
+        } catch (err) { Swal.fire('Error', 'Gagal memuat data', 'error'); }
+    };
+
+    // Load Data & Table
+    async function loadProgram() { 
+        let colCount = document.querySelector('#tabelProgram thead tr').cells.length;
+        tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-5"><div class="spinner-border text-success"></div></td></tr>`;
+        const url = `/pengurus/program-data?page=${state.currentPage}&status=${state.status}&search=${state.search}&perPage=${state.perPage}&sortBy=${state.sortBy}&sortDir=${state.sortDir}`;
+        try {
+            const res = await fetch(url);
+            const response = await res.json();
+            renderTable(response.data, response.from || 1);
+            renderPagination(response); 
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center text-danger">Gagal memuat data</td></tr>`;
+        }
+    }
+
+    function renderTable(data, startNum) {
+        tbody.innerHTML = ''; 
+        if (data.length === 0) {
+            let colCount = document.querySelector('#tabelProgram thead tr').cells.length;
+            tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-4 text-muted">Belum ada program.</td></tr>`;
+            return;
+        }
+        data.forEach((item, i) => {
+            let badgeClass = 'bg-secondary';
+            if(item.status_program === 'sedang berjalan') badgeClass = 'bg-warning text-dark';
+            if(item.status_program === 'belum dilaksanakan') badgeClass = 'bg-success';
+
+            // Fix URL Image
+            const fotoUrl = item.foto_program ? item.foto_url : 'https://via.placeholder.com/150?text=No+Img';
+
+            const row = `
+                <tr>
+                    <td class="text-center">${startNum + i}</td>
+                    <td class="text-center">
+                        <div style="width: 50px; height: 50px; margin: 0 auto; overflow: hidden; border-radius: 8px;">
+                            <img src="${fotoUrl}" class="shadow-sm" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                    </td>
+                    <td><div class="fw-bold text-dark">${item.nama_program}</div></td>
+                    <td class="text-center small">${formatTanggal(item.tanggal_program)}</td>
+                    <td class="text-center small">${item.lokasi_program}</td>
+                    <td class="text-center"><span class="badge ${badgeClass} rounded-pill px-3 fw-normal">${item.status_program}</span></td>
+                    <td class="text-center">
+                         <div class="d-flex justify-content-center gap-2"> 
+                            <button class="btn btn-sm btn-info text-white rounded-3 shadow-sm" onclick="window.showDetailProgram('${item.id_program}')"><i class="bi bi-eye"></i></button>
+                            <button class="btn btn-sm btn-warning text-white rounded-3 shadow-sm" onclick="window.editProgram('${item.id_program}')"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-danger rounded-3 shadow-sm" onclick="window.hapusProgram('${item.id_program}')"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            tbody.insertAdjacentHTML('beforeend', row);
+        });
+    }
+
+    // Detail & Delete & Utils
+    window.hapusProgram = async function(id) { const c = await Swal.fire({ title: 'Hapus?', text: 'Data akan hilang permanen!', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33' }); if (c.isConfirmed) { await fetch(`/pengurus/program/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token } }); Swal.fire('Terhapus!', '', 'success'); loadProgram(); } };
+    window.showDetailProgram = async function(id) { try { const res = await fetch(`/pengurus/program/${id}`); const data = await res.json(); document.getElementById('d_nama').textContent = data.nama_program; document.getElementById('d_penyelenggara').textContent = data.penyelenggara_program; document.getElementById('d_lokasi').textContent = data.lokasi_program; document.getElementById('d_tanggal').textContent = formatTanggal(data.tanggal_program); document.getElementById('d_deskripsi').textContent = data.deskripsi_program; document.getElementById('detailFotoProgram').src = data.foto_url || 'https://via.placeholder.com/400?text=No+Image'; let badgeClass = 'bg-secondary'; if(data.status_program === 'sedang berjalan') badgeClass = 'bg-warning text-dark'; if(data.status_program === 'belum dilaksanakan') badgeClass = 'bg-success'; const statusEl = document.getElementById('d_status'); statusEl.className = `badge rounded-pill px-3 py-2 mb-2 ${badgeClass}`; statusEl.textContent = data.status_program; modalDetail.show(); } catch (err) { Swal.fire('Error', 'Gagal memuat detail', 'error'); } };
+    function formatTanggal(str) { if (!str) return '-'; return new Date(str).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' }); }
+    function renderPagination(response) { const nav = document.getElementById('paginationLinks'); document.getElementById('paginationInfo').textContent = `Menampilkan ${response.from||0} - ${response.to||0} dari ${response.total} data`; let html = '<ul class="pagination justify-content-end mb-0 pagination-sm">'; response.links.forEach(link => { html += `<li class="page-item ${link.active?'active':''} ${link.url?'':'disabled'}"><a class="page-link" href="#" data-url="${link.url}">${link.label.replace('&laquo; Previous','<').replace('Next &raquo;','>')}</a></li>`; }); nav.innerHTML = html + '</ul>'; nav.querySelectorAll('a.page-link').forEach(a => a.addEventListener('click', (e) => { e.preventDefault(); if(a.dataset.url && a.dataset.url !== 'null') { state.currentPage = new URLSearchParams(a.dataset.url.split('?')[1]).get('page'); loadProgram(); } })); }
+    searchInput.addEventListener('keyup', () => { clearTimeout(state.searchTimeout); state.searchTimeout = setTimeout(() => { state.search = searchInput.value; state.currentPage = 1; loadProgram(); }, 300); });
+    statusFilter.addEventListener('change', () => { state.status = statusFilter.value; state.currentPage = 1; loadProgram(); });
+
+    loadProgram();
+});
+</script>
 @endpush
 @endsection

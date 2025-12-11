@@ -44,12 +44,15 @@ class ArtikelController extends Controller
             'foto_artikel' => 'nullable|image|max:2048',
         ]);
 
+        // JIKA VALIDASI GAGAL -> Return JSON Error 422
         if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+            return response()->json([
+                'message' => 'Validasi gagal, periksa inputan anda.',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
         $data = $validator->validated();
-        $fotoPath = null;
 
         // 2. Upload Foto Jika Ada
         if ($request->hasFile('foto_artikel')) {
@@ -60,9 +63,17 @@ class ArtikelController extends Controller
         // 3. Simpan ke Database
         try {
             Artikel::create($data);
-            return redirect()->route('pengurus.artikel.index')->with('success', 'Artikel berhasil ditambahkan!');
+            // SUKSES -> Return JSON 200
+            return response()->json([
+                'message' => 'Artikel berhasil ditambahkan!',
+                'redirect_url' => route('pengurus.artikel.index') // Kirim URL redirect buat JS
+            ], 200);
+
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal menyimpan artikel: ' . $e->getMessage())->withInput();
+            // ERROR SERVER -> Return JSON 500
+            return response()->json([
+                'message' => 'Gagal menyimpan artikel: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -84,8 +95,6 @@ class ArtikelController extends Controller
 
         $validator = Validator::make($request->all(), [
             'judul_artikel' => 'required|string|max:255',
-            // Hapus validasi 'required' untuk isi_artikel di sini jika Anda mengandalkan validasi JS
-            // atau pastikan input hidden terisi.
             'isi_artikel' => 'nullable', 
             'status_artikel' => 'required|in:draft,published',
             'penulis_artikel' => 'required|string|max:100',
@@ -93,48 +102,52 @@ class ArtikelController extends Controller
             'foto_artikel' => 'nullable|image|max:2048',
         ]);
 
+        // JIKA VALIDASI GAGAL -> Return JSON Error 422
         if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+            return response()->json([
+                'message' => 'Validasi gagal.',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
         $data = $validator->validated();
         
-        // Pastikan isi artikel tidak kosong jika validator di atas 'nullable'
         if (empty($request->isi_artikel) || trim(strip_tags($request->isi_artikel)) == '') {
-             return redirect()->back()->with('error', 'Isi artikel tidak boleh kosong.')->withInput();
+             return response()->json(['message' => 'Isi artikel tidak boleh kosong.'], 422);
         }
 
-        // --- LOGIKA BARU: Cek apakah ada permintaan hapus foto ---
+        // --- LOGIKA HAPUS FOTO ---
         if ($request->has('hapus_foto') && $request->hapus_foto == '1') {
-            // Hapus file lama jika ada
             if ($artikel->foto_artikel) {
                 Storage::disk('public')->delete($artikel->foto_artikel);
             }
-            // Set kolom di DB menjadi null
             $data['foto_artikel'] = null;
         }
 
-        // --- Logika upload foto baru (jika ada file diupload) ---
+        // --- LOGIKA UPLOAD FOTO ---
         if ($request->hasFile('foto_artikel')) {
-            // Hapus foto lama (jika belum dihapus oleh logika 'hapus_foto' di atas)
             if ($artikel->foto_artikel && Storage::disk('public')->exists($artikel->foto_artikel)) {
                 Storage::disk('public')->delete($artikel->foto_artikel);
             }
-            // Upload baru
             $path = $request->file('foto_artikel')->store('artikel_photos', 'public');
             $data['foto_artikel'] = $path;
         } 
-        // Jika tidak ada file baru DAN tidak ada request hapus foto, 
-        // maka jangan update kolom foto_artikel (hapus dari array $data)
         elseif (!array_key_exists('foto_artikel', $data)) {
              unset($data['foto_artikel']);
         }
 
         try {
             $artikel->update($data);
-            return redirect()->route('pengurus.artikel.index')->with('success', 'Artikel berhasil diperbarui!');
+            // SUKSES -> Return JSON 200
+            return response()->json([
+                'message' => 'Artikel berhasil diperbarui!',
+                'redirect_url' => route('pengurus.artikel.index')
+            ], 200);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Gagal memperbarui artikel: ' . $e->getMessage())->withInput();
+            // ERROR -> Return JSON 500
+            return response()->json([
+                'message' => 'Gagal memperbarui artikel: ' . $e->getMessage()
+            ], 500);
         }
     }
 

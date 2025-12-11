@@ -5,6 +5,9 @@
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
+{{-- 1. Load CSS Cropper.js --}}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+
 <div class="container-fluid p-4">
 
     {{-- Header: Filter, Search, Tombol --}}
@@ -30,7 +33,7 @@
         
         {{-- Tombol Tambah Khotib --}}
         <div class="d-flex align-items-center mt-2 mt-md-0">
-            <button class="btn btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#modalKhotib">
+            <button class="btn btn-primary d-flex align-items-center" id="btnTambahModal">
                 <i class="bi bi-plus-circle me-2"></i>
                 Tambah Khutbah
             </button>
@@ -69,12 +72,11 @@
                 <span id="paginationInfo">Menampilkan 0 dari 0 data</span>
                 <nav id="paginationLinks"></nav>
             </div>
-            </div>
+        </div>
     </div>
 </div>
 
-<!-- Modal Form -->
-<div class="modal fade" id="modalKhotib" tabindex="-1">
+<div class="modal fade" id="modalKhotib" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             
@@ -140,135 +142,435 @@
                             </button>
                         </div>
                     </div> 
-                    </div>
+                </div>
             </form>
         </div>
     </div>
 </div>
 
+<div class="modal fade" id="modalCrop" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Potong Gambar (Rasio 1:1)</h5>
+                <button type="button" class="btn-close" id="btnCloseCrop" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="img-container" style="height: 500px; background-color: #333; display: flex; justify-content: center; align-items: center; overflow: hidden;">
+                    <img id="imageToCrop" style="max-width: 100%; display: block;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="btnCancelCrop">Batal</button>
+                <button type="button" class="btn btn-primary" id="btnCropImage">
+                    <i class="bi bi-scissors me-2"></i>Potong & Gunakan
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- CSS Custom --}}
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
 
-    #modalKhotib {
-        font-family: 'Poppins', sans-serif;
-    }
+    #modalKhotib, #modalCrop { font-family: 'Poppins', sans-serif; }
 
-    /* Modal Content: Menggunakan Flex Column agar header tetap diam saat body discroll */
+    /* Modal Styling */
     #modalKhotib .modal-content {
-        border-radius: 20px;
-        border: none;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        height: 90vh; /* Tinggi fix agar scroll main di dalam */
-        display: flex;
-        flex-direction: column;
-        overflow: hidden; /* Mencegah scroll ganda */
+        border-radius: 20px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        height: 90vh; display: flex; flex-direction: column; overflow: hidden;
     }
-
-    /* PERBAIKAN: Header dibuat Sticky & Tidak Boleh Mengecil */
     #modalKhotib .modal-header {
-        border-bottom: 1px solid #f0f0f0;
-        padding: 15px 25px;
-        background: white;
-        z-index: 10;
-        flex-shrink: 0; /* PENTING: Mencegah header hilang/tergencet saat konten penuh */
+        border-bottom: 1px solid #f0f0f0; padding: 15px 25px; background: white; z-index: 10; flex-shrink: 0;
     }
-
-    #modalKhotib .modal-title {
-        font-weight: 700;
-        font-size: 1.3rem;
-        color: #333;
-    }
-
-    /* PERBAIKAN: Body dibuat scrollable */
-    #modalKhotib .modal-body {
-        overflow-y: auto;
-        padding: 20px 25px;
-        flex-grow: 1; /* Mengisi sisa ruang */
-    }
-
-    /* Wrapper Hijau */
-    .form-wrapper {
-        background-color: #f0fdf4;
-        border: 1px solid #dcfce7;
-        border-radius: 15px;
-        padding: 20px;
-    }
-
-    .form-section-title {
-        color: #166534;
-        font-weight: 700;
-        margin-bottom: 15px;
-        font-size: 1.1rem;
-    }
-
-    /* Form Inputs */
-    #modalKhotib .form-label {
-        font-weight: 600;
-        font-size: 0.9rem;
-        color: #374151;
-        margin-bottom: 8px;
-    }
-
-    #modalKhotib .form-control {
-        border-radius: 12px;
-        padding: 12px 15px;
-        border: 1px solid #e5e7eb;
-        font-size: 0.95rem;
-    }
-
-    #modalKhotib .form-control:focus {
-        border-color: #22c55e;
-        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
-    }
-
-    /* Custom File Input */
-    .custom-file-wrapper label {
-        border-radius: 12px !important;
-        padding: 12px 15px;
-        background: white;
-    }
-
-    /* PERBAIKAN: Preview Image Lebih Besar */
-    #previewFoto {
-        width: 100%;          /* Lebar penuh mengikuti container */
-        height: auto;         /* Tinggi menyesuaikan rasio */
-        max-height: 350px;    /* Batas tinggi agar tidak kepanjangan */
-        object-fit: cover;    /* Gambar di-crop rapi */
-        border-radius: 12px;
-        display: block;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Tombol Simpan */
-    .btn-action-primary {
-        background-color: #198754;
-        color: white;
-        border: none;
-        border-radius: 12px;
-        padding: 14px;
-        width: 100%;
-        font-weight: 700;
-        font-size: 1rem;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 8px;
-        margin-top: 20px;
-    }
+    #modalKhotib .modal-body { overflow-y: auto; padding: 20px 25px; flex-grow: 1; }
     
-    .btn-action-primary:hover {
-        background-color: #157347;
-        color: white;
-    }
+    .form-wrapper { background-color: #f0fdf4; border: 1px solid #dcfce7; border-radius: 15px; padding: 20px; }
+    .form-section-title { color: #166534; font-weight: 700; margin-bottom: 15px; font-size: 1.1rem; }
+    .form-label { font-weight: 600; font-size: 0.9rem; color: #374151; margin-bottom: 8px; }
+    .form-control { border-radius: 12px; padding: 12px 15px; border: 1px solid #e5e7eb; font-size: 0.95rem; }
+    .form-control:focus { border-color: #22c55e; box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1); }
+    
+    /* Preview Image */
+    #previewFoto { width: 100%; height: auto; max-height: 350px; object-fit: contain; border-radius: 12px; display: block; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
 
-    /* Pagination (Tetap) */
+    /* Button */
+    .btn-action-primary { background-color: #198754; color: white; border: none; border-radius: 12px; padding: 14px; width: 100%; font-weight: 700; font-size: 1rem; display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; }
+    .btn-action-primary:hover { background-color: #157347; color: white; }
+
+    /* Pagination */
     #paginationLinks .pagination { margin-bottom: 0; }
     #paginationLinks .page-item.disabled .page-link { background-color: #e9ecef; }
     #paginationLinks .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; }
     #paginationLinks .page-link { cursor: pointer; }
 </style>
 
-
+{{-- 4. Load JS Libraries --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="{{ asset('js/khotib.js') }}"></script>
+{{-- Script Cropper JS --}}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- A. DEFINISI ELEMEN ---
+    const token = document.querySelector('meta[name="csrf-token"]').content;
+
+    // Modal Utama
+    const modalKhotibElement = document.getElementById('modalKhotib');
+    const modalKhotib = new bootstrap.Modal(modalKhotibElement);
+    const form = document.getElementById('formKhotib');
+    const btnTambahModal = document.getElementById('btnTambahModal');
+
+    // Modal Crop
+    const modalCropElement = document.getElementById('modalCrop');
+    const modalCrop = new bootstrap.Modal(modalCropElement);
+    const imageToCrop = document.getElementById('imageToCrop');
+    const btnCropImage = document.getElementById('btnCropImage');
+    const btnCancelCrop = document.getElementById('btnCancelCrop');
+    const btnCloseCrop = document.getElementById('btnCloseCrop');
+
+    // Elemen Input File & Preview
+    const fotoInput = document.getElementById('foto_khotib');
+    const fotoLabel = document.getElementById('foto_khotib_label');
+    const fotoLabelSpan = fotoLabel.querySelector('span');
+    const clearFileBtn = document.getElementById('clearFile');
+    const preview = document.getElementById('previewFoto');
+    const previewContainer = document.getElementById('previewContainer');
+
+    // Filter & Table
+    const tbody = document.querySelector('#tabelKhotib tbody');
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const paginationContainer = document.getElementById('paginationLinks');
+    const paginationInfo = document.getElementById('paginationInfo');
+    const sortTanggal = document.getElementById('sortTanggal');
+    const sortIcon = document.getElementById('sortIcon');
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.innerHTML;
+
+    // --- B. STATE MANAGEMENT ---
+    let state = {
+        currentPage: 1, status: 'aktif', search: '',
+        perPage: 10, sortBy: 'tanggal', sortDir: 'desc',
+        searchTimeout: null
+    };
+
+    // Variabel Cropping
+    let cropper = null;
+    let croppedBlob = null; // Menyimpan hasil crop
+    let originalFileName = ''; 
+
+    // --- C. LOGIKA CROPPING ---
+
+    // 1. Trigger saat user memilih file
+    if (fotoInput) {
+        fotoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validasi gambar
+                if (!file.type.startsWith('image/')) {
+                    Swal.fire('Error', 'File harus berupa gambar', 'error');
+                    this.value = ''; // Reset input
+                    return;
+                }
+
+                originalFileName = file.name;
+                const reader = new FileReader();
+                
+                reader.onload = function(evt) {
+                    // Masukkan gambar ke elemen di dalam Modal Crop
+                    imageToCrop.src = evt.target.result;
+                    
+                    // Sembunyikan Modal Utama, Tampilkan Modal Crop
+                    modalKhotib.hide(); 
+                    modalCrop.show();
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // 2. Saat Modal Crop Muncul -> Init Library Cropper
+    modalCropElement.addEventListener('shown.bs.modal', () => {
+        // Hancurkan instance lama jika ada (mencegah bug)
+        if (cropper) { cropper.destroy(); }
+        
+        cropper = new Cropper(imageToCrop, {
+            aspectRatio: 1 / 1, // RASIO 1:1
+            viewMode: 1,        // Batasi crop box agar tidak keluar area gambar
+            autoCropArea: 1,
+            responsive: true,
+            background: false,
+        });
+    });
+
+    // 3. Tombol "Potong & Gunakan" diklik
+    btnCropImage.addEventListener('click', () => {
+        if (!cropper) return;
+
+        // Ambil hasil crop sebagai Blob
+        cropper.getCroppedCanvas({
+            width: 800, height: 800 // Resize agar tidak terlalu besar di server
+        }).toBlob((blob) => {
+            
+            // Simpan blob ke variabel state
+            croppedBlob = blob;
+
+            // Generate URL untuk preview di modal utama
+            const url = URL.createObjectURL(blob);
+            preview.src = url;
+            previewContainer.classList.remove('d-none');
+
+            // Update Text Label
+            fotoLabelSpan.textContent = "Gambar (1:1) Siap Upload";
+            fotoLabelSpan.classList.remove('text-muted');
+            clearFileBtn.classList.remove('d-none');
+
+            // Tutup Crop, Buka Modal Utama
+            closeCropModal();
+            modalKhotib.show();
+
+        }, 'image/jpeg', 0.9);
+    });
+
+    // 4. Tombol Batal Crop
+    const handleCancelCrop = () => {
+        fotoInput.value = ''; // Reset input file agar user bisa pilih file yg sama
+        closeCropModal();
+        modalKhotib.show(); // Kembali ke modal utama
+    };
+
+    btnCancelCrop.addEventListener('click', handleCancelCrop);
+    btnCloseCrop.addEventListener('click', handleCancelCrop);
+
+    function closeCropModal() {
+        modalCrop.hide();
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+    }
+
+    // --- D. LOGIKA FORM SUBMIT ---
+    form.addEventListener('submit', async e => {
+        e.preventDefault();
+        setLoading(true);
+
+        const id = document.getElementById('id_khutbah').value;
+        const formData = new FormData(form);
+
+        // [PENTING] Ganti file input asli dengan Blob Hasil Crop
+        if (croppedBlob) {
+            const fname = originalFileName || 'cropped.jpg';
+            formData.set('foto_khotib', croppedBlob, fname);
+        }
+
+        const url = id ? `/pengurus/khotib-jumat/${id}` : '/pengurus/khotib-jumat';
+        if (id) formData.append('_method', 'PUT');
+
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                Swal.fire('Berhasil!', data.message, 'success');
+                modalKhotib.hide();
+                loadKhotib();
+            } else {
+                if (res.status === 422 && data.errors) {
+                    let msg = Object.values(data.errors).map(e => e[0]).join('<br>');
+                    throw new Error(msg);
+                }
+                throw new Error(data.message || 'Terjadi kesalahan');
+            }
+        } catch (err) {
+            Swal.fire('Gagal', err.message, 'error');
+        } finally {
+            setLoading(false);
+        }
+    });
+
+    // --- E. RESET & HELPER ---
+
+    // Buka Modal Tambah
+    if (btnTambahModal) {
+        btnTambahModal.addEventListener('click', () => {
+            document.getElementById('id_khutbah').value = '';
+            form.reset();
+            resetFileState();
+            modalKhotib.show();
+        });
+    }
+
+    // Reset saat Modal Utama tertutup
+    modalKhotibElement.addEventListener('hidden.bs.modal', function () {
+        if (!document.querySelector('.modal-backdrop')) { 
+            // Hanya reset jika benar-benar tutup, bukan pindah ke modal crop
+            // Tapi karena kita manual hide/show, reset lebih aman dilakukan manual saat tombol tambah/edit
+        }
+    });
+
+    function resetFileState() {
+        croppedBlob = null;
+        originalFileName = '';
+        fotoInput.value = '';
+        preview.src = '';
+        previewContainer.classList.add('d-none');
+        clearFileBtn.classList.add('d-none');
+        fotoLabelSpan.textContent = "Pilih foto...";
+        fotoLabelSpan.classList.add('text-muted');
+    }
+
+    // Tombol Hapus File (X)
+    clearFileBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        resetFileState();
+    });
+
+    function setLoading(isLoading) {
+        if (isLoading) {
+            submitButton.disabled = true;
+            submitButton.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Menyimpan...`;
+        } else {
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalButtonText;
+        }
+    }
+
+    // --- F. CRUD LIST & EDIT (Sama seperti sebelumnya) ---
+
+    window.editKhotib = async function(id) {
+        try {
+            const res = await fetch(`/pengurus/khotib-jumat/${id}`);
+            if (!res.ok) throw new Error('Data error');
+            const data = await res.json();
+
+            document.getElementById('id_khutbah').value = data.id_khutbah;
+            document.getElementById('nama_khotib').value = data.nama_khotib;
+            document.getElementById('nama_imam').value = data.nama_imam;
+            document.getElementById('tema_khutbah').value = data.tema_khutbah;
+            if (data.tanggal) document.getElementById('tanggal').value = data.tanggal.split('T')[0];
+
+            // Reset state crop karena ini mode edit
+            croppedBlob = null; 
+
+            if (data.foto_khotib) {
+                fotoLabelSpan.textContent = data.foto_khotib.split('/').pop();
+                fotoLabelSpan.classList.remove('text-muted');
+                clearFileBtn.classList.remove('d-none');
+                preview.src = data.foto_url;
+                previewContainer.classList.remove('d-none');
+            } else {
+                resetFileState();
+            }
+
+            modalKhotib.show();
+        } catch (err) {
+            Swal.fire('Gagal', err.message, 'error');
+        }
+    }
+
+    window.hapusKhotib = async function(id) {
+        const c = await Swal.fire({
+            title: 'Hapus data?', text: "Data tidak bisa kembali!", icon: 'warning',
+            showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Hapus'
+        });
+        if (!c.isConfirmed) return;
+
+        try {
+            const fd = new FormData(); fd.append('_method', 'DELETE');
+            const res = await fetch(`/pengurus/khotib-jumat/${id}`, {
+                method: 'POST', headers: {'X-CSRF-TOKEN': token}, body: fd
+            });
+            if(res.ok) {
+                Swal.fire('Terhapus', '', 'success');
+                loadKhotib();
+            } else { throw new Error('Gagal menghapus'); }
+        } catch(e) { Swal.fire('Error', e.message, 'error'); }
+    }
+
+    // --- G. FUNGSI LOAD DATA (Pagination, Search, Sort) ---
+    async function loadKhotib() {
+        let colCount = tbody.closest('table').querySelector('thead tr').cells.length;
+        tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center"><div class="spinner-border text-primary"></div></td></tr>`;
+
+        const url = `/pengurus/khotib-jumat-data?page=${state.currentPage}&status=${state.status}&search=${state.search}&sortBy=${state.sortBy}&sortDir=${state.sortDir}`;
+
+        try {
+            const res = await fetch(url);
+            const response = await res.json();
+            renderTable(response.data, response.from || 1);
+            renderPagination(response);
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center text-danger">Gagal memuat data</td></tr>`;
+        }
+    }
+
+    function renderTable(data, startNum) {
+        tbody.innerHTML = '';
+        if (data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center">Tidak ada data.</td></tr>`;
+            return;
+        }
+        data.forEach((item, i) => {
+            const row = `
+            <tr>
+                <td class="text-center">${startNum + i}</td>
+                <td class="text-center"><img src="${item.foto_url}" class="rounded" style="width:50px;height:50px;object-fit:cover;"></td>
+                <td>${item.nama_khotib}</td>
+                <td>${item.nama_imam}</td>
+                <td>${item.tema_khutbah}</td> 
+                <td class="text-center">${item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID') : '-'}</td>
+                <td class="text-center">
+                    <button class="btn btn-warning btn-sm" onclick="editKhotib('${item.id_khutbah}')"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-danger btn-sm" onclick="hapusKhotib('${item.id_khutbah}')"><i class="bi bi-trash"></i></button>
+                </td>
+            </tr>`;
+            tbody.insertAdjacentHTML('beforeend', row);
+        });
+    }
+
+    function renderPagination(response) {
+        paginationInfo.textContent = `Menampilkan ${response.from || 0} - ${response.to || 0} dari ${response.total} data`;
+        let linksHtml = '<ul class="pagination justify-content-center mb-0">';
+        response.links.forEach(link => {
+            let label = link.label.replace('&laquo; Previous', '<').replace('Next &raquo;', '>');
+            let active = link.active ? 'active' : '';
+            let disabled = !link.url ? 'disabled' : '';
+            linksHtml += `<li class="page-item ${active} ${disabled}"><a class="page-link" href="${link.url}" data-page="${link.url}">${label}</a></li>`;
+        });
+        linksHtml += '</ul>';
+        paginationContainer.innerHTML = linksHtml;
+    }
+
+    // Event Listeners Filter
+    searchInput.addEventListener('keyup', () => {
+        clearTimeout(state.searchTimeout);
+        state.searchTimeout = setTimeout(() => { state.search = searchInput.value; state.currentPage = 1; loadKhotib(); }, 300);
+    });
+    statusFilter.addEventListener('change', () => { state.status = statusFilter.value; state.currentPage = 1; loadKhotib(); });
+    if(sortTanggal) sortTanggal.addEventListener('click', () => {
+        state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+        sortIcon.className = state.sortDir === 'asc' ? 'bi bi-arrow-up' : 'bi bi-arrow-down';
+        loadKhotib();
+    });
+    paginationContainer.addEventListener('click', e => {
+        e.preventDefault();
+        if(e.target.classList.contains('page-link') && e.target.href) {
+            state.currentPage = new URL(e.target.href).searchParams.get('page');
+            loadKhotib();
+        }
+    });
+
+    // Load awal
+    loadKhotib();
+});
+</script>
 @endsection
