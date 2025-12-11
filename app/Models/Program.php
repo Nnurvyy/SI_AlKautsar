@@ -38,6 +38,6 @@ class Program extends Model
             return asset('storage/' . $this->foto_program);
         }
 
-        return asset('images/default_program.png');
+        return asset('images/default2.png');
     }
 }

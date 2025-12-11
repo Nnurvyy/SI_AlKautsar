@@ -48,6 +48,6 @@ class Artikel extends Model
 
         return $foto
             ? asset('storage/' . $foto)
-            : asset('images/default_artikel.png');
+            : asset('images/default2.png');
     }
 }
