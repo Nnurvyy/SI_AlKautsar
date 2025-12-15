@@ -145,11 +145,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const id = document.getElementById('id_infaq').value;
             const formData = new FormData(form);
 
-            
-            
             const rawNominal = cleanRupiah(document.getElementById('nominal_infaq').value);
             formData.set('nominal_infaq', rawNominal); 
             
+            // Perbaikan KRITIS: Mengganti id_infaq dengan id
             const url = id ? `/pengurus/infaq-jumat/${id}` : '/pengurus/infaq-jumat';
             if (id) formData.append('_method', 'PUT');
 
@@ -187,7 +186,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!res.ok) throw new Error('Data tidak ditemukan');
             const data = await res.json();
 
-            document.getElementById('id_infaq').value = data.id_infaq_jumat; 
+            // Kunci ini harus sama dengan yang dikembalikan fungsi show() di Controller (yaitu: 'id_infaq')
+            // Kode Anda sudah menggunakan 'id_infaq', yang sesuai dengan Controller
+            document.getElementById('id_infaq').value = data.id_infaq; 
             document.getElementById('tanggal_infaq').value = data.tanggal_infaq;
             
             
