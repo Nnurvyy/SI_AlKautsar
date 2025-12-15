@@ -196,7 +196,7 @@
         @csrf
     </form>
 
-    {{-- 3. MODAL CROPPER (Sama seperti Artikel tapi disesuaikan) --}}
+    {{-- 3. MODAL CROPPER --}}
     <div class="modal fade" id="modalCrop" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false"
         aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
