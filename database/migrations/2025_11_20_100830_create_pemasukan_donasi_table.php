@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-        public function up(): void
+    public function up(): void
     {
         Schema::create('pemasukan_donasi', function (Blueprint $table) {
             $table->uuid('id_pemasukan_donasi')->primary();
@@ -36,7 +36,7 @@ return new class extends Migration
         });
     }
 
-        public function down(): void
+    public function down(): void
     {
         Schema::dropIfExists('pemasukan_donasi');
     }

@@ -81,7 +81,7 @@ class PengaturanController extends Controller
         // 'lokasi_nama_api' akan otomatis ikut karena tidak ada di 'except'
         $dataToUpdate = $request->except(['_token', '_method', 'foto_masjid', 'hapus_foto_masjid']);
 
-        // 3. Logika Upload Foto (Ini sudah benar)
+        // 3. Logika Upload Foto 
         if ($request->hasFile('foto_masjid')) {
 
             if ($settings->foto_masjid && Storage::disk('public')->exists($settings->foto_masjid)) {

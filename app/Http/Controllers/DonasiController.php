@@ -13,8 +13,6 @@ class DonasiController extends Controller
 {
     public function index()
     {
-
-
         $totalDonasi = DB::table('pemasukan_donasi')
             ->where('status', 'success')
             ->sum('nominal');

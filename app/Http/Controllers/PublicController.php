@@ -45,8 +45,6 @@ class PublicController extends Controller
 
     public function jadwalKajian()
     {
-        // Ambil kajian yang tanggalnya >= hari ini
-        $today = Carbon::today();
 
         $kajianEvent = Kajian::where('tipe', 'event')
             ->whereDate('tanggal_kajian', '>=', now())
@@ -105,7 +103,7 @@ class PublicController extends Controller
 
         // 2. Data untuk List Bawah: Ambil SEMUA program
         // Diurutkan descending (yang paling baru inputnya/tanggalnya di atas)
-        // Menggunakan pagination 9 item per halaman
+        // Menggunakan pagination 3 item per halaman
         $semuaProgram = Program::orderBy('tanggal_program', 'desc')->paginate(3);
 
         return view('public.program', compact('sliderPrograms', 'semuaProgram'));
@@ -117,7 +115,7 @@ class PublicController extends Controller
 
         // Format tanggal
         $program->tanggal_formatted = $program->tanggal_program->translatedFormat('l, d F Y');
-        $program->waktu_formatted = $program->tanggal_program->format('H:i') . ' WIB';
+        $program->waktu_formatted = $program->tanggal_program->format('H:i');
 
         // Foto URL (sudah ada accessor di model, tapi kita pastikan di sini juga aman)
         $program->foto_url_lengkap = $program->foto_url;
@@ -157,7 +155,7 @@ class PublicController extends Controller
 
             $item->gambar_url = $item->foto_donasi
                 ? asset('storage/' . $item->foto_donasi)
-                : asset('images/donasi/default.jpg');
+                : asset('images/default2.png');
 
             return $item;
         });
@@ -193,7 +191,7 @@ class PublicController extends Controller
             'id_donasi' => $donasi->id_donasi,
             'nama_donasi' => $donasi->nama_donasi,
             'deskripsi' => $donasi->deskripsi,
-            'foto_url' => $donasi->foto_donasi ? asset('storage/' . $donasi->foto_donasi) : asset('images/donasi/default.jpg'),
+            'foto_url' => $donasi->foto_donasi ? asset('storage/' . $donasi->foto_donasi) : asset('images/default2.png'),
             'target_dana' => $donasi->target_dana,
             'terkumpul' => $donasi->pemasukan_sum_nominal ?? 0,
             'persentase' => ($donasi->target_dana > 0) ? min(100, round(($donasi->pemasukan_sum_nominal / $donasi->target_dana) * 100)) : 0,

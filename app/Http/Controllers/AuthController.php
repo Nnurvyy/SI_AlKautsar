@@ -40,7 +40,6 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-
         $pengurus = Pengurus::where('email', $credentials['email'])->first();
         if ($pengurus && Hash::check($credentials['password'], $pengurus->password)) {
 
@@ -194,10 +193,6 @@ class AuthController extends Controller
     }
 
 
-
-
-
-
     public function showVerifyForm(Request $request)
     {
         $email = $request->query('email');
@@ -283,11 +278,6 @@ class AuthController extends Controller
 
         try {
             Mail::to($user->email)->send(new OtpVerificationMail($otp));
-        } catch (Exception $e) {
-        }
-
-
-        try {
         } catch (Exception $e) {
         }
     }
