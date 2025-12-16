@@ -7,13 +7,14 @@ use App\Http\Controllers\PemasukanController;
 use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\KhotibJumatController;
 use App\Http\Controllers\PublicController;
-use App\Http\Controllers\TabunganHewanQurbanController; 
+use App\Http\Controllers\TabunganHewanQurbanController;
 use App\Http\Controllers\PemasukanTabunganQurbanController;
 use App\Http\Controllers\InfaqJumatController;
 use App\Http\Controllers\BarangInventarisController;
+use App\Http\Controllers\BarangInventarisDetailController;
 use App\Http\Controllers\GrafikController;
 use App\Http\Controllers\LapKeuController;
-use App\Http\Controllers\QurbanController; 
+use App\Http\Controllers\QurbanController;
 use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\DonasiController;
 use App\Http\Controllers\PemasukanDonasiController;
@@ -101,8 +102,36 @@ Route::middleware(['auth:pengurus'])->prefix('pengurus')->name('pengurus.')->gro
     Route::get('khotib-jumat-data', [KhotibJumatController::class, 'data'])->name('khotib-jumat.data');
     Route::resource('infaq-jumat', InfaqJumatController::class)->only(['index','store', 'update', 'destroy', 'show']);
     Route::get('infaq-jumat-data', [InfaqJumatController::class, 'data'])->name('infaq-jumat.data');
-    Route::resource('inventaris', BarangInventarisController::class)->only(['index','store', 'update', 'destroy', 'show']);
+    
+    //BarangInventaris
+    Route::resource('inventaris', BarangInventarisController::class)->only([
+        'index',    // GET /inventaris (Menampilkan view master)
+        'store',    // POST /inventaris (API: Tambah barang master)
+        'update',   // PUT/PATCH /inventaris/{id} (API: Edit barang master)
+        'destroy',  // DELETE /inventaris/{id} (API: Hapus barang master)
+        'show'      // GET /inventaris/{id} (API: Ambil data master tunggal)
+    ]);
+
     Route::get('inventaris-data', [BarangInventarisController::class, 'data'])->name('inventaris.data');
+
+    //BarangInventarisDetail
+    Route::get('inventaris/{id_barang}/detail', [BarangInventarisDetailController::class, 'indexDetail'])->name('inventaris.detail.index');
+    Route::prefix('barang-inventaris-detail')->group(function () {
+        
+        // API untuk mengambil data tabel unit detail berdasarkan ID Master
+        // Contoh URL: /barang-inventaris-detail/uuid-barang-master-123/data
+        Route::get('{id_barang}/data', [BarangInventarisDetailController::class, 'data'])->name('inventaris.detail.data');
+        
+        // API untuk Menambah Unit Detail Baru
+        // Menggunakan POST ke root prefix karena id_barang dikirim via body request, bukan URL
+        Route::post('/', [BarangInventarisDetailController::class, 'store'])->name('inventaris.detail.store');
+
+        // API CRUD untuk satu unit detail (menggunakan ID Detail Unit)
+        Route::get('{id_detail_barang}', [BarangInventarisDetailController::class, 'show'])->name('inventaris.detail.show');
+        Route::put('{id_detail_barang}', [BarangInventarisDetailController::class, 'update'])->name('inventaris.detail.update');
+        Route::delete('{id_detail_barang}', [BarangInventarisDetailController::class, 'destroy'])->name('inventaris.detail.destroy');
+    });
+
     Route::resource('kajian', KajianController::class);
     Route::get('kajian-data', [KajianController::class, 'data'])->name('kajian.data');
     
@@ -125,7 +154,7 @@ Route::middleware(['auth:pengurus'])->prefix('pengurus')->name('pengurus.')->gro
     
     // Hewan & Pemasukan Qurban
     Route::resource('pemasukan-qurban', PemasukanTabunganQurbanController::class)->parameter('pemasukan-qurban', 'id');
-    Route::resource('hewan-qurban', HewanQurbanController::class)->parameters(['hewan-qurban' => 'id']); 
+    Route::resource('hewan-qurban', HewanQurbanController::class)->parameters(['hewan-qurban' => 'id']);
 
     // Content
     Route::get('artikel-data', [ArtikelController::class, 'artikelData'])->name('artikel.data');

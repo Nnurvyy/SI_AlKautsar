@@ -26,9 +26,14 @@ class BarangInventaris extends Model
     protected $fillable = [
         'nama_barang',
         'satuan',
-        'kondisi',
-        'stock',
+        'kode',
+        'total_stock',
     ];
+
+    public function details()
+    {
+        return $this->hasMany(BarangInventarisDetail::class, 'id_barang', 'id_barang');
+    }
 
     protected static function boot()
     {
