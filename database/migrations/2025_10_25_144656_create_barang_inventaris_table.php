@@ -12,8 +12,8 @@ return new class extends Migration
             $table->uuid('id_barang')->primary();
             $table->string('nama_barang', 100);
             $table->string('satuan', 20)->nullable();
-            $table->string('kode', 5)->unique();
-            $table->integer('total_stock')->default(0);
+            $table->string('kondisi', 50)->nullable();
+            $table->integer('stock')->default(0);
             $table->timestamps();
         });
     }
