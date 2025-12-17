@@ -45,7 +45,6 @@
 
             <div class="divider">atau</div>
 
-            {{ route('auth.google.redirect') }}" -->
             <a href="{{ route('auth.google.redirect') }}" class="btn btn-social">
                 <i class="bi bi-google"></i>
                 Sign In with Google

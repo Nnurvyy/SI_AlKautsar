@@ -466,7 +466,6 @@
             <div class="container d-flex justify-content-between align-items-center px-4">
                 <a class="navbar-brand" href="{{ url('/') }}">Smart Masjid</a>
 
-                {{-- [PERBAIKAN] Cek Manual Guard: Jika TIDAK login Pengurus DAN TIDAK login Jamaah --}}
                 @if (!Auth::guard('pengurus')->check() && !Auth::guard('jamaah')->check())
                     <a href="{{ route('auth.welcome') }}" class="profile-trigger">
                         <i class="bi bi-box-arrow-in-right"></i>

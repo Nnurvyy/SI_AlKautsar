@@ -1,199 +1,218 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Laporan Keuangan</title>
     <style>
-        body {
-            font-family: sans-serif;
-            font-size: 12px;
-        }
+        body { font-family: sans-serif; font-size: 11px; color: #333; }
+        
+        /* Header */
+        .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        .header h1 { margin: 0; font-size: 20px; color: #2c3e50; text-transform: uppercase; }
+        .header p { margin: 2px 0; font-size: 12px; color: #7f8c8d; }
 
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+        /* Info Filter */
+        .meta-info { margin-bottom: 15px; font-size: 12px; }
+        .meta-info span { font-weight: bold; color: #2c3e50; }
 
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-        }
+        /* Tabel Utama */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: middle; }
+        
+        th { background-color: #f8f9fa; font-weight: bold; color: #444; text-transform: uppercase; font-size: 10px; }
+        
+        /* Kolom Spesifik */
+        .text-center { text-align: center; }
+        .text-end { text-align: right; }
+        .col-date { width: 12%; }
+        .col-type { width: 10%; }
+        .col-cat { width: 15%; }
+        .col-desc { width: auto; } /* Deskripsi fleksibel */
+        .col-money { width: 15%; white-space: nowrap; }
 
-        .header p {
-            margin: 0;
-            font-size: 14px;
-        }
+        /* Warna Nominal */
+        .text-success { color: #27ae60; }
+        .text-danger { color: #c0392b; }
+        .bg-light-success { background-color: #eafaf1; color: #27ae60; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold; display: inline-block; }
+        .bg-light-danger { background-color: #fdedec; color: #c0392b; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: bold; display: inline-block; }
 
-        .info {
-            margin-bottom: 20px;
-            font-size: 13px;
-        }
-
-        table {
+        /* Ringkasan Bawah (Card Style) */
+        .summary-wrapper { width: 100%; margin-top: 20px; page-break-inside: avoid; }
+        .summary-card { float: right; width: 50%; border: 1px solid #ddd; border-radius: 5px; overflow: hidden; }
+        .summary-row { padding: 8px 12px; border-bottom: 1px solid #eee; }
+        .summary-row:last-child { border-bottom: none; background-color: #f8f9fa; }
+        .summary-label { float: left; font-weight: bold; color: #555; }
+        .summary-value { float: right; font-weight: bold; }
+        .clearfix::after { content: ""; clear: both; display: table; }
+        .summary-container {
             width: 100%;
+            margin-top: 20px;
+            page-break-inside: avoid;
+        }
+        
+        /* Kita gunakan tabel untuk layout ringkasan agar tinggi otomatis menyesuaikan konten */
+        .summary-table {
+            width: 50%;             /* Lebar kartu 50% */
+            margin-left: auto;      /* Geser ke kanan (float right replacement) */
+            border: 1px solid #ddd;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            font-size: 11px;
         }
 
-        th,
-        td {
-            border: 1px solid #444;
-            padding: 6px 8px;
-            text-align: left;
+        .summary-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
         }
 
-        th {
-            background-color: #f2f2f2;
+        .summary-table tr:last-child td {
+            border-bottom: none;
+            background-color: #f8f9fa; /* Warna latar baris terakhir */
             font-weight: bold;
         }
 
-        .text-end {
-            text-align: right;
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .summary-container {
-            width: 100%;
-            overflow: hidden;
-        }
-
-        .summary {
-            float: right;
-            width: 40%;
-            margin-top: 10px;
-        }
-
-        .summary th,
-        .summary td {
-            border: 1px solid #ddd;
-            padding: 5px;
-        }
-
-        .summary th {
-            background-color: #fff;
+        .label-cell {
+            font-weight: bold;
+            color: #555;
             text-align: left;
         }
 
-        h3 {
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 5px;
-            margin-top: 30px;
+        .value-cell {
+            font-weight: bold;
+            text-align: right;
         }
+
+        /* Footer Halaman */
+        .footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 9px; color: #aaa; border-top: 1px solid #eee; padding-top: 5px; }
     </style>
 </head>
-
 <body>
 
     <div class="header">
         <h1>Laporan Keuangan</h1>
-        <p>Smart Masjid ({{ $settings->nama_masjid }})</p>
+        <p>Smart Masjid ({{ $settings->nama_masjid ?? 'Al Imaam' }})</p>
         <p>Tanggal Cetak: {{ $tanggalCetak }}</p>
     </div>
 
-    <div class="info">
-        <strong>Filter Laporan:</strong> {{ $periodeTeks }}
+    <div class="meta-info">
+        <p><span>Filter Laporan:</span> {{ $periodeTeks }}</p>
+        
+        {{-- LOGIKA TAMPILAN JENIS TRANSAKSI --}}
+        <p><span>Jenis Transaksi:</span> 
+            @if($tipe == 'pemasukan')
+                Pemasukan
+            @elseif($tipe == 'pengeluaran')
+                Pengeluaran
+            @else
+                Pemasukan & Pengeluaran
+            @endif
+        </p>
     </div>
 
-    {{-- Tabel Pemasukan --}}
-    @if ($tipe == 'pemasukan' || $tipe == 'semua')
-        <h3>Data Pemasukan</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 20%">Tanggal</th>
-                    <th style="width: 20%">Kategori</th>
-                    <th>Deskripsi</th>
-                    <th class="text-end" style="width: 20%">Nominal</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($pemasukanData as $item)
-                    <tr>
-                        <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}</td>
-                        <td>{{ $item->kategori->nama_kategori_keuangan ?? '-' }}</td>
-                        <td>{{ $item->deskripsi ?? '-' }}</td>
-                        <td class="text-end">Rp {{ number_format($item->nominal, 0, ',', '.') }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="4" class="text-center">Tidak ada data pemasukan pada periode ini.</td>
-                    </tr>
-                @endforelse
-                {{-- Subtotal Pemasukan jika mau ditampilkan per tabel --}}
-                @if ($pemasukanData->count() > 0)
-                    <tr>
-                        <td colspan="3" class="text-end"><strong>Total Pemasukan</strong></td>
-                        <td class="text-end"><strong>Rp
-                                {{ number_format($pemasukanData->sum('nominal'), 0, ',', '.') }}</strong></td>
-                    </tr>
-                @endif
-            </tbody>
-        </table>
-    @endif
+    <table>
+        <thead>
+            <tr>
+                <th class="col-date text-center">Tanggal</th>
+                <th class="col-type text-center">Tipe</th>
+                <th class="col-cat">Kategori</th>
+                <th class="col-desc">Deskripsi</th>
+                <th class="col-money text-end">Nominal</th>
+                <th class="col-money text-end">Saldo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{-- Baris Saldo Awal: HANYA TAMPIL JIKA FILTER SEMUA & ADA SALDO AWAL --}}
+            @if(($tipe == 'semua' || empty($tipe)) && isset($saldoAwal) && $saldoAwal != 0)
+            <tr style="background-color: #f0f0f0;">
+                <td colspan="5" style="text-align: right; font-weight: bold; font-style: italic;">
+                    Saldo Awal (Sebelum Periode Ini)
+                </td>
+                <td class="text-end" style="font-weight: bold;">
+                    Rp {{ number_format($saldoAwal, 0, ',', '.') }}
+                </td>
+            </tr>
+            @endif
 
-    {{-- Tabel Pengeluaran --}}
-    @if ($tipe == 'pengeluaran' || $tipe == 'semua')
-        <h3>Data Pengeluaran</h3>
-        <table>
-            <thead>
+            @forelse ($transaksi as $item)
+                @php
+                    $isMasuk = $item->tipe == 'pemasukan';
+                    // KITA TIDAK BUTUH LOGIKA HITUNG DI SINI LAGI
+                    // Cukup ambil data yang sudah dihitung Controller
+                    $saldoRow = $item->saldo_berjalan_formatted; 
+                @endphp
                 <tr>
-                    <th style="width: 20%">Tanggal</th>
-                    <th style="width: 20%">Kategori</th>
-                    <th>Deskripsi</th>
-                    <th class="text-end" style="width: 20%">Nominal</th>
+                    <td class="text-center">{{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}</td>
+                    <td class="text-center">
+                        <span class="{{ $isMasuk ? 'bg-light-success' : 'bg-light-danger' }}">
+                            {{ ucfirst($item->tipe) }}
+                        </span>
+                    </td>
+                    <td>{{ $item->kategori->nama_kategori_keuangan ?? '-' }}</td>
+                    <td>{{ $item->deskripsi ?? '-' }}</td>
+                    
+                    {{-- Nominal --}}
+                    <td class="text-end {{ $isMasuk ? 'text-success' : 'text-danger' }}">
+                        {{ $isMasuk ? '+' : '-' }} Rp {{ number_format($item->nominal, 0, ',', '.') }}
+                    </td>
+                    
+                    {{-- Saldo Berjalan (LANGSUNG DARI CONTROLLER) --}}
+                    <td class="text-end" style="font-weight: bold; color: {{ $saldoRow < 0 ? 'red' : '#333' }}">
+                        Rp {{ number_format($saldoRow, 0, ',', '.') }}
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                @forelse ($pengeluaranData as $item)
-                    <tr>
-                        <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}</td>
-                        <td>{{ $item->kategori->nama_kategori_keuangan ?? '-' }}</td>
-                        <td>{{ $item->deskripsi ?? '-' }}</td>
-                        <td class="text-end">Rp {{ number_format($item->nominal, 0, ',', '.') }}</td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="4" class="text-center">Tidak ada data pengeluaran pada periode ini.</td>
-                    </tr>
-                @endforelse
-                {{-- Subtotal Pengeluaran --}}
-                @if ($pengeluaranData->count() > 0)
-                    <tr>
-                        <td colspan="3" class="text-end"><strong>Total Pengeluaran</strong></td>
-                        <td class="text-end"><strong>Rp
-                                {{ number_format($pengeluaranData->sum('nominal'), 0, ',', '.') }}</strong></td>
-                    </tr>
-                @endif
-            </tbody>
-        </table>
-    @endif
+            @empty
+                <tr>
+                    <td colspan="6" class="text-center" style="padding: 20px; color: #999;">
+                        Tidak ada data transaksi untuk periode ini.
+                    </td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
 
-    {{-- Ringkasan Akhir --}}
+    {{-- Ringkasan Bawah (Summary) --}}
     <div class="summary-container">
-        <table class="summary">
+        <table class="summary-table">
+            {{-- Total Pemasukan --}}
             <tr>
-                <th>Total Pemasukan</th>
-                <td class="text-end text-success" style="color: green;">Rp
-                    {{ number_format($totalPemasukan, 0, ',', '.') }}</td>
+                <td class="label-cell">Total Pemasukan</td>
+                <td class="value-cell text-success">
+                    Rp {{ number_format($totalPemasukan, 0, ',', '.') }}
+                </td>
             </tr>
+            
+            {{-- Total Pengeluaran --}}
             <tr>
-                <th>Total Pengeluaran</th>
-                <td class="text-end text-danger" style="color: red;">(Rp
-                    {{ number_format($totalPengeluaran, 0, ',', '.') }})</td>
+                <td class="label-cell">Total Pengeluaran</td>
+                <td class="value-cell text-danger">
+                    {{-- Kurung hanya jika nilainya > 0 --}}
+                    @if($totalPengeluaran > 0)
+                        (Rp {{ number_format($totalPengeluaran, 0, ',', '.') }})
+                    @else
+                        Rp 0
+                    @endif
+                </td>
             </tr>
+
+            {{-- Saldo Akhir / Total Akumulasi --}}
             <tr>
-                <th style="background-color: #eee;"><strong>Saldo Akhir</strong></th>
-                <td class="text-end" style="background-color: #eee;"><strong>Rp
-                        {{ number_format($saldo, 0, ',', '.') }}</strong></td>
+                <td class="label-cell">
+                    {{-- Ubah Label sesuai konteks --}}
+                    @if($tipe == 'pemasukan') Total Pemasukan
+                    @elseif($tipe == 'pengeluaran') Total Pengeluaran
+                    @else Saldo Akhir
+                    @endif
+                </td>
+                <td class="value-cell" style="color: {{ $saldo < 0 ? 'red' : '#2980b9' }}">
+                    Rp {{ number_format($saldo, 0, ',', '.') }}
+                </td>
             </tr>
         </table>
+    </div>
+
+    <div class="footer">
+        Dicetak otomatis oleh Sistem Informasi Smart Masjid
     </div>
 
 </body>
-
 </html>

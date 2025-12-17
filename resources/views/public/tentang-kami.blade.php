@@ -205,13 +205,12 @@
                             <i class="bi bi-youtube"></i>
                             <div>
                                 <div class="small opacity-75">YouTube</div>
-                                <div>Tonton Kajian</div>
+                                <div>Channel Kami</div>
                             </div>
                         </a>
                     </div>
                 @endif
             </div>
         </div>
-
     </div>
 @endsection
