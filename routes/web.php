@@ -3,8 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\PemasukanController;
-use App\Http\Controllers\PengeluaranController;
+use App\Http\Controllers\KeuanganController;
 use App\Http\Controllers\KhotibJumatController;
 use App\Http\Controllers\PublicController;
 use App\Http\Controllers\TabunganHewanQurbanController; 
@@ -12,7 +11,6 @@ use App\Http\Controllers\PemasukanTabunganQurbanController;
 use App\Http\Controllers\InfaqJumatController;
 use App\Http\Controllers\BarangInventarisController;
 use App\Http\Controllers\GrafikController;
-use App\Http\Controllers\LapKeuController;
 use App\Http\Controllers\QurbanController; 
 use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\DonasiController;
@@ -89,12 +87,11 @@ Route::middleware(['auth:pengurus'])->prefix('pengurus')->name('pengurus.')->gro
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     // Keuangan & Inventaris
+    Route::get('keuangan/export-pdf', [App\Http\Controllers\KeuanganController::class, 'exportPdf'])->name('keuangan.export.pdf');
     Route::get('kategori-keuangan/data', [KategoriKeuanganController::class, 'data']);
     Route::resource('kategori-keuangan', KategoriKeuanganController::class);
-    Route::get('pemasukan/data', [PemasukanController::class, 'data']);
-    Route::resource('pemasukan', PemasukanController::class);
-    Route::get('pengeluaran/data', [PengeluaranController::class, 'data']);
-    Route::resource('pengeluaran', PengeluaranController::class);
+    Route::get('keuangan/data', [App\Http\Controllers\KeuanganController::class, 'data'])->name('keuangan.data');
+    Route::resource('keuangan', App\Http\Controllers\KeuanganController::class);
     
     // Masjid Activities
     Route::resource('khotib-jumat', KhotibJumatController::class);
@@ -106,9 +103,7 @@ Route::middleware(['auth:pengurus'])->prefix('pengurus')->name('pengurus.')->gro
     Route::resource('kajian', KajianController::class);
     Route::get('kajian-data', [KajianController::class, 'data'])->name('kajian.data');
     
-    // Laporan & Grafik
-    Route::get('/lapkeu', [LapKeuController::class, 'index'])->name('lapkeu.index');
-    Route::get('/lapkeu/export-pdf', [LapKeuController::class, 'exportPdf'])->name('lapkeu.export.pdf');
+    // Grafik
     Route::get('grafik/data', [GrafikController::class, 'dataUntukGrafik'])->name('grafik.data');
 
     // Donasi

@@ -23,26 +23,10 @@
         <li class="nav-label mt-3 mb-2 px-3 text-uppercase small fw-bold text-muted" style="font-size: 0.7rem; letter-spacing: 1px;">Keuangan</li>
 
         <li class="nav-item mb-1">
-            <a href="{{ route('pengurus.pemasukan.index') }}"
-               class="nav-link {{ request()->routeIs('pengurus.pemasukan.*') ? 'active' : '' }}">
-                <i class="bi bi-arrow-down-circle-fill"></i> 
-                <span>Pemasukan</span>
-            </a>
-        </li>
-
-        <li class="nav-item mb-1">
-            <a href="{{ route('pengurus.pengeluaran.index') }}"
-               class="nav-link {{ request()->routeIs('pengurus.pengeluaran.*') ? 'active' : '' }}">
-                <i class="bi bi-arrow-up-circle-fill"></i> 
-                <span>Pengeluaran</span>
-            </a>
-        </li>
-
-        <li class="nav-item mb-1">
-            <a href="{{ route('pengurus.lapkeu.index') }}"
-               class="nav-link {{ request()->routeIs('pengurus.lapkeu.*') ? 'active' : '' }}">
-                <i class="bi bi-file-earmark-bar-graph-fill"></i> 
-                <span>Laporan Keuangan</span>
+            <a href="{{ route('pengurus.keuangan.index') }}"
+               class="nav-link {{ request()->routeIs('pengurus.keuangan.*') ? 'active' : '' }}">
+                <i class="bi bi-wallet-fill"></i> 
+                <span>Keuangan</span>
             </a>
         </li>
 
