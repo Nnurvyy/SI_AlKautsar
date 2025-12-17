@@ -142,9 +142,16 @@
                                     <th scope="col">Kategori</th>
                                     <th scope="col">Deskripsi</th>
                                     <th scope="col" class="text-end">Jumlah</th>
+                                    {{-- KOLOM BARU --}}
+                                    <th scope="col" class="text-end">Saldo</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                {{-- Inisialisasi variabel saldo berjalan dimulai dari Saldo Total Saat Ini --}}
+                                @php
+                                    $runningBalance = $saldo; 
+                                @endphp
+
                                 @forelse($recentTransactions as $item)
                                     @php
                                         $isPemasukan = $item->tipe == 'pemasukan';
@@ -152,6 +159,9 @@
                                         $textClass = $isPemasukan ? 'text-success' : 'text-danger';
                                         $symbol = $isPemasukan ? '+' : '-';
                                         $kategori = $item->kategori ? $item->kategori->nama_kategori_keuangan : '-';
+                                        
+                                        // Simpan saldo untuk baris INI sebelum diubah untuk iterasi berikutnya
+                                        $currentRowBalance = $runningBalance;
                                     @endphp
                                     <tr>
                                         <td>{{ \Carbon\Carbon::parse($item->tanggal)->translatedFormat('d M Y') }}</td>
@@ -165,10 +175,29 @@
                                         <td class="text-end {{ $textClass }} fw-bold">
                                             {{ $symbol }} Rp {{ number_format($item->nominal, 0, ',', '.') }}
                                         </td>
+                                        
+                                        {{-- TAMPILKAN SALDO --}}
+                                        <td class="text-end fw-bold text-primary">
+                                            Rp {{ number_format($currentRowBalance, 0, ',', '.') }}
+                                        </td>
                                     </tr>
+
+                                    @php
+                                        // LOGIKA MUNDUR (Backwards Calculation)
+                                        // Karena list diurutkan dari TERBARU ke TERLAMA, kita harus membalik logika 
+                                        // untuk mengetahui saldo baris di bawahnya (masa lalu).
+                                        
+                                        if ($isPemasukan) {
+                                            // Jika sekarang pemasukan, berarti saldo masa lalu lebih kecil
+                                            $runningBalance = $runningBalance - $item->nominal;
+                                        } else {
+                                            // Jika sekarang pengeluaran, berarti saldo masa lalu lebih besar
+                                            $runningBalance = $runningBalance + $item->nominal;
+                                        }
+                                    @endphp
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">Belum ada transaksi.</td>
+                                        <td colspan="6" class="text-center text-muted py-4">Belum ada transaksi.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
