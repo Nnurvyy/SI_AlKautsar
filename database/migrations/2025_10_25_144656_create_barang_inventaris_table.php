@@ -6,19 +6,24 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-        public function up(): void
+    public function up(): void
     {
-        Schema::create('barang_inventaris', function (Blueprint $table) {
-            $table->uuid('id_barang')->primary();
-            $table->string('nama_barang', 100);
-            $table->string('satuan', 20)->nullable();
-            $table->string('kondisi', 50)->nullable();
-            $table->integer('stock')->default(0);
-            $table->timestamps();
-        });
+        // Cek dulu: Apakah tabel 'barang_inventaris' BELUM ada?
+        if (!Schema::hasTable('barang_inventaris')) {
+            
+            // Jika belum ada, baru jalankan perintah create ini
+            Schema::create('barang_inventaris', function (Blueprint $table) {
+                $table->uuid('id_barang')->primary();
+                $table->string('nama_barang', 100);
+                $table->string('satuan', 20)->nullable();
+                $table->string('kondisi', 50)->nullable();
+                $table->integer('stock')->default(0);
+                $table->timestamps();
+            });
+        }
     }
 
-        public function down(): void
+    public function down(): void
     {
         Schema::dropIfExists('barang_inventaris');
     }

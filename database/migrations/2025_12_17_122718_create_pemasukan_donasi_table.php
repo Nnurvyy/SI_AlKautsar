@@ -8,32 +8,36 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('pemasukan_donasi', function (Blueprint $table) {
-            $table->uuid('id_pemasukan_donasi')->primary();
+        // Cek dulu: Jika tabel 'pemasukan_donasi' BELUM ada, baru buat
+        if (!Schema::hasTable('pemasukan_donasi')) {
 
-            
-            $table->uuid('id_donasi');
-            $table->string('order_id')->nullable()->unique();
-            $table->foreign('id_donasi')
-                  ->references('id_donasi')
-                  ->on('donasi')
-                  ->onDelete('cascade');
-            
-            $table->unsignedBigInteger('id_jamaah')->nullable(); 
+            Schema::create('pemasukan_donasi', function (Blueprint $table) {
+                $table->uuid('id_pemasukan_donasi')->primary();
 
-            $table->date('tanggal');
-            $table->string('nama_donatur');
-            $table->enum('metode_pembayaran', ['tunai', 'transfer', 'whatsapp'])->default('tunai');
-            $table->bigInteger('nominal');
-            $table->string('status')->default('pending');
-            $table->string('tripay_reference')->nullable(); 
-            $table->string('checkout_url')->nullable();
-            $table->text('pesan')->nullable();
+                
+                $table->uuid('id_donasi');
+                $table->string('order_id')->nullable()->unique();
+                $table->foreign('id_donasi')
+                      ->references('id_donasi')
+                      ->on('donasi')
+                      ->onDelete('cascade');
+                
+                $table->unsignedBigInteger('id_jamaah')->nullable(); 
 
-            $table->timestamps();
+                $table->date('tanggal');
+                $table->string('nama_donatur');
+                $table->enum('metode_pembayaran', ['tunai', 'transfer', 'whatsapp'])->default('tunai');
+                $table->bigInteger('nominal');
+                $table->string('status')->default('pending');
+                $table->string('tripay_reference')->nullable(); 
+                $table->string('checkout_url')->nullable();
+                $table->text('pesan')->nullable();
 
-             $table->foreign('id_jamaah')->references('id')->on('jamaah')->onDelete('cascade');
-        });
+                $table->timestamps();
+
+                $table->foreign('id_jamaah')->references('id')->on('jamaah')->onDelete('cascade');
+            });
+        }
     }
 
     public function down(): void
