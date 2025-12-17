@@ -21,7 +21,6 @@ class BarangInventarisController extends Controller
     public function data(Request $request)
     {
         $search = $request->get('search');
-        $kondisi = $request->get('kondisi');
 
         $sortBy = $request->get('sortBy', 'nama_barang');
         $sortDir = $request->get('sortDir', 'asc');
@@ -29,15 +28,12 @@ class BarangInventarisController extends Controller
 
         $query = BarangInventaris::query();
 
-
-
-        if ($kondisi && $kondisi !== 'all') {
-            $query->where('kondisi', $kondisi);
-        }
-
-
         if ($search) {
-            $query->whereRaw('LOWER(nama_barang) LIKE ?', ['%' . strtolower($search) . '%']);
+            // Perluas pencarian untuk menyertakan 'kode'
+            $query->where(function ($q) use ($search) {
+                $q->whereRaw('LOWER(nama_barang) LIKE ?', ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw('LOWER(kode) LIKE ?', ['%' . strtolower($search) . '%']);
+            });
         }
 
 
@@ -56,10 +52,11 @@ class BarangInventarisController extends Controller
 
             $validated = $request->validate([
                 'nama_barang' => 'required|string|max:255',
+                'kode' => 'required|string|max:10|unique:barang_inventaris,kode',
                 'satuan' => 'required|string|max:50',
-                'kondisi' => 'required|string|in:Baik,Perlu Perbaikan,Rusak Berat',
-                'stock' => 'required|integer|min:1',
             ]);
+
+            $validated['total_stock'] = 0;
 
             BarangInventaris::create($validated);
 
@@ -88,9 +85,8 @@ class BarangInventarisController extends Controller
 
             $validated = $request->validate([
                 'nama_barang' => 'required|string|max:255',
+                'kode' => 'required|string|max:10|unique:barang_inventaris,kode,' . $id_barang . ',id_barang',
                 'satuan' => 'required|string|max:50',
-                'kondisi' => 'required|string|in:Baik,Perlu Perbaikan,Rusak Berat',
-                'stock' => 'required|integer|min:0',
             ]);
 
 

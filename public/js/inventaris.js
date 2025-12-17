@@ -1,42 +1,41 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    
+    // SETUP ELEMENT
     const tableBody = document.querySelector('#tabelInventaris tbody');
     const form = document.getElementById('formInventarisStock');
     const modalElement = document.getElementById('modalInventaris');
     const modal = new bootstrap.Modal(modalElement);
     const modalTitle = document.getElementById('modalInventarisLabel');
     
-    
+    // Hapus referensi ke kondisiFilter, karena sudah dihapus di View Master
     const searchInput = document.getElementById('searchInput');
-    const kondisiFilter = document.getElementById('kondisiFilter');
     const paginationContainer = document.getElementById('paginationLinks');
     const paginationInfo = document.getElementById('paginationInfo');
 
-    
+    // Token CSRF
     const token = document.querySelector('meta[name="csrf-token"]').content;
 
-    
+    // State Aplikasi
     let state = {
         page: 1,
         search: '',
-        kondisi: 'all' 
+        // kondisi DIHAPUS
     };
 
-    
+    // Fungsi untuk memuat data inventaris
     async function loadInventaris() {
         if (!tableBody) return;
 
-        
-        let colCount = 6;
+        // Total 6 kolom di view master: No, Nama, Kode, Satuan, Total Stock, Aksi
+        const colCount = 6; 
         tableBody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-5"><div class="spinner-border text-success" role="status"></div></td></tr>`;
 
-        
+        // Update state
         state.search = searchInput ? searchInput.value : '';
-        state.kondisi = kondisiFilter ? kondisiFilter.value : 'all';
+        // state.kondisi DIHAPUS
 
-        
-        const url = `/pengurus/inventaris-data?page=${state.page}&search=${state.search}&kondisi=${state.kondisi}`;
+        // URL API: Hapus parameter kondisi
+        const url = `/pengurus/inventaris-data?page=${state.page}&search=${state.search}`;
 
         try {
             const res = await fetch(url);
@@ -50,13 +49,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    
+    // Fungsi untuk merender tabel
     function renderTable(res) {
         tableBody.innerHTML = '';
         let no = res.from;
 
+        const colCount = 6;
+
         if (res.data.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted">Belum ada data barang inventaris.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-5 text-muted">Belum ada data barang inventaris.</td></tr>`;
             paginationInfo.textContent = 'Menampilkan 0 data';
             paginationContainer.innerHTML = '';
             return;
@@ -64,30 +65,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
         res.data.forEach(item => {
             
-            let badgeClass = 'bg-secondary';
-            if (item.kondisi === 'Baik') badgeClass = 'bg-success';
-            if (item.kondisi === 'Perlu Perbaikan') badgeClass = 'bg-warning text-dark';
-            if (item.kondisi === 'Rusak Berat') badgeClass = 'bg-danger';
-
+            // Logika badge kondisi DIHAPUS
+            
             const row = `
                 <tr>
                     <td class="text-center fw-bold text-muted">${no++}</td>
                     <td>
                         <div class="fw-bold text-dark">${item.nama_barang}</div>
                     </td>
+                    <td class="text-center fw-bold text-dark">${item.kode || '-'}</td>
                     <td class="text-center">${item.satuan}</td>
-                    <td class="text-center">
-                        <span class="badge rounded-pill ${badgeClass} px-3">${item.kondisi}</span>
-                    </td>
-                    <td class="text-center fw-bold text-dark">${item.stock}</td>
+                    <td class="text-center fw-bold text-dark">${item.total_stock || 0}</td>
                     <td class="text-center">
                         <div class="d-flex justify-content-center gap-2">
                             
-                            <button onclick="editBarang('${item.id_barang}')" class="btn btn-sm btn-warning text-white rounded-3 shadow-sm" title="Edit">
+                            <a href="/pengurus/inventaris/${item.id_barang}/detail" class="btn btn-sm btn-gradient-green rounded-pill shadow-sm" title="Lihat Detail">
+                                <i class="bi bi-list-columns-reverse me-1"></i> Detail Unit
+                            </a>
+                            
+                            <button onclick="editBarang('${item.id_barang}')" class="btn btn-sm btn-warning text-white rounded-3 shadow-sm" title="Edit Master">
                                 <i class="bi bi-pencil"></i>
                             </button>
 
-                            <button onclick="hapusBarang('${item.id_barang}')" class="btn btn-sm btn-danger rounded-3 shadow-sm" title="Hapus">
+                            <button onclick="hapusBarang('${item.id_barang}')" class="btn btn-sm btn-danger rounded-3 shadow-sm" title="Hapus Master">
                                 <i class="bi bi-trash"></i>
                             </button>
 
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPagination(res);
     }
 
-    
+    // Fungsi merender pagination (Logika tetap sama)
     function renderPagination(res) {
         
         paginationContainer.innerHTML = '';
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    
+    // Form Submit (Store/Update Master)
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
@@ -216,22 +216,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     
-    
-    
+    // Fungsi Edit Barang Master
+    // ... (Kode sebelumnya)
+
+// Fungsi Edit Barang Master
     window.editBarang = async function(id) {
         try {
             const res = await fetch(`/pengurus/inventaris/${id}`);
             if (!res.ok) throw new Error('Gagal mengambil data');
             const data = await res.json();
 
+            // Ambil elemen Kode
+            const kodeInput = document.getElementById('kode');
             
+            // 1. Isi data form
             document.getElementById('id_barang').value = data.id_barang;
             document.getElementById('nama_barang').value = data.nama_barang;
+            kodeInput.value = data.kode;
             document.getElementById('satuan').value = data.satuan;
-            document.getElementById('kondisi').value = data.kondisi;
-            document.getElementById('stock').value = data.stock;
-
             
+            // 2. Terapkan Read-Only pada Kode saat Edit
+            kodeInput.setAttribute('readonly', true);
+            kodeInput.classList.add('bg-light'); // Tambahkan visual indikator read-only
+
             modalTitle.textContent = 'Ubah Barang Inventaris';
             modal.show();
 
@@ -240,11 +247,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    
+    // ... (Kode hapusBarang)
+
+    // Reset modal saat ditutup
+    modalElement.addEventListener('hidden.bs.modal', function () {
+        const kodeInput = document.getElementById('kode');
+
+        form.reset();
+        document.getElementById('id_barang').value = '';
+        modalTitle.textContent = 'Barang Inventaris';
+        
+        if (kodeInput) {
+            kodeInput.removeAttribute('readonly');
+            kodeInput.classList.remove('bg-light');
+        }
+    });
+
+    // ... (Kode selanjutnya)
+
+    // Fungsi Hapus Barang Master (Logika tetap sama)
     window.hapusBarang = async function(id) {
         const confirm = await Swal.fire({
-            title: 'Hapus Barang?',
-            text: "Data yang dihapus tidak dapat dikembalikan!",
+            title: 'Hapus Barang Master?',
+            text: "Menghapus master akan menghapus SEMUA unit detail terkait!",
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#dc3545',
@@ -289,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     
     
-    
+    // Reset modal saat ditutup
     modalElement.addEventListener('hidden.bs.modal', function () {
         form.reset();
         document.getElementById('id_barang').value = '';
@@ -312,12 +337,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    if(kondisiFilter) {
-        kondisiFilter.addEventListener('change', () => {
-            state.page = 1;
-            loadInventaris();
-        });
-    }
+    // Hapus event listener untuk kondisiFilter
     
     loadInventaris();
 });

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Stok & Inventori')
+@section('title', 'Barang Inventaris')
 
 @section('content')
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -11,20 +11,14 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
             <div class="d-flex flex-wrap align-items-center gap-2">
 
-                {{-- Filter Kondisi (Opsional, style disamakan) --}}
-                <select class="form-select rounded-pill ps-3" id="kondisiFilter" style="width: 170px; border-color: #e5e7eb;">
-                    <option value="all" selected>Semua Kondisi</option>
-                    <option value="Baik">Baik</option>
-                    <option value="Perlu Perbaikan">Perlu Perbaikan</option>
-                    <option value="Rusak Berat">Rusak Berat</option>
-                </select>
-
+                {{-- Filter Kondisi DIHAPUS karena Kondisi hanya ada di Detail --}}
+                
                 {{-- Search Bar --}}
                 <div class="input-group" style="width: 300px;">
                     <span class="input-group-text bg-white border-end-0 rounded-start-pill ps-3"><i
                             class="bi bi-search text-muted"></i></span>
                     <input type="text" id="searchInput" class="form-control border-start-0 rounded-end-pill"
-                        placeholder="Cari nama barang...">
+                        placeholder="Cari nama/kode barang...">
                 </div>
             </div>
 
@@ -35,15 +29,16 @@
             </button>
         </div>
 
-        {{-- CARD TOTAL BARANG (Div sebelum Table) --}}
+        {{-- CARD TOTAL BARANG (Tidak Berubah, karena masih relevan untuk jenis barang) --}}
         <div class="card border-0 shadow-sm rounded-4 mb-4">
             <div class="card-body p-4 d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="fw-bold text-dark mb-0">Total Jenis Barang</h5>
-                    <small class="text-muted">Jumlah aset terdaftar di inventaris</small>
+                    <small class="text-muted">Jumlah kategori aset yang terdaftar</small>
                 </div>
                 {{-- Angka dari Controller --}}
                 <h3 class="fw-bold text-success mb-0">
+                    {{-- $totalBarang tetap menghitung jumlah baris di tabel master --}}
                     {{ number_format($totalBarang, 0, ',', '.') }} Item
                 </h3>
             </div>
@@ -58,14 +53,17 @@
                             <tr style="height: 50px;">
                                 <th class="text-center ps-4 rounded-top-left" style="width: 5%;">No</th>
                                 <th style="width: 30%;">Nama Barang</th>
+                                <th class="text-center" style="width: 10%;">Kode</th> {{-- KOLOM BARU --}}
                                 <th class="text-center" style="width: 10%;">Satuan</th>
-                                <th class="text-center" style="width: 15%;">Kondisi</th>
-                                <th class="text-center" style="width: 10%;">Stock</th>
+                                <th class="text-center" style="width: 15%;">Total Stock</th> {{-- NAMA KOLOM DIUBAH --}}
+                                {{-- Kolom Kondisi DIHAPUS --}}
                                 <th class="text-center pe-4 rounded-top-right" style="width: 20%;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white">
                             {{-- Data dimuat lewat JS --}}
+                            {{-- Setiap baris harus mencakup $item->kode dan $item->total_stock --}}
+                            {{-- Kolom Aksi harus berisi: <a href="/inventaris/{{ $item->id_barang }}/detail">Lihat Detail</a> --}}
                         </tbody>
                     </table>
                 </div>
@@ -81,7 +79,7 @@
         </div>
     </div>
 
-    {{-- MODAL TAMBAH / EDIT INVENTARIS (Style Green) --}}
+    {{-- MODAL TAMBAH / EDIT INVENTARIS MASTER --}}
     <div class="modal fade" id="modalInventaris" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg modal-rounded">
@@ -90,7 +88,7 @@
                 <div class="modal-header border-0 pb-0 pt-4 px-4 bg-white">
                     <div>
                         <h5 class="modal-title fw-bold text-dark" id="modalInventarisLabel">Barang Inventaris</h5>
-                        <p class="text-muted small mb-0">Kelola aset masjid & ketersediaan stok</p>
+                        <p class="text-muted small mb-0">Kelola master aset & penamaan kode unik</p>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -106,42 +104,34 @@
                             <div class="mb-3">
                                 <label class="form-label fw-bold text-success small text-uppercase ls-1">Nama Barang</label>
                                 <input type="text" class="form-control rounded-pill-input" id="nama_barang"
-                                    name="nama_barang" placeholder="Contoh: Karpet Sajadah" required>
+                                    name="nama_barang" placeholder="Contoh: AC Daikin 1 PK" required>
+                            </div>
+                            
+                            {{-- Kode Master (BARU) --}}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-success small text-uppercase ls-1">Kode Master (Singkat)</label>
+                                <input type="text" class="form-control rounded-pill-input" id="kode"
+                                    name="kode" placeholder="Contoh: AD" maxlength="10" required>
+                                <small class="text-muted ms-3">Kode tidak bisa di edit</small>
                             </div>
 
-                            {{-- Satuan & Kondisi --}}
-                            <div class="row g-2 mb-3">
-                                <div class="col-6">
-                                    <label class="form-label fw-bold text-success small text-uppercase ls-1">Satuan</label>
-                                    <select class="form-select rounded-pill-input" id="satuan" name="satuan" required>
-                                        <option value="" disabled selected>Pilih...</option>
-                                        <option value="Pcs">Pcs</option>
-                                        <option value="Unit">Unit</option>
-                                        <option value="Set">Set</option>
-                                        <option value="Meter">Meter</option>
-                                        <option value="Roll">Roll</option>
-                                        <option value="Box">Box</option>
-                                    </select>
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label fw-bold text-success small text-uppercase ls-1">Kondisi</label>
-                                    <select class="form-select rounded-pill-input" id="kondisi" name="kondisi" required>
-                                        <option value="" disabled selected>Pilih...</option>
-                                        <option value="Baik">Baik</option>
-                                        <option value="Perlu Perbaikan">Perlu Perbaikan</option>
-                                        <option value="Rusak Berat">Rusak Berat</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            {{-- Stock --}}
+                            {{-- Satuan --}}
                             <div class="mb-4">
-                                <label class="form-label fw-bold text-success small text-uppercase ls-1">Jumlah
-                                    Stock</label>
-                                <input type="number" class="form-control rounded-pill-input" id="stock"
-                                    name="stock" placeholder="0" min="0" required>
+                                <label class="form-label fw-bold text-success small text-uppercase ls-1">Satuan</label>
+                                <select class="form-select rounded-pill-input" id="satuan" name="satuan" required>
+                                    <option value="" disabled selected>Pilih...</option>
+                                    <option value="Pcs">Pcs</option>
+                                    <option value="Unit">Unit</option>
+                                    <option value="Set">Set</option>
+                                    <option value="Meter">Meter</option>
+                                    <option value="Roll">Roll</option>
+                                    <option value="Box">Box</option>
+                                </select>
                             </div>
 
+                            {{-- Kondisi DIHAPUS --}}
+                            {{-- Stock DIHAPUS --}}
+                            
                             {{-- Tombol --}}
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-gradient-green rounded-pill py-2 fw-bold shadow-sm">
@@ -156,8 +146,9 @@
         </div>
     </div>
 
-    {{-- CSS KHUSUS HALAMAN INI (Sama dengan Donasi & Program) --}}
+    {{-- CSS KHUSUS HALAMAN INI (Tidak Berubah) --}}
     <style>
+        /* ... Kode CSS tetap sama ... */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
 
         #tabelInventaris,
@@ -235,7 +226,7 @@
 
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {{-- Pastikan nama file JS kamu benar (misal: public/js/inventaris.js) --}}
+        {{-- ASUMSI: Anda perlu memperbarui logika JS di inventaris.js untuk menangani perubahan kolom dan aksi --}}
         <script src="{{ asset('js/inventaris.js') }}"></script>
     @endpush
 @endsection

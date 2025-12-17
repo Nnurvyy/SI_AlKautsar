@@ -52,8 +52,8 @@
         <li class="nav-item mb-1">
             <a href="{{ route('pengurus.inventaris.index') }}"
                class="nav-link {{ request()->routeIs('pengurus.inventaris.index') ? 'active' : '' }}">
-                <i class="bi bi-box-seam-fill"></i> 
-                <span>Stok & Inventori</span>
+                <i class="bi bi-box-seam-fill"></i>
+                <span>Barang Inventaris</span>
             </a>
         </li>
 
