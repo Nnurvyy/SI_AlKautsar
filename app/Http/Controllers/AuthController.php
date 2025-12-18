@@ -275,9 +275,9 @@ class AuthController extends Controller
 
     private function sendOtp($user, $otp)
     {
-
         try {
-            Mail::to($user->email)->send(new OtpVerificationMail($otp));
+            // 'queue' melempar tugas ke database dan langsung lanjut (user tidak menunggu)
+            Mail::to($user->email)->queue(new OtpVerificationMail($otp));
         } catch (Exception $e) {
         }
     }

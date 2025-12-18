@@ -3,10 +3,12 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue; // 1. Tambahkan baris ini
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class OtpVerificationMail extends Mailable
+// 2. Tambahkan 'implements ShouldQueue' di sini
+class OtpVerificationMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
